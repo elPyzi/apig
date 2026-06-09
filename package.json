@@ -1,0 +1,31 @@
+{
+  "name": "@happy/apig",
+  "version": "0.0.1",
+  "type": "module",
+  "bin": {
+    "apig": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "bun src/cli.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@apidevtools/swagger-parser": "12.1.0",
+    "openapi-types": "12.1.3",
+    "swagger2openapi": "7.0.8",
+    "commander": "~15.0.0",
+    "jiti": "~2.7.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/swagger-parser": "7.0.1",
+    "@types/swagger2openapi": "7.0.4",
+    "typescript": "5.8.3"
+  },
+  "peerDependencies": {
+    "typescript": "5.8.3"
+  }
+}
