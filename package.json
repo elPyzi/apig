@@ -1,22 +1,42 @@
 {
   "name": "@travjek/apig",
-  "version": "0.1.0",
+  "version": "0.8.0",
   "type": "module",
-  "description": "OpenAPI code generator for TypeScript",
+  "description": "OpenAPI code generator for TypeScript with a plugin system — generates types, SDK, Zod/Valibot/Yup schemas, TanStack Query / SWR hooks, React Hook Form resolvers, Faker factories and MSW handlers",
   "keywords": [
     "openapi",
+    "openapi-generator",
     "codegen",
+    "code-generator",
     "typescript",
-    "tanstack-query",
+    "typescript-generator",
+    "api-client",
+    "api-generator",
+    "sdk",
+    "sdk-generator",
     "zod",
+    "valibot",
+    "yup",
+    "schema-validation",
+    "tanstack-query",
+    "react-query",
+    "swr",
+    "react-hook-form",
+    "rhf",
     "msw",
-    "faker"
+    "mock-service-worker",
+    "faker",
+    "swagger",
+    "swagger-codegen",
+    "openapi3",
+    "rest-api",
+    "cli"
   ],
   "author": "danilapyzhikov",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/travjek/apig"
+    "url": "https://github.com/elPyzi/apig"
   },
   "bin": {
     "apig": "./dist/cli.js"
