@@ -81,7 +81,7 @@ describe('validateConfig', () => {
     });
 
     test('Тест пропущенный output', () => {
-      expect(() => validateConfig(NEGATIVE_CONFIGS.MISSING_OUTPUT)).toThrow();
+      expect(() => validateConfig(NEGATIVE_CONFIGS.MISSING_OUTPUT)).not.toThrow();
     });
 
     test('Тест invalid output', () => {

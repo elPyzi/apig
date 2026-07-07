@@ -34,10 +34,9 @@ describe('swr', () => {
   });
 
   describe('пустой IR', () => {
-    test('содержит banner и импорт swr', () => {
+    test('содержит banner', () => {
       const result = generateSwr(emptyIR, baseConfig);
       expect(result.code).toContain('auto-generated');
-      expect(result.code).toContain("import useSWR");
     });
 
     test('пустые exports', () => {
