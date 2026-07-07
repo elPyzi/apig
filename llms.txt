@@ -1,0 +1,306 @@
+# @travjek/apig
+
+> OpenAPI code generator for TypeScript with a plugin system. Reads an OpenAPI 3.0 spec (or Swagger 2.0, auto-upgraded) and generates typed TypeScript code via composable plugins.
+
+## Install
+
+```bash
+npm install -D @travjek/apig
+```
+
+## Config file
+
+Create `apig.config.ts` in the project root:
+
+```ts
+import { defineConfig } from '@travjek/apig'
+
+export default defineConfig({
+  input: './openapi.json',      // path or URL to OpenAPI spec
+  output: './src/api',          // output directory (default: .apig/generated)
+  plugins: [
+    typescript(),
+    sdk(),
+    zod({ withTypes: true }),
+    tanstackQuery(),
+  ],
+})
+```
+
+Multiple configs in one file:
+
+```ts
+export default [configA, configB]
+```
+
+## CLI
+
+```bash
+apig generate              # run generation
+apig generate --dry-run    # preview without writing files
+apig generate --watch      # watch mode
+apig generate -c ./path/to/config.ts
+
+apig versions              # list saved snapshots
+apig version checkout <id|alias>  # regenerate from snapshot
+apig info                  # show resolved config and spec summary
+apig config                # show current config
+```
+
+## Top-level config options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `input` | `string` | Path or URL to OpenAPI spec |
+| `output` | `string` | Output directory (default: `.apig/generated`) |
+| `plugins` | `Plugin[]` | Array of plugins |
+| `baseUrl` | `string` | Prefix for all request paths |
+| `groupBy` | `'none' \| 'tags' \| 'endpoints' \| 'operations'` | Split output files by structure |
+| `fileNaming` | `'camelCase' \| 'kebab-case' \| 'snake_case'` | Output file naming convention |
+| `functionNaming` | `'camelCase' \| 'snake_case'` | Generated function naming convention |
+| `filter` | `{ tags?, includeDeprecated? }` | Include/exclude operations |
+| `rename` | `Record<string, string>` | Rename operationIds before generation |
+| `endpointsMap` | `boolean` | Generate `endpoints.ts` with typed path constants |
+| `index` | `boolean` | Control `index.ts` re-export generation |
+| `formatter` | `'prettier' \| 'biome' \| 'oxfmt' \| 'none'` | Format generated files |
+| `cache` | `boolean` | Cache spec with ETag to avoid re-downloading |
+| `versioning` | `VersioningConfig` | Snapshot-based versioning of generated IR |
+| `hooks` | `{ afterAllFilesWrite?: string }` | Shell command after generation |
+
+## Plugins
+
+### `typescript()`
+
+Generates TypeScript types from OpenAPI schemas.
+
+```ts
+typescript({
+  typeStyle: 'type',        // 'type' | 'interface'
+  enumStyle: 'union',       // 'union' | 'enum' | 'const'
+})
+```
+
+### `sdk()`
+
+Generates typed request functions.
+
+```ts
+sdk({
+  httpClient: { name: 'fetch' },   // 'fetch' | 'axios' | 'ky' | 'ofetch' | 'wretch'
+  errorHandling: 'ApigError',      // built-in or custom error class
+  rawResponse: false,              // return { body, status, headers } instead of data
+  apiLogging: false,               // add console.log to each function
+})
+```
+
+Generated output example:
+
+```ts
+export const getUsers = (params?: { page?: number }) =>
+  fetch(`/users?${new URLSearchParams(params)}`).then(r => r.json() as Promise<UserList>)
+
+export const createUser = (body: CreateUserInput) =>
+  fetch('/users', { method: 'POST', body: JSON.stringify(body) }).then(r => r.json() as Promise<User>)
+```
+
+### `zod()`
+
+Generates Zod schemas.
+
+```ts
+zod({
+  schemaSuffix: 'Schema',          // variable name suffix (default: 'Schema')
+  enumStyle: 'union',              // 'union' | 'enum' | 'const'
+  withTypes: false,                // emit z.infer<> type aliases
+  infer: true,
+  input: true,
+  output: true,
+  validateResponse: false,         // generate validateXxxResponse(data: unknown): Xxx functions
+})
+```
+
+Generated output example:
+
+```ts
+export const UserSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  bio: z.string().nullable().optional(),
+  role: RoleSchema,
+})
+export type User = z.infer<typeof UserSchema>
+```
+
+### `valibot()`
+
+Generates Valibot schemas.
+
+```ts
+valibot({
+  schemaSuffix: 'Schema',
+  enumStyle: 'union',              // 'union' | 'enum' | 'const'
+  withTypes: false,                // emit v.InferOutput<> type aliases
+})
+```
+
+Generated output example:
+
+```ts
+export const UserSchema = v.object({
+  id: v.pipe(v.string(), v.uuid()),
+  email: v.pipe(v.string(), v.email()),
+  bio: v.optional(v.nullable(v.string())),
+})
+```
+
+Supports: `v.picklist` for enums, `v.pipe` for string/number constraints, `v.intersect` for `allOf`, `v.variant` for `oneOf` with discriminator.
+
+### `yup()`
+
+Generates Yup schemas.
+
+```ts
+yup({
+  schemaSuffix: 'Schema',
+  enumStyle: 'union',              // 'union' | 'enum' | 'const'
+  withTypes: false,                // emit yup.InferType<> type aliases
+})
+```
+
+Generated output example:
+
+```ts
+export const UserSchema = yup.object({
+  id: yup.string().uuid().required(),
+  email: yup.string().email().required(),
+  bio: yup.string().nullable().optional(),
+})
+```
+
+### `tanstackQuery()`
+
+Generates TanStack Query v5 hooks.
+
+```ts
+tanstackQuery({
+  queryKeysStyle: 'functions',     // 'functions' | 'object'
+  hookGenerationStrategies: {
+    createUser: 'mutation',        // override per operationId
+  },
+})
+```
+
+Generated output example:
+
+```ts
+export const useGetUsers = (params?: GetUsersParams, options?: UseQueryOptions<UserList>) =>
+  useQuery({ queryKey: getUsersKey(params), queryFn: () => getUsers(params), ...options })
+
+export const useCreateUser = (options?: UseMutationOptions<User, ApigError, CreateUserInput>) =>
+  useMutation({ mutationFn: createUser, ...options })
+```
+
+### `swr()`
+
+Generates SWR hooks.
+
+```ts
+swr({
+  queryKeysStyle: 'functions',     // 'functions' | 'object'
+  hookGenerationStrategies: {},
+})
+```
+
+### `rhf()`
+
+Generates React Hook Form resolvers.
+
+```ts
+rhf({
+  resolver: 'zod',                 // 'zod' | 'valibot' | 'yup'
+})
+```
+
+### `faker()`
+
+Generates Faker.js factories for all schemas.
+
+```ts
+faker()
+```
+
+Generated output example:
+
+```ts
+export const generateUser = (): User => ({
+  id: faker.string.uuid(),
+  email: faker.internet.email(),
+  name: faker.person.fullName(),
+  role: faker.helpers.arrayElement(['admin', 'user']),
+  tags: faker.helpers.multiple(() => faker.lorem.word(), { count: 3 }),
+})
+```
+
+Semantic heuristics: field names like `email`, `name`, `phone`, `url`, `date`, `id` map to appropriate faker methods automatically.
+
+### `msw()`
+
+Generates Mock Service Worker request handlers. Requires `faker()` plugin.
+
+```ts
+msw()
+```
+
+Generated output example:
+
+```ts
+export const handlers = [
+  http.get('/users', () => HttpResponse.json(generateUserList())),
+  http.post('/users', () => HttpResponse.json(generateUser())),
+  http.delete('/users/:id', () => new HttpResponse(null, { status: 204 })),
+]
+```
+
+## OpenAPI features supported
+
+- Schemas: `string`, `number`, `boolean`, `array`, `object`
+- String formats: `email`, `uuid`, `uri`, `date-time`
+- String constraints: `minLength`, `maxLength`
+- Number constraints: `minimum`, `maximum`
+- Array constraints: `minItems`, `maxItems`
+- Nullable fields: `nullable: true`
+- Optional fields: inferred from `required` array
+- Enums: `enum` array on string schemas
+- `allOf` → intersection / `.and()` / `.concat()`
+- `oneOf` with `discriminator.propertyName` → discriminated union
+- `$ref` → resolves to named schema variable
+- Swagger 2.0 → auto-upgraded to OpenAPI 3.0
+
+## Client library
+
+```ts
+import { ApigError } from '@travjek/apig/client'
+
+try {
+  await createUser(data)
+} catch (e) {
+  if (e instanceof ApigError) {
+    console.log(e.status, e.body)
+  }
+}
+```
+
+## Versioning config
+
+```ts
+defineConfig({
+  versioning: {
+    enabled: true,
+    storage: '.apig/versions',
+    maxSaves: 10,
+    saveSpec: true,
+    pinVersions: ['abc123'],
+    aliasTemplate: '{apiVersion}-{date}',
+  },
+})
+```
