@@ -1,14 +1,12 @@
 {
   "compilerOptions": {
     "lib": ["ESNext"],
-    "target": "ESNext",
-    "module": "Preserve",
-    "moduleDetection": "force",
-    "allowJs": true,
+    "target": "ES2022",
+    "module": "ESNext",
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
-    "noEmit": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
     "strict": true,
     "skipLibCheck": true,
     "baseUrl": ".",
@@ -21,13 +19,23 @@
       "@client": ["src/client"],
       "@plugins": ["src/plugins"]
     },
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false
+    "noUnusedParameters": false
   },
-  "include": ["src", "*.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/test.ts",
+    "src/api",
+    "src/**/__tests__",
+    "src/**/__test__",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts"
+  ]
 }
