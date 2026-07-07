@@ -2,7 +2,7 @@
 
 All notable changes to `@travjek/apig` will be documented in this file.
 
-## [0.8.0] - 2025-07-07
+## [0.8.0]
 
 ### Added
 - `groupBy` option: `none` | `tags` | `endpoints` | `operations` — split generated files by structure
@@ -21,7 +21,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 
 ---
 
-## [0.7.0] - 2025-06-01
+## [0.7.0]
 
 ### Added
 - `versioning` — snapshot-based versioning of generated IR
@@ -33,7 +33,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 
 ---
 
-## [0.6.0] - 2025-05-01
+## [0.6.0]
 
 ### Added
 - `swr()` plugin — generates SWR hooks
@@ -47,7 +47,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 
 ---
 
-## [0.5.0] - 2025-04-01
+## [0.5.0]
 
 ### Added
 - `faker()` plugin — generates Faker.js factories for all schemas
@@ -62,7 +62,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 
 ---
 
-## [0.4.0] - 2025-03-01
+## [0.4.0]
 
 ### Added
 - `valibot()` plugin — generates Valibot schemas
@@ -80,7 +80,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 
 ---
 
-## [0.3.0] - 2025-02-15
+## [0.3.0]
 
 ### Added
 - `zod()` plugin — generates Zod schemas
@@ -96,7 +96,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 
 ---
 
-## [0.2.0] - 2025-02-01
+## [0.2.0]
 
 ### Added
 - `tanstackQuery()` plugin — generates TanStack Query v5 hooks
@@ -110,7 +110,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 
 ---
 
-## [0.1.0] - 2025-01-15
+## [0.1.0]
 
 ### Added
 - `typescript()` plugin — generates TypeScript types from OpenAPI schemas
