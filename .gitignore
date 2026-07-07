@@ -5,3 +5,4 @@ src/api/generated/
 .DS_Store
 bugs.md
 .idea/
+TEST_PLAN.md
