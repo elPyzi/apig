@@ -1,0 +1,111 @@
+# Custom Plugin
+
+You can extend apig with your own plugin implementing the `ApigPlugin` interface.
+
+## Real interface (import from `@travjek/apig`)
+
+```ts
+interface ApigPlugin {
+  name: string;          // unique plugin name
+  fileName: string;       // base output filename, no extension ("sdk" → "sdk.ts")
+  scope: 'root' | 'operations'; // "root" = once for full IR, "operations" = per group under groupBy
+  generate: (ir: IR, config: ApigConfig, ctx?: PluginContext) => PluginResult;
+  generateRootFiles?: (ir: IR, config: ApigConfig) => ExtraFile[]; // optional shared files
+  withTypes?: boolean;    // default true
+}
+
+interface PluginResult {
+  code: string;
+  exports: string[];
+  typeExports: string[];
+}
+```
+
+There is **no** exported type named `Plugin` — it's `ApigPlugin`. `generate()` returns a single `PluginResult` object (`{ code, exports, typeExports }`), **not** an array of `{ fileName, code }` file objects.
+
+## Minimal Example
+
+```ts
+import type { ApigPlugin } from '@travjek/apig'
+
+export const myPlugin = (): ApigPlugin => ({
+  name: 'my-plugin',
+  fileName: 'my-output',
+  scope: 'root',
+  generate(ir) {
+    const lines = ir.operations.map(
+      (op) => `// ${op.method.toUpperCase()} ${op.path} → ${op.id}`
+    )
+
+    return {
+      code: lines.join('\n'),
+      exports: [],
+      typeExports: [],
+    }
+  },
+})
+```
+
+Usage in config:
+
+```ts
+import { defineConfig } from '@travjek/apig'
+import { myPlugin } from './my-plugin'
+
+export default defineConfig({
+  input: './openapi.json',
+  output: './src/api',
+  plugins: [myPlugin()],
+})
+```
+
+## IR (Intermediate Representation)
+
+```ts
+interface IR {
+  operations: IROperation[]
+  schemas: IRSchema[]
+}
+
+interface IROperation {
+  id: string           // operationId, after `rename` is applied
+  method: string         // 'get' | 'post' | 'put' | 'patch' | 'delete'
+  path: string           // '/users/{id}'
+  tag: string
+  params: { path: IRParam[]; query: IRParam[] }
+  body?: { schema: IRSchema; required: boolean; contentType: string }
+  response?: IRSchema
+  errors?: { status: string; schema: IRSchema }[]
+}
+```
+
+## Checking for another plugin
+
+```ts
+generate(ir, config) {
+  const hasFaker = (config.plugins ?? []).some((p) => p.name === 'faker')
+  if (!hasFaker) throw new Error('my-plugin requires the faker() plugin')
+}
+```
+
+This is exactly what the built-in `msw()` plugin does — it throws if `faker()` isn't in the plugins array.
+
+## `scope: 'operations'` and `PluginContext`
+
+Plugins with `scope: 'operations'` (like `sdk`, `tanstackQuery`, `swr`) are called once per group when `groupBy` is `'tags'` or `'endpoints'`. `generate` receives a `ctx` with import paths to use instead of hardcoding:
+
+```ts
+generate: (ir, config, ctx) => {
+  const sdkImport = ctx?.sdkImportPath ?? './sdk' // changes depending on groupBy
+}
+```
+
+## `generateRootFiles` — shared files
+
+If a plugin needs to emit one file shared across all groups (e.g. `query-keys.ts`), use `generateRootFiles`:
+
+```ts
+generateRootFiles: (ir, config) => [
+  { fileName: 'my-shared-file.ts', code: '/* ... */' },
+],
+```
