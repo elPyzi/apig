@@ -14,7 +14,6 @@
       "devDependencies": {
         "@commitlint/cli": "^21.2.1",
         "@commitlint/config-conventional": "^21.2.0",
-        "@faker-js/faker": "10.4.0",
         "@types/bun": "latest",
         "husky": "^9.1.7",
         "tsc-alias": "1.8.17",
