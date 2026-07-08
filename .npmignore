@@ -1,4 +1,6 @@
 src/
+docs/
+examples/
 test/
 __fixtures__/
 **/__fixtures__/

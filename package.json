@@ -32,6 +32,7 @@
     "rest-api",
     "cli"
   ],
+  "readme": "README.npm.md",
   "author": "danilapyzhikov",
   "license": "MIT",
   "repository": {
@@ -55,8 +56,7 @@
   },
   "files": [
     "dist",
-    "README.md",
-    "readme"
+    "README.npm.md"
   ],
   "scripts": {
     "build": "bun build src/cli.ts src/index.ts src/client/index.ts --outdir dist --target node --minify --external jiti && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",

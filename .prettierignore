@@ -1,33 +1,11 @@
 node_modules
-
-# Build outputs
-.next
-out
 dist
-build
-coverage
+bun.lock
 
-.env
-.env.*
 *.log
-
-package-lock.json
-
-*.min.js
-*.min.css
-*.map
 *.d.ts
+*.min.js
+*.map
 
-public
-static
-
-.idea
-.vscode
 .DS_Store
-
-storybook-static
-
-**/__snapshots__/**
-
-*.pdf
-*.zip
+.idea

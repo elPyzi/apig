@@ -1,7 +1,5 @@
 # @travjek/apig
 
-OpenAPI code generator for TypeScript with a plugin system.
-
 A powerful, developer-friendly OpenAPI code generator that takes the pain out of API integration — and makes your day a little happier.
 
 ## Install
@@ -57,30 +55,6 @@ apig versions           # list saved snapshots
 apig info               # show spec stats without generating
 ```
 
-## Documentation
-
-- [Configuration](./docs/en/config.md)
-- [CLI](./docs/en/cli.md)
-- [Plugins](./docs/en/plugins/index.md)
-  - [typescript()](./docs/en/plugins/typescript.md)
-  - [sdk()](./docs/en/plugins/sdk.md)
-  - [zod()](./docs/en/plugins/zod.md)
-  - [valibot()](./docs/en/plugins/valibot.md)
-  - [yup()](./docs/en/plugins/yup.md)
-  - [tanstackQuery()](./docs/en/plugins/tanstack-query.md)
-  - [swr()](./docs/en/plugins/swr.md)
-  - [rhf()](./docs/en/plugins/rhf.md)
-  - [faker()](./docs/en/plugins/faker.md)
-  - [msw()](./docs/en/plugins/msw.md)
-- [Creating a custom plugin](./docs/en/custom-plugin.md)
-- [ApigError client](./docs/en/client.md)
-- [Cache](./docs/en/cache.md)
-- [endpointsMap](./docs/en/endpoints-map.md)
-
 ## License
 
 MIT
-
----
-
-[Русский](./docs/ru/README.md) · [中文](./docs/zh/README.md) · [Deutsch](./docs/de/README.md) · [Français](./docs/fr/README.md) · [Español](./docs/es/README.md) · [日本語](./docs/ja/README.md) · [한국어](./docs/ko/README.md) · [Português](./docs/pt/README.md)
