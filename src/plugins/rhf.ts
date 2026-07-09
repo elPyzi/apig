@@ -7,6 +7,7 @@ import {
   type RhfOptions,
   type RhfResolver,
   banner,
+  DEFAULTS,
 } from '@models';
 import { toPascalCase, toCamelCase } from '../libs';
 
@@ -70,7 +71,7 @@ export const generateRhf = (
 export const rhf = (options: RhfOptions): ApigPlugin => {
   const opts: Required<RhfOptions> = {
     resolver: options.resolver,
-    schemaSuffix: options.schemaSuffix ?? 'Schema',
+    schemaSuffix: options.schemaSuffix ?? DEFAULTS.PLUGINS.RHF.schemaSuffix,
     schemasImportPath: options.schemasImportPath ?? `./${options.resolver}`,
   };
 

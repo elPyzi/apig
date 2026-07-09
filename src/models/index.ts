@@ -68,3 +68,5 @@ export type {
 } from './plugin';
 export { QUERY_KEYS_STYLE } from './plugin';
 export type { LoadSpecResult } from './swagger';
+export { DEFAULTS } from './defaults';
+export type { TanstackFramework, SwrFramework } from './plugin';

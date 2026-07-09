@@ -8,6 +8,7 @@ import {
   type IR,
   banner,
   HTTP_METHODS,
+  DEFAULTS,
 } from '@models';
 import {
   toCamelCase,
@@ -28,9 +29,9 @@ import {
  * @example swr({ queryKeysStyle: "object" })
  */
 export const swr = (options: SwrOptions = {}): ApigPlugin => {
-  const style = options.queryKeysStyle ?? 'functions';
-  const hookGenerationStrategies = options.hookGenerationStrategies ?? {};
-  const framework = options.framework ?? 'react';
+  const style = options.queryKeysStyle ?? DEFAULTS.PLUGINS.SWR.queryKeysStyle;
+  const hookGenerationStrategies = options.hookGenerationStrategies ?? DEFAULTS.PLUGINS.SWR.hookGenerationStrategies;
+  const framework = options.framework ?? DEFAULTS.PLUGINS.SWR.framework;
 
   const plugin: ApigPlugin = {
     name: 'swr',
@@ -70,7 +71,7 @@ export const generateSwr = (
   hookGenerationStrategies: Record<string, { query?: boolean; mutation?: boolean }> = {},
   configImportPath = './config',
   customErrorImportPath?: string,
-  framework: SwrFramework = 'react',
+  framework: SwrFramework = DEFAULTS.PLUGINS.SWR.framework,
 ): PluginResult => {
   const typesImport = getTypesImport(config);
   const errCfg = getErrorConfig(config);

@@ -1,12 +1,9 @@
 import { describe, test, expect } from 'bun:test';
 import { yup, generateYup } from '../yup';
 import { baseConfig, emptyIR, makeSchema, makeProp, makeIR } from './fixtures';
+import { DEFAULTS } from '@models';
 
-const opts = (overrides = {}) => ({
-  withTypes: true,
-  schemaSuffix: 'Schema',
-  ...overrides,
-});
+const opts = (overrides = {}) => ({ ...DEFAULTS.PLUGINS.YUP, ...overrides });
 
 describe('yup', () => {
   describe('фабрика', () => {

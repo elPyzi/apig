@@ -7,6 +7,7 @@ import {
   type IR,
   banner,
   HTTP_METHODS,
+  DEFAULTS,
 } from '@models';
 import {
   toCamelCase,
@@ -24,15 +25,7 @@ import {
 } from '../libs';
 import type { TanstackFrameworkConfig } from '../libs';
 
-const DEFAULT_OPTS: Required<TanstackQueryOptions> = {
-  query: true,
-  mutation: true,
-  infinite: false,
-  suspense: false,
-  queryKeysStyle: 'functions',
-  hookGenerationStrategies: {},
-  framework: 'react',
-};
+const DEFAULT_OPTS = DEFAULTS.PLUGINS.TANSTACK;
 
 /**
  * Generates TanStack Query hooks from OpenAPI operations.
@@ -87,7 +80,7 @@ export const generateTanstack = (
   config: ApigConfig,
   sdkImportPath = './sdk',
   queryKeysImportPath = './query-keys',
-  opts: Required<TanstackQueryOptions> = DEFAULT_OPTS,
+  opts: Required<TanstackQueryOptions> = { ...DEFAULT_OPTS },
   configImportPath = './config',
   customErrorImportPath?: string,
 ): PluginResult => {

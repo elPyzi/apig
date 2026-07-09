@@ -1,12 +1,9 @@
 import { describe, test, expect } from 'bun:test';
 import { valibot, generateValibot } from '../valibot';
 import { baseConfig, emptyIR, makeSchema, makeProp, makeIR } from './fixtures';
+import { DEFAULTS } from '@models';
 
-const opts = (overrides = {}) => ({
-  withTypes: true,
-  schemaSuffix: 'Schema',
-  ...overrides,
-});
+const opts = (overrides = {}) => ({ ...DEFAULTS.PLUGINS.VALIBOT, ...overrides });
 
 describe('valibot', () => {
   describe('фабрика', () => {

@@ -6,6 +6,7 @@ import {
   type PluginResult,
   type ZodOptions,
   banner,
+  DEFAULTS,
 } from '@models';
 import { toPascalCase, generateZodSchema } from '../libs';
 import type { ZodOpts } from '../libs';
@@ -70,14 +71,7 @@ const collectRefsOf = (schema: IRSchema): Set<string> => {
   return out;
 };
 
-const DEFAULT_OPTS: ZodOpts = {
-  infer: true,
-  input: false,
-  output: false,
-  validateResponse: false,
-  withTypes: true,
-  schemaSuffix: 'Schema',
-};
+const DEFAULT_OPTS = DEFAULTS.PLUGINS.ZOD;
 
 /**
  * Generates Zod validation schemas from OpenAPI schemas.
@@ -108,7 +102,7 @@ export const zod = (options: ZodOptions = {}): ApigPlugin => {
 export const generateZod = (
   ir: IR,
   config: ApigConfig,
-  opts: ZodOpts = DEFAULT_OPTS,
+  opts: ZodOpts = { ...DEFAULT_OPTS },
 ): PluginResult => {
   const lines: string[] = [banner, '', "import { z } from 'zod';", ''];
 

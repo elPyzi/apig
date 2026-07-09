@@ -1,15 +1,9 @@
 import { describe, test, expect } from 'bun:test';
 import { tanstackQuery, generateTanstack } from '../tanstack';
 import { baseConfig, emptyIR, makeOperation, makeIR } from './fixtures';
-import { HTTP_METHODS } from '@models';
+import { HTTP_METHODS, DEFAULTS } from '@models';
 
-const DEFAULT_OPTS = {
-  query: true,
-  mutation: true,
-  infinite: false,
-  suspense: false,
-  queryKeysStyle: 'functions' as const,
-};
+const DEFAULT_OPTS = DEFAULTS.PLUGINS.TANSTACK;
 
 describe('tanstack-query', () => {
   describe('фабрика', () => {

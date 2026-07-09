@@ -5,14 +5,12 @@ import {
   type PluginResult,
   type YupOptions,
   banner,
+  DEFAULTS,
 } from '@models';
 import { toPascalCase, generateYupSchema } from '../libs';
 import type { YupOpts } from '../libs';
 
-const DEFAULT_OPTS: YupOpts = {
-  withTypes: true,
-  schemaSuffix: 'Schema',
-};
+const DEFAULT_OPTS = DEFAULTS.PLUGINS.YUP;
 
 /**
  * Generates Yup validation schemas from OpenAPI schemas.
@@ -39,7 +37,7 @@ export const yup = (options: YupOptions = {}): ApigPlugin => {
 export const generateYup = (
   ir: IR,
   config: ApigConfig,
-  opts: YupOpts = DEFAULT_OPTS,
+  opts: YupOpts = { ...DEFAULT_OPTS },
 ): PluginResult => {
   const lines: string[] = [banner, '', "import * as yup from 'yup';", ''];
 
