@@ -20,7 +20,9 @@ import {
   generateSuspenseQuery,
   generateTanstackMutation,
   generateQueryKeysFile,
+  getFrameworkConfig,
 } from '../libs';
+import type { TanstackFrameworkConfig } from '../libs';
 
 const DEFAULT_OPTS: Required<TanstackQueryOptions> = {
   query: true,
@@ -29,6 +31,7 @@ const DEFAULT_OPTS: Required<TanstackQueryOptions> = {
   suspense: false,
   queryKeysStyle: 'functions',
   hookGenerationStrategies: {},
+  framework: 'react',
 };
 
 /**
@@ -49,6 +52,7 @@ export const tanstackQuery = (
     suspense: options.suspense ?? false,
     queryKeysStyle: options.queryKeysStyle ?? 'functions',
     hookGenerationStrategies: options.hookGenerationStrategies ?? {},
+    framework: options.framework ?? 'react',
   };
 
   const plugin: ApigPlugin = {
@@ -87,6 +91,7 @@ export const generateTanstack = (
   configImportPath = './config',
   customErrorImportPath?: string,
 ): PluginResult => {
+  const fw = getFrameworkConfig(opts.framework);
   const typesImport = getTypesImport(config);
   const style = opts.queryKeysStyle;
 
@@ -123,7 +128,7 @@ export const generateTanstack = (
   const lines: string[] = [
     banner,
     '',
-    buildTanstackImports(usedHooks),
+    buildTanstackImports(usedHooks, fw),
     `import { ${sdkFunctions.join(', ')} } from '${sdkImportPath}';`,
   ];
 
@@ -169,28 +174,28 @@ export const generateTanstack = (
         lines.push(generateQueryKeyFn(op));
         lines.push('');
       }
-      lines.push(generateQuery(op, style, errorHandling, rawResponse, errCfg.className));
+      lines.push(generateQuery(op, style, errorHandling, rawResponse, errCfg.className, fw));
       lines.push('');
       if (style === 'functions') exports.push(`${name}QueryKey`);
-      exports.push(`${name}QueryOptions`, `use${pascalName}Query`);
+      exports.push(`${name}QueryOptions`, `${fw.exportPrefix}${pascalName}Query`);
     }
 
     if (genInfinite) {
-      lines.push(generateInfiniteQuery(op, style));
+      lines.push(generateInfiniteQuery(op, style, errCfg.className, fw));
       lines.push('');
-      exports.push(`useInfinity${pascalName}Query`);
+      exports.push(`${fw.exportPrefix}Infinity${pascalName}Query`);
     }
 
     if (genSuspense) {
-      lines.push(generateSuspenseQuery(op));
+      lines.push(generateSuspenseQuery(op, fw));
       lines.push('');
-      exports.push(`useSuspense${pascalName}Query`);
+      exports.push(`${fw.exportPrefix}Suspense${pascalName}Query`);
     }
 
     if (genMutation) {
-      lines.push(generateTanstackMutation(op, errorHandling, rawResponse, errCfg.className));
+      lines.push(generateTanstackMutation(op, errorHandling, rawResponse, errCfg.className, fw));
       lines.push('');
-      exports.push(`use${pascalName}Mutation`);
+      exports.push(`${fw.exportPrefix}${pascalName}Mutation`);
     }
   }
 

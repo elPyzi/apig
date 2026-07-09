@@ -4,6 +4,7 @@ import {
   type ExtraFile,
   type PluginResult,
   type SwrOptions,
+  type SwrFramework,
   type IR,
   banner,
   HTTP_METHODS,
@@ -29,6 +30,7 @@ import {
 export const swr = (options: SwrOptions = {}): ApigPlugin => {
   const style = options.queryKeysStyle ?? 'functions';
   const hookGenerationStrategies = options.hookGenerationStrategies ?? {};
+  const framework = options.framework ?? 'react';
 
   const plugin: ApigPlugin = {
     name: 'swr',
@@ -44,6 +46,7 @@ export const swr = (options: SwrOptions = {}): ApigPlugin => {
         hookGenerationStrategies,
         ctx?.configImportPath ?? './config',
         ctx?.customErrorImportPath,
+        framework,
       ),
   };
 
@@ -67,6 +70,7 @@ export const generateSwr = (
   hookGenerationStrategies: Record<string, { query?: boolean; mutation?: boolean }> = {},
   configImportPath = './config',
   customErrorImportPath?: string,
+  framework: SwrFramework = 'react',
 ): PluginResult => {
   const typesImport = getTypesImport(config);
   const errCfg = getErrorConfig(config);
@@ -96,12 +100,17 @@ export const generateSwr = (
 
   const lines: string[] = [banner, ''];
 
-  if (mutationOps.length > 0) {
-    lines.push("import useSWRMutation from 'swr/mutation';");
-    lines.push("import type { SWRMutationConfiguration } from 'swr/mutation';");
-  }
-  if (queryOps.length > 0) {
-    lines.push(`import useSWR, { type SWRConfiguration } from 'swr';`);
+  if (framework === 'vue') {
+    if (queryOps.length > 0) lines.push(`import useSWRV from 'swrv';`);
+    if (mutationOps.length > 0) lines.push(`import { mutate } from 'swrv';`);
+  } else {
+    if (mutationOps.length > 0) {
+      lines.push("import useSWRMutation from 'swr/mutation';");
+      lines.push("import type { SWRMutationConfiguration } from 'swr/mutation';");
+    }
+    if (queryOps.length > 0) {
+      lines.push(`import useSWR, { type SWRConfiguration } from 'swr';`);
+    }
   }
 
   if (sdkFunctions.length > 0) {

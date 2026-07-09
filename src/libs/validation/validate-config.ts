@@ -39,7 +39,6 @@ const DOCS_LINKS: Record<string, string> = {
   versioning: `${DOCS_BASE}/config/versioning`,
   baseUrl: `${DOCS_BASE}/config/base-url`,
   index: `${DOCS_BASE}/config/index`,
-  validate: `${DOCS_BASE}/config/validate`,
   endpointsMap: `${DOCS_BASE}/config/endpoints-map`,
   apiLogging: `${DOCS_BASE}/config/api-logging`,
   cliLogging: `${DOCS_BASE}/config/cli-logging`,
@@ -266,11 +265,6 @@ export const validateConfig = (config: ApigConfig): void => {
   // index
   if (config.index !== undefined && typeof config.index !== 'boolean') {
     errors.push(`index must be a boolean`);
-  }
-
-  // validate
-  if (config.validate !== undefined && typeof config.validate !== 'boolean') {
-    errors.push(`validate must be a boolean`);
   }
 
   // filter

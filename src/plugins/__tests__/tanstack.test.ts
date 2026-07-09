@@ -227,4 +227,47 @@ describe('tanstack-query', () => {
       expect(result.exports).toContain('useCreateUserMutation');
     });
   });
+
+  describe('framework', () => {
+    const ir = makeIR([
+      makeOperation({ id: 'getUsers', method: HTTP_METHODS.GET, path: '/users' }),
+      makeOperation({ id: 'createUser', method: HTTP_METHODS.POST, path: '/users' }),
+    ]);
+
+    test('react (default) — импортирует из @tanstack/react-query с use* хуками', () => {
+      const result = generateTanstack(ir, baseConfig);
+      expect(result.code).toContain("from '@tanstack/react-query'");
+      expect(result.code).toContain('useQuery');
+      expect(result.code).toContain('useMutation');
+      expect(result.exports).toContain('useGetUsersQuery');
+      expect(result.exports).toContain('useCreateUserMutation');
+    });
+
+    test('vue — импортирует из @tanstack/vue-query с use* хуками', () => {
+      const opts = { ...DEFAULT_OPTS, hookGenerationStrategies: {}, framework: 'vue' as const };
+      const result = generateTanstack(ir, baseConfig, './sdk', './query-keys', opts);
+      expect(result.code).toContain("from '@tanstack/vue-query'");
+      expect(result.code).toContain('useQuery');
+      expect(result.exports).toContain('useGetUsersQuery');
+      expect(result.exports).toContain('useCreateUserMutation');
+    });
+
+    test('solid — импортирует из @tanstack/solid-query с create* хуками', () => {
+      const opts = { ...DEFAULT_OPTS, hookGenerationStrategies: {}, framework: 'solid' as const };
+      const result = generateTanstack(ir, baseConfig, './sdk', './query-keys', opts);
+      expect(result.code).toContain("from '@tanstack/solid-query'");
+      expect(result.code).toContain('createQuery');
+      expect(result.code).toContain('createMutation');
+      expect(result.exports).toContain('createGetUsersQuery');
+      expect(result.exports).toContain('createCreateUserMutation');
+    });
+
+    test('svelte — импортирует из @tanstack/svelte-query с create* хуками', () => {
+      const opts = { ...DEFAULT_OPTS, hookGenerationStrategies: {}, framework: 'svelte' as const };
+      const result = generateTanstack(ir, baseConfig, './sdk', './query-keys', opts);
+      expect(result.code).toContain("from '@tanstack/svelte-query'");
+      expect(result.code).toContain('createQuery');
+      expect(result.exports).toContain('createGetUsersQuery');
+    });
+  });
 });

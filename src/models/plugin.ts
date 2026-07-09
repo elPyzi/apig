@@ -156,6 +156,12 @@ export const QUERY_KEYS_STYLE = {
 export type QueryKeysStyle =
   (typeof QUERY_KEYS_STYLE)[keyof typeof QUERY_KEYS_STYLE];
 
+/** Framework target for TanStack Query code generation. */
+export type TanstackFramework = 'react' | 'vue' | 'solid' | 'svelte';
+
+/** Framework target for SWR code generation. */
+export type SwrFramework = 'react' | 'vue';
+
 /**
  * Per-operation hook generation overrides for `tanstackQuery()`.
  * Each field overrides the top-level plugin option for this specific operation.
@@ -207,6 +213,15 @@ export interface TanstackQueryOptions {
    * @example { searchPets: { query: true } }
    */
   hookGenerationStrategies?: Record<string, TanstackHookStrategy>;
+  /**
+   * Target framework for generated hooks.
+   * - `"react"` — `@tanstack/react-query` (default)
+   * - `"vue"`   — `@tanstack/vue-query`
+   * - `"solid"` — `@tanstack/solid-query` (uses `create*` prefix)
+   * - `"svelte"` — `@tanstack/svelte-query` (uses `create*` prefix)
+   * @default "react"
+   */
+  framework?: TanstackFramework;
 }
 
 /** Resolver type for React Hook Form. */
@@ -249,4 +264,11 @@ export interface SwrOptions {
    * @example { searchPets: { query: true } }
    */
   hookGenerationStrategies?: Record<string, SwrHookStrategy>;
+  /**
+   * Target framework for generated hooks.
+   * - `"react"` — `swr` (default)
+   * - `"vue"`   — `swrv`
+   * @default "react"
+   */
+  framework?: SwrFramework;
 }

@@ -48,7 +48,9 @@ export {
   generateTanstackMutation,
   generateQueryKeysFile,
   buildTanstackImports,
+  getFrameworkConfig,
 } from '@services/codegen/tanstack/generate-tanstack-hooks';
+export type { TanstackFrameworkConfig } from '@services/codegen/tanstack/generate-tanstack-hooks';
 export {
   generateSwrKeyFn,
   buildSwrKeyEntry,

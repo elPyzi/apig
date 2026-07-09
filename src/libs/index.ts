@@ -49,12 +49,14 @@ export {
   generateTanstackMutation,
   generateQueryKeysFile,
   buildTanstackImports,
+  getFrameworkConfig,
   generateSwrKeyFn,
   buildSwrKeyEntry,
   generateSwrQueryHook,
   generateSwrMutationHook,
   generateSwrKeysFile,
 } from '@services/codegen';
+export type { TanstackFrameworkConfig } from '@services/codegen';
 export type {
   ErrorConfig,
   FnArg,
