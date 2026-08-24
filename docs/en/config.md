@@ -187,14 +187,6 @@ rename: {
 
 ---
 
-### `validate`
-
-**Type:** `boolean`
-
-> **Known quirk:** this field is currently not read anywhere in code generation besides a type-check during config validation — it has no effect on actual behavior. Don't rely on it.
-
----
-
 ### `endpointsMap`
 
 **Type:** `boolean`  

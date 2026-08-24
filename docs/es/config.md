@@ -187,14 +187,6 @@ rename: {
 
 ---
 
-### `validate`
-
-**Tipo:** `boolean`
-
-> **Particularidad conocida:** en este momento este campo no se lee en ningún lugar de la generación de código, salvo en la comprobación de tipos al validar la configuración — no afecta al comportamiento real. No confíes en él.
-
----
-
 ### `endpointsMap`
 
 **Tipo:** `boolean`  

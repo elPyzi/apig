@@ -2,6 +2,54 @@
 
 All notable changes to `@travjek/apig` will be documented in this file.
 
+## [0.10.0]
+
+### Added
+- `mcp()` plugin — generates an MCP server exposing every operation as a tool, so an AI assistant can call the API through the generated SDK. Requires `sdk()` and `zod()`
+- Plugin dependency validation — `msw()` without `faker()`, `mcp()` without `sdk()`/`zod()`, and `rhf()` without a validation plugin are now caught during config validation instead of failing mid-generation
+- `schemaSuffix` is exposed on validation plugins, so `mcp()` resolves imported schema names without the option being repeated by hand
+- `@modelcontextprotocol/sdk` declared as an optional peer dependency, alongside a runtime-requirements header in the generated `mcp.ts` — a missing install otherwise shows up only as the MCP client closing the connection with no reason
+- `apiLogging` combined with `mcp()` is now a config error: the SDK's `console.log` writes to stdout, which is the MCP transport
+
+### Fixed
+- A non-JSON error response (a gateway 502, a plain-text 404) made the generated fetch SDK throw a JSON parse error and lose the status code entirely. Error bodies now go through a `parseErrorBody` helper that falls back to text
+
+---
+
+## [0.9.0]
+
+### Added
+- `framework` option for `tanstackQuery()` and `swr()` — Vue, Solid and Svelte targets alongside React
+- Plugin option types (`ZodOptions`, `TanstackQueryOptions`, `SdkOptions`, …) are now exported from the package root
+- `toQuery` helper is emitted into `config.ts` when generating fetch-based SDKs with query parameters
+
+### Fixed
+- `msw()` emitted an internal `@/plugins/faker` import into user code, so the generated `msw.ts` never compiled
+- Generated fetch calls passed the typed params object straight to `new URLSearchParams`, which fails `tsc --strict` on any non-string query parameter, always appended a trailing `?`, serialized `undefined` as the string `"undefined"` and ignored array values
+- `zod({ withTypes: false })` (and the valibot/yup equivalents) still made the SDK import its types from the validation file, which no longer exported them
+- Root-scoped plugins (`faker()`, `msw()`, `rhf()`) built import paths as if they were nested, breaking every layout except `groupBy: 'none'`
+- Custom `fileName` on a plugin was ignored by importers, which always assumed the default name
+- `apig --version` reported a hardcoded `0.0.1`; it now reads the installed package version
+- `allOf` with an empty `schemas` list crashed zod and yup generation
+
+### Changed
+- `clean` no longer deletes the whole output directory — only files carrying the generator's banner are removed, and anything else is kept and reported. `deletedFiles` in the run summary is now accurate instead of always `0`
+- Generated `config.ts` carries the standard banner like every other generated file
+- The five HTTP client adapters were collapsed into one table-driven module
+
+### Removed
+- `validate` config option from the docs — it was never read by `ApigConfig`, and passing it fails validation as an unknown property
+
+---
+
+## [0.8.1]
+
+### Changed
+- Plugin default values centralized into a single `DEFAULTS` constant
+- `@faker-js/faker` dropped from devDependencies
+
+---
+
 ## [0.8.0]
 
 ### Added
