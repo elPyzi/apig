@@ -1,6 +1,6 @@
 {
   "name": "@travjek/apig",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "type": "module",
   "description": "OpenAPI code generator for TypeScript with a plugin system — generates types, SDK, Zod/Valibot/Yup schemas, TanStack Query / SWR hooks, React Hook Form resolvers, Faker factories and MSW handlers",
   "keywords": [
@@ -46,13 +46,17 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./client": {
-      "import": "./dist/client/index.js",
-      "types": "./dist/client/index.d.ts"
-    }
+      "types": "./dist/client/index.d.ts",
+      "import": "./dist/client/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "files": [
     "dist",
@@ -61,11 +65,15 @@
     ".claude-plugin"
   ],
   "scripts": {
-    "build": "bun build src/cli.ts src/index.ts src/client/index.ts --outdir dist --target node --minify --external jiti && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+    "build": "rm -rf dist && bun build src/cli.ts src/index.ts src/client/index.ts --outdir dist --target node --minify --external jiti && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "dev": "bun src/cli.ts",
     "generate": "bun src/cli.ts generate",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint src --deny-warnings",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\"",
     "test": "bun test",
-    "prepublish": "bun run build",
+    "prepublishOnly": "bun run build",
     "prepare": "husky"
   },
   "dependencies": {
@@ -79,8 +87,11 @@
   "devDependencies": {
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.2.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@types/bun": "latest",
     "husky": "^9.1.7",
+    "oxlint": "^1.78.0",
+    "prettier": "^3.9.6",
     "tsc-alias": "1.8.17",
     "typescript": "5.8.3"
   },
@@ -93,7 +104,8 @@
     "yup": ">=1.0.0",
     "msw": ">=2.0.0",
     "@hookform/resolvers": ">=3.0.0",
-    "@faker-js/faker": ">=9.0.0"
+    "@faker-js/faker": ">=9.0.0",
+    "@modelcontextprotocol/sdk": ">=1.0.0"
   },
   "peerDependenciesMeta": {
     "@tanstack/react-query": {
@@ -118,6 +130,9 @@
       "optional": true
     },
     "@faker-js/faker": {
+      "optional": true
+    },
+    "@modelcontextprotocol/sdk": {
       "optional": true
     }
   }

@@ -187,14 +187,6 @@ rename: {
 
 ---
 
-### `validate`
-
-**Typ:** `boolean`
-
-> **Bekannte Einschränkung:** Aktuell wird dieses Feld an keiner Stelle der Codegenerierung ausgelesen, außer bei der Typprüfung während der Konfigurationsvalidierung — es hat keinen Einfluss auf das tatsächliche Verhalten. Verlass dich nicht darauf.
-
----
-
 ### `endpointsMap`
 
 **Typ:** `boolean`  

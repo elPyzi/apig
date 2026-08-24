@@ -26,7 +26,7 @@ export const generateTypes = (ir: IR, config: ApigConfig): PluginResult => {
   const lines: string[] = [banner, ''];
 
   for (const schema of ir.schemas) {
-    const generated = generateSchema(schema, config);
+    const generated = generateSchema(schema, config, ir.schemas);
     if (generated) {
       lines.push(generated);
       lines.push('');

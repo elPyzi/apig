@@ -26,10 +26,17 @@ export const generateYupSchema = (
 
   if (schema.type === 'object' && schema.properties) {
     const fields = schema.properties
-      .map((prop) => `  ${prop.name}: ${generateYupProperty(prop, allSchemas, opts.schemaSuffix)},`)
+      .map(
+        (prop) =>
+          `  ${prop.name}: ${generateYupProperty(prop, allSchemas, opts.schemaSuffix)},`,
+      )
       .join('\n');
     lines.push(`export const ${varName} = yup.object({\n${fields}\n});`);
-  } else if (schema.type === 'allOf' || schema.type === 'oneOf' || schema.type === 'anyOf') {
+  } else if (
+    schema.type === 'allOf' ||
+    schema.type === 'oneOf' ||
+    schema.type === 'anyOf'
+  ) {
     lines.push(
       `export const ${varName} = ${generateYupValue(
         schema,

@@ -72,7 +72,10 @@ export const saveSnapshot = (params: SaveSnapshotParams): string => {
     const pinVersions = versioning.pinVersions ?? [];
     const allSnapshots = storage.list();
 
-    if (pinVersions.length >= versioning.maxSaves && allSnapshots.length >= versioning.maxSaves) {
+    if (
+      pinVersions.length >= versioning.maxSaves &&
+      allSnapshots.length >= versioning.maxSaves
+    ) {
       throw new Error(
         `All ${versioning.maxSaves} pinned versions are protected — ` +
           `remove at least one entry from pinVersions or increase maxSaves to continue saving snapshots.`,

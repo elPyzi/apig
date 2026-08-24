@@ -1,0 +1,58 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "Query styles", "version": "1.0.0" },
+  "paths": {
+    "/items": {
+      "get": {
+        "operationId": "listItems",
+        "tags": ["items"],
+        "parameters": [
+          {
+            "name": "tags",
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "style": "form",
+            "explode": false,
+            "schema": { "type": "array", "items": { "type": "integer" } }
+          },
+          {
+            "name": "cols",
+            "in": "query",
+            "style": "pipeDelimited",
+            "explode": false,
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "words",
+            "in": "query",
+            "style": "spaceDelimited",
+            "explode": false,
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["on", "off"] }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

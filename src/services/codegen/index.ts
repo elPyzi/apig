@@ -1,5 +1,8 @@
 export { getClientImport } from '@services/codegen/common/get-client-import';
-export { getBaseUrl, resetBaseUrlWarning } from '@services/codegen/common/get-base-url';
+export {
+  getBaseUrl,
+  resetBaseUrlWarning,
+} from '@services/codegen/common/get-base-url';
 export { getUrl } from '@services/codegen/common/get-url';
 export { generateFunction } from '@services/codegen/sdk/generate-function';
 export { generateSchema } from '@services/codegen/typescript/generate-schema';
@@ -14,17 +17,34 @@ export { buildJsDoc } from '@services/codegen/common/jsdoc';
 export {
   apigErrorCode,
   apigResponseCode,
+  toQueryCode,
+  parseErrorBodyCode,
+  PARSE_ERROR_FN,
   APIG_ERROR_CLASS,
   APIG_CONFIG_FILE,
+  TO_QUERY_FN,
   buildApigConfigFile,
 } from '@services/codegen/common/apig-error';
+export {
+  needsQueryHelper,
+  needsParseErrorHelper,
+  usesFetch,
+} from '@services/codegen/common/needs-query-helper';
 export {
   generateErrorType,
   getErrorTypeName,
 } from '@services/codegen/common/generate-error-types';
-export { getErrorConfig, resolveErrorImportPath } from '@services/codegen/common/get-error-config';
+export {
+  getErrorConfig,
+  resolveErrorImportPath,
+} from '@services/codegen/common/get-error-config';
 export type { ErrorConfig } from '@services/codegen/common/get-error-config';
 export { getTypesImport } from '@services/codegen/common/get-types-import';
+export {
+  findPlugin,
+  getRootPrefix,
+  getRootPluginImport,
+} from '@services/codegen/common/get-plugin-import';
 export { generateZodSchema } from '@services/codegen/zod/generate-zod-schema';
 export type { ZodOpts } from '@services/codegen/zod/generate-zod-schema';
 export { generateValibotSchema } from '@services/codegen/valibot/generate-valibot-schema';
@@ -32,6 +52,15 @@ export type { ValibotOpts } from '@services/codegen/valibot/generate-valibot-sch
 export { generateYupSchema } from '@services/codegen/yup/generate-yup-schema';
 export type { YupOpts } from '@services/codegen/yup/generate-yup-schema';
 export { generateFakerFactory } from '@services/codegen/faker/generate-faker-factory';
+export {
+  generateMcpTool,
+  toToolName,
+} from '@services/codegen/mcp/generate-mcp-tool';
+export {
+  buildInputSchema,
+  collectSchemaRefs,
+  operationSchemaRefs,
+} from '@services/codegen/mcp/input-schema';
 export {
   hasFakerPlugin,
   generateMswHandler,
@@ -48,7 +77,9 @@ export {
   generateTanstackMutation,
   generateQueryKeysFile,
   buildTanstackImports,
+  getFrameworkConfig,
 } from '@services/codegen/tanstack/generate-tanstack-hooks';
+export type { TanstackFrameworkConfig } from '@services/codegen/tanstack/generate-tanstack-hooks';
 export {
   generateSwrKeyFn,
   buildSwrKeyEntry,

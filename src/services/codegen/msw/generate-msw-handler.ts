@@ -1,7 +1,16 @@
-import { HTTP_METHODS, toHttpMethodLower, type IROperation, type ApigConfig } from '@models';
+import {
+  HTTP_METHODS,
+  toHttpMethodLower,
+  type IROperation,
+  type ApigConfig,
+} from '@models';
 import { toMswPath, getFakerResponse } from './utils';
 
-export { hasFakerPlugin, getMswUsedGenerators, getMswNeedsFaker } from './utils';
+export {
+  hasFakerPlugin,
+  getMswUsedGenerators,
+  getMswNeedsFaker,
+} from './utils';
 
 export const generateMswHandler = (
   operation: IROperation,

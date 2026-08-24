@@ -5,14 +5,12 @@ import {
   type PluginResult,
   type ValibotOptions,
   banner,
+  DEFAULTS,
 } from '@models';
 import { toPascalCase, generateValibotSchema } from '../libs';
 import type { ValibotOpts } from '../libs';
 
-const DEFAULT_OPTS: ValibotOpts = {
-  withTypes: true,
-  schemaSuffix: 'Schema',
-};
+const DEFAULT_OPTS = DEFAULTS.PLUGINS.VALIBOT;
 
 /**
  * Generates Valibot validation schemas from OpenAPI schemas.
@@ -32,6 +30,7 @@ export const valibot = (options: ValibotOptions = {}): ApigPlugin => {
     fileName: 'valibot',
     scope: 'root',
     withTypes: opts.withTypes,
+    schemaSuffix: opts.schemaSuffix,
     generate: (ir, config) => generateValibot(ir, config, opts),
   };
 };
@@ -39,7 +38,7 @@ export const valibot = (options: ValibotOptions = {}): ApigPlugin => {
 export const generateValibot = (
   ir: IR,
   config: ApigConfig,
-  opts: ValibotOpts = DEFAULT_OPTS,
+  opts: ValibotOpts = { ...DEFAULT_OPTS },
 ): PluginResult => {
   const lines: string[] = [banner, '', "import * as v from 'valibot';", ''];
 

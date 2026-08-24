@@ -6,12 +6,12 @@ import {
   banner,
 } from '@models';
 import {
-  toPascalCase,
   logger,
   hasFakerPlugin,
   generateMswHandler,
   getMswUsedGenerators,
   getMswNeedsFaker,
+  getRootPluginImport,
 } from '../libs';
 
 /**
@@ -32,8 +32,9 @@ export const generateMsw = (ir: IR, config: ApigConfig): PluginResult => {
   logger.plugin('msw', 'Generating handlers...');
 
   if (!hasFakerPlugin(config)) {
-    logger.error('msw plugin requires faker plugin — add "faker" to plugins');
-    throw new Error('msw plugin requires faker plugin');
+    throw new Error(
+      'msw plugin requires faker plugin — add faker() to plugins',
+    );
   }
 
   const usedGenerators = getMswUsedGenerators(ir.operations);
@@ -49,7 +50,7 @@ export const generateMsw = (ir: IR, config: ApigConfig): PluginResult => {
 
   if (usedGenerators.size > 0) {
     lines.push(
-      `import { ${[...usedGenerators].join(', ')} } from '@/plugins/faker';`,
+      `import { ${[...usedGenerators].join(', ')} } from '${getRootPluginImport(config, 'faker', 'root')}';`,
     );
   }
 

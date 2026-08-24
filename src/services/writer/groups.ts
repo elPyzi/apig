@@ -1,4 +1,4 @@
-import { join, resolve, relative, dirname } from 'path';
+import { join, resolve, relative } from 'path';
 import { mkdirSync } from 'fs';
 
 import type { ApigConfig, ApigPlugin, PluginResult } from '@models';
@@ -8,7 +8,10 @@ import type { WriteFn } from '@services/writer/write-fn';
 
 const VALIDATION_NAMES = new Set(['zod', 'valibot', 'yup']);
 
-const resolveCustomErrorPath = (userPath: string, generatedFileDir: string): string => {
+const resolveCustomErrorPath = (
+  userPath: string,
+  generatedFileDir: string,
+): string => {
   const abs = resolve(process.cwd(), userPath);
   const rel = relative(generatedFileDir, abs).replace(/\.ts$/, '');
   return rel.startsWith('.') ? rel : `./${rel}`;
@@ -67,16 +70,16 @@ export const writeOpPlugins = (
     if (plugin.scope !== 'operations') continue;
 
     const sdkImportPath = `./${fileBaseName}.${sdkFileName}`;
-    const configImportPath = queryKeysImportPath?.replace('query-keys', 'config') ?? './config';
+    const configImportPath =
+      queryKeysImportPath?.replace('query-keys', 'config') ?? './config';
     const eh = config.errorHandling;
     const customErrorImportPath =
       eh && typeof eh === 'object'
         ? resolveCustomErrorPath(eh.path, dir)
         : undefined;
-    const clientImportPath =
-      config.httpClient?.path
-        ? resolveCustomErrorPath(config.httpClient.path, dir)
-        : undefined;
+    const clientImportPath = config.httpClient?.path
+      ? resolveCustomErrorPath(config.httpClient.path, dir)
+      : undefined;
     const result = plugin.generate(ir, config, {
       sdkImportPath,
       queryKeysImportPath,
@@ -123,10 +126,9 @@ export const writeAll = (
       eh && typeof eh === 'object'
         ? resolveCustomErrorPath(eh.path, outputPath)
         : undefined;
-    const clientImportPath =
-      config.httpClient?.path
-        ? resolveCustomErrorPath(config.httpClient.path, outputPath)
-        : undefined;
+    const clientImportPath = config.httpClient?.path
+      ? resolveCustomErrorPath(config.httpClient.path, outputPath)
+      : undefined;
     const result = plugin.generate(ir, config, {
       sdkImportPath: './sdk',
       queryKeysImportPath: './query-keys',

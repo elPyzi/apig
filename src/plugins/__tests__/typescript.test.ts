@@ -3,22 +3,22 @@ import { typescript, generateTypes } from '../typescript';
 import { baseConfig, emptyIR, makeSchema, makeProp, makeIR } from './fixtures';
 
 describe('typescript', () => {
-  describe('фабрика', () => {
-    test('возвращает плагин с правильными мета', () => {
+  describe('factory', () => {
+    test('returns a plugin with the right metadata', () => {
       const plugin = typescript();
       expect(plugin.name).toBe('typescript');
       expect(plugin.fileName).toBe('types');
       expect(plugin.scope).toBe('root');
     });
 
-    test('принимает пустые опции', () => {
+    test('accepts empty options', () => {
       expect(() => typescript()).not.toThrow();
       expect(() => typescript({})).not.toThrow();
     });
   });
 
-  describe('пустой IR', () => {
-    test('содержит только banner', () => {
+  describe('empty IR', () => {
+    test('contains only the banner', () => {
       const result = generateTypes(emptyIR, baseConfig);
       expect(result.code).toContain('auto-generated');
       expect(result.exports).toEqual([]);
@@ -27,7 +27,7 @@ describe('typescript', () => {
   });
 
   describe('object schema', () => {
-    test('генерирует type из object схемы', () => {
+    test('generates a type from an object schema', () => {
       const ir = makeIR(
         [],
         [
@@ -44,13 +44,13 @@ describe('typescript', () => {
       expect(result.code).toContain('name');
     });
 
-    test('добавляет название в typeExports', () => {
+    test('adds the name to typeExports', () => {
       const ir = makeIR([], [makeSchema({ name: 'User', type: 'object' })]);
       const result = generateTypes(ir, baseConfig);
       expect(result.typeExports).toContain('User');
     });
 
-    test('несколько схем генерируются все', () => {
+    test('every one of several schemas is generated', () => {
       const ir = makeIR(
         [],
         [
@@ -64,7 +64,7 @@ describe('typescript', () => {
       expect(result.typeExports).toHaveLength(2);
     });
 
-    test('required свойство без ?', () => {
+    test('a required property has no ?', () => {
       const ir = makeIR(
         [],
         [
@@ -80,7 +80,7 @@ describe('typescript', () => {
       expect(result.code).not.toContain('id?:');
     });
 
-    test('optional свойство с ?', () => {
+    test('an optional property gets ?', () => {
       const ir = makeIR(
         [],
         [
@@ -97,7 +97,7 @@ describe('typescript', () => {
   });
 
   describe('enum schema', () => {
-    test('union style (default) генерирует type union', () => {
+    test('union style (default) generates a type union', () => {
       const ir = makeIR(
         [],
         [
@@ -115,7 +115,7 @@ describe('typescript', () => {
       expect(result.code).toContain('inactive');
     });
 
-    test('const style генерирует as const объект', () => {
+    test('const style generates an as const object', () => {
       const ir = makeIR(
         [],
         [
@@ -131,7 +131,7 @@ describe('typescript', () => {
       expect(result.code).toContain('as const');
     });
 
-    test('enum style генерирует enum', () => {
+    test('enum style generates an enum', () => {
       const ir = makeIR(
         [],
         [
@@ -149,13 +149,13 @@ describe('typescript', () => {
   });
 
   describe('exports', () => {
-    test('exports всегда пустой (только typeExports)', () => {
+    test('exports is always empty (typeExports only)', () => {
       const ir = makeIR([], [makeSchema({ name: 'User', type: 'object' })]);
       const result = generateTypes(ir, baseConfig);
       expect(result.exports).toEqual([]);
     });
 
-    test('схема без name не попадает в typeExports', () => {
+    test('a schema without a name stays out of typeExports', () => {
       const ir = makeIR([], [makeSchema({ type: 'object' })]);
       const result = generateTypes(ir, baseConfig);
       expect(result.typeExports).toEqual([]);

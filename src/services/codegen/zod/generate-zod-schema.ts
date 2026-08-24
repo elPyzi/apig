@@ -34,6 +34,7 @@ export const generateZodValue = (
     const [first, ...rest] = schema.schemas.map((s) =>
       generateZodValue(s, allSchemas, suffix, ownerName),
     );
+    if (!first) return withNullable('z.unknown()', schema);
     return withNullable(
       rest.reduce((acc, s) => `${acc}.and(${s})`, first),
       schema,
@@ -55,6 +56,17 @@ export const generateZodValue = (
     return withNullable(`z.enum([${values}])`, schema);
   }
 
+  if (schema.type === 'tuple' && schema.prefixItems) {
+    const members = schema.prefixItems
+      .map((s) => generateZodValue(s, allSchemas, suffix, ownerName))
+      .join(', ');
+    let expr = `z.tuple([${members}])`;
+    // `items` alongside `prefixItems` types the variadic remainder
+    if (schema.items)
+      expr += `.rest(${generateZodValue(schema.items, allSchemas, suffix, ownerName)})`;
+    return withNullable(expr, schema);
+  }
+
   if (schema.type === 'array' && schema.items) {
     let expr = `z.array(${generateZodValue(schema.items, allSchemas, suffix, ownerName)})`;
     if (schema.minItems !== undefined) expr += `.min(${schema.minItems})`;
@@ -64,17 +76,25 @@ export const generateZodValue = (
 
   if (schema.type === 'object' && schema.properties) {
     const fields = schema.properties
-      .map((prop) => `${quoteKey(prop.name)}: ${generateZodProperty(prop, allSchemas, suffix, ownerName)}`)
+      .map(
+        (prop) =>
+          `${quoteKey(prop.name)}: ${generateZodProperty(prop, allSchemas, suffix, ownerName)}`,
+      )
       .join(', ');
     return withNullable(`z.object({ ${fields} })`, schema);
   }
 
   switch (schema.type) {
-    case 'string':  return withNullable(zodString(schema), schema);
-    case 'number':  return withNullable(zodNumber(schema), schema);
-    case 'boolean': return withNullable('z.boolean()', schema);
-    case 'null':    return 'z.null()';
-    default:        return withNullable('z.unknown()', schema);
+    case 'string':
+      return withNullable(zodString(schema), schema);
+    case 'number':
+      return withNullable(zodNumber(schema), schema);
+    case 'boolean':
+      return withNullable('z.boolean()', schema);
+    case 'null':
+      return 'z.null()';
+    default:
+      return withNullable('z.unknown()', schema);
   }
 };
 
@@ -108,12 +128,19 @@ export const generateZodSchema = (
 
   if (schema.type === 'object' && schema.properties) {
     const fields = schema.properties
-      .map((prop) => `  ${quoteKey(prop.name)}: ${generateZodProperty(prop, allSchemas, opts.schemaSuffix, schema.name)},`)
+      .map(
+        (prop) =>
+          `  ${quoteKey(prop.name)}: ${generateZodProperty(prop, allSchemas, opts.schemaSuffix, schema.name)},`,
+      )
       .join('\n');
     lines.push(`export const ${varName} = z.object({\n${fields}\n});`);
   } else if (schema.type === 'object') {
     lines.push(`export const ${varName} = z.record(z.string(), z.unknown());`);
-  } else if (schema.type === 'allOf' || schema.type === 'oneOf' || schema.type === 'anyOf') {
+  } else if (
+    schema.type === 'allOf' ||
+    schema.type === 'oneOf' ||
+    schema.type === 'anyOf'
+  ) {
     lines.push(
       `export const ${varName} = ${generateZodValue(
         schema,
@@ -123,11 +150,17 @@ export const generateZodSchema = (
       )};`,
     );
   } else if (schema.type === 'array' && schema.items) {
-    lines.push(`export const ${varName} = z.array(${generateZodValue(schema.items, allSchemas, opts.schemaSuffix)});`);
+    lines.push(
+      `export const ${varName} = z.array(${generateZodValue(schema.items, allSchemas, opts.schemaSuffix)});`,
+    );
   } else if (schema.type === 'string') {
-    lines.push(`export const ${varName} = ${generateZodValue(schema, allSchemas, opts.schemaSuffix)};`);
+    lines.push(
+      `export const ${varName} = ${generateZodValue(schema, allSchemas, opts.schemaSuffix)};`,
+    );
   } else if (schema.type === 'number') {
-    lines.push(`export const ${varName} = ${generateZodValue(schema, allSchemas, opts.schemaSuffix)};`);
+    lines.push(
+      `export const ${varName} = ${generateZodValue(schema, allSchemas, opts.schemaSuffix)};`,
+    );
   } else if (schema.type === 'boolean') {
     lines.push(`export const ${varName} = z.boolean();`);
   } else {
@@ -135,13 +168,17 @@ export const generateZodSchema = (
   }
 
   if (opts.withTypes) {
-    if (opts.infer)  lines.push(`export type ${name} = z.infer<typeof ${varName}>;`);
-    if (opts.input)  lines.push(`export type ${name}Input = z.input<typeof ${varName}>;`);
-    if (opts.output) lines.push(`export type ${name}Output = z.output<typeof ${varName}>;`);
+    if (opts.infer)
+      lines.push(`export type ${name} = z.infer<typeof ${varName}>;`);
+    if (opts.input)
+      lines.push(`export type ${name}Input = z.input<typeof ${varName}>;`);
+    if (opts.output)
+      lines.push(`export type ${name}Output = z.output<typeof ${varName}>;`);
   }
 
   if (opts.validateResponse) {
-    const retType = opts.withTypes && opts.infer ? name : `z.infer<typeof ${varName}>`;
+    const retType =
+      opts.withTypes && opts.infer ? name : `z.infer<typeof ${varName}>`;
     lines.push(
       `export const validate${name}Response = (data: unknown): ${retType} => ${varName}.parse(data);`,
     );

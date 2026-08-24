@@ -16,7 +16,8 @@ export interface LoadResult {
 export const load = async (config: ApigConfig): Promise<LoadResult> => {
   logger.stage('Specification loading...');
 
-  const input = typeof config.input === 'function' ? await config.input() : config.input;
+  const input =
+    typeof config.input === 'function' ? await config.input() : config.input;
 
   if (config.cache) {
     const result = await fetchWithCache(input);

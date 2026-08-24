@@ -12,12 +12,16 @@ export const generateValibotValue = (
   }
 
   if (schema.type === 'allOf' && schema.schemas) {
-    const parts = schema.schemas.map((s) => generateValibotValue(s, allSchemas, suffix));
+    const parts = schema.schemas.map((s) =>
+      generateValibotValue(s, allSchemas, suffix),
+    );
     return withNullable(`v.intersect([${parts.join(', ')}])`, schema);
   }
 
   if ((schema.type === 'oneOf' || schema.type === 'anyOf') && schema.schemas) {
-    const variants = schema.schemas.map((s) => generateValibotValue(s, allSchemas, suffix));
+    const variants = schema.schemas.map((s) =>
+      generateValibotValue(s, allSchemas, suffix),
+    );
     const expr = schema.discriminator
       ? `v.variant('${schema.discriminator}', [${variants.join(', ')}])`
       : `v.union([${variants.join(', ')}])`;
@@ -29,27 +33,50 @@ export const generateValibotValue = (
     return withNullable(`v.picklist([${values}])`, schema);
   }
 
+  if (schema.type === 'tuple' && schema.prefixItems) {
+    const members = schema.prefixItems
+      .map((s) => generateValibotValue(s, allSchemas, suffix))
+      .join(', ');
+    // `items` alongside `prefixItems` types the variadic remainder
+    const expr = schema.items
+      ? `v.tupleWithRest([${members}], ${generateValibotValue(schema.items, allSchemas, suffix)})`
+      : `v.tuple([${members}])`;
+    return withNullable(expr, schema);
+  }
+
   if (schema.type === 'array' && schema.items) {
-    const pipes: string[] = [`v.array(${generateValibotValue(schema.items, allSchemas, suffix)})`];
-    if (schema.minItems !== undefined) pipes.push(`v.minLength(${schema.minItems})`);
-    if (schema.maxItems !== undefined) pipes.push(`v.maxLength(${schema.maxItems})`);
+    const pipes: string[] = [
+      `v.array(${generateValibotValue(schema.items, allSchemas, suffix)})`,
+    ];
+    if (schema.minItems !== undefined)
+      pipes.push(`v.minLength(${schema.minItems})`);
+    if (schema.maxItems !== undefined)
+      pipes.push(`v.maxLength(${schema.maxItems})`);
     const expr = pipes.length === 1 ? pipes[0]! : `v.pipe(${pipes.join(', ')})`;
     return withNullable(expr, schema);
   }
 
   if (schema.type === 'object' && schema.properties) {
     const fields = schema.properties
-      .map((prop) => `${prop.name}: ${generateValibotProperty(prop, allSchemas, suffix)}`)
+      .map(
+        (prop) =>
+          `${prop.name}: ${generateValibotProperty(prop, allSchemas, suffix)}`,
+      )
       .join(', ');
     return withNullable(`v.object({ ${fields} })`, schema);
   }
 
   switch (schema.type) {
-    case 'string':  return withNullable(valibotString(schema), schema);
-    case 'number':  return withNullable(valibotNumber(schema), schema);
-    case 'boolean': return withNullable('v.boolean()', schema);
-    case 'null':    return 'v.null_()';
-    default:        return withNullable('v.unknown()', schema);
+    case 'string':
+      return withNullable(valibotString(schema), schema);
+    case 'number':
+      return withNullable(valibotNumber(schema), schema);
+    case 'boolean':
+      return withNullable('v.boolean()', schema);
+    case 'null':
+      return 'v.null_()';
+    default:
+      return withNullable('v.unknown()', schema);
   }
 };
 

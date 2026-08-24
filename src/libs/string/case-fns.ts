@@ -1,4 +1,4 @@
-import { NAMING_CASES, type NamingCase } from '@models';
+import { NAMING_CASES } from '@models';
 import { toCamelCase } from '@libs/string/to-camel-case';
 import { toKebabCase } from '@libs/string/to-kebab-case';
 import { toPascalCase } from '@libs/string/to-pascal-case';

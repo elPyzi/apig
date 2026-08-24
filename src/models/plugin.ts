@@ -51,6 +51,12 @@ export interface ApigPlugin {
    * Default: true.
    */
   withTypes?: boolean;
+  /**
+   * Suffix this plugin appends to generated schema names.
+   * Exposed so plugins that import those schemas (`rhf`, `mcp`) can resolve the
+   * names without the user keeping two options in sync by hand.
+   */
+  schemaSuffix?: string;
 }
 
 /** Options for the `typescript()` plugin — generates TypeScript types from schemas. */
@@ -148,6 +154,20 @@ export interface FakerOptions {
 /** Options for the `msw()` plugin — generates Mock Service Worker handlers. */
 export interface MswOptions {}
 
+/** Options for the `mcp()` plugin — generates an MCP server over the SDK. */
+export interface McpOptions {
+  /**
+   * Server name reported to the MCP client.
+   * @default "apig"
+   */
+  name?: string;
+  /**
+   * Server version reported to the MCP client.
+   * @default "1.0.0"
+   */
+  version?: string;
+}
+
 export const QUERY_KEYS_STYLE = {
   FUNCTIONS: 'functions',
   OBJECT: 'object',
@@ -155,6 +175,12 @@ export const QUERY_KEYS_STYLE = {
 
 export type QueryKeysStyle =
   (typeof QUERY_KEYS_STYLE)[keyof typeof QUERY_KEYS_STYLE];
+
+/** Framework target for TanStack Query code generation. */
+export type TanstackFramework = 'react' | 'vue' | 'solid' | 'svelte';
+
+/** Framework target for SWR code generation. */
+export type SwrFramework = 'react' | 'vue';
 
 /**
  * Per-operation hook generation overrides for `tanstackQuery()`.
@@ -207,6 +233,15 @@ export interface TanstackQueryOptions {
    * @example { searchPets: { query: true } }
    */
   hookGenerationStrategies?: Record<string, TanstackHookStrategy>;
+  /**
+   * Target framework for generated hooks.
+   * - `"react"` — `@tanstack/react-query` (default)
+   * - `"vue"`   — `@tanstack/vue-query`
+   * - `"solid"` — `@tanstack/solid-query` (uses `create*` prefix)
+   * - `"svelte"` — `@tanstack/svelte-query` (uses `create*` prefix)
+   * @default "react"
+   */
+  framework?: TanstackFramework;
 }
 
 /** Resolver type for React Hook Form. */
@@ -249,4 +284,11 @@ export interface SwrOptions {
    * @example { searchPets: { query: true } }
    */
   hookGenerationStrategies?: Record<string, SwrHookStrategy>;
+  /**
+   * Target framework for generated hooks.
+   * - `"react"` — `swr` (default)
+   * - `"vue"`   — `swrv`
+   * @default "react"
+   */
+  framework?: SwrFramework;
 }

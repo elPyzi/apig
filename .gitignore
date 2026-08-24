@@ -6,3 +6,8 @@ src/api/generated/
 bugs.md
 .idea/
 TEST_PLAN.md
+BACKLOG.md
+
+# local MCP experiments — the server path is machine-specific
+playground/
+.mcp.json

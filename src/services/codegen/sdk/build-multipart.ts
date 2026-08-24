@@ -12,7 +12,9 @@ export const buildMultipartBody = (operation: IROperation): string => {
       if (prop.required) {
         lines.push(`  _fd.append('${prop.name}', ${prop.name});`);
       } else {
-        lines.push(`  if (${prop.name} !== undefined) _fd.append('${prop.name}', ${prop.name});`);
+        lines.push(
+          `  if (${prop.name} !== undefined) _fd.append('${prop.name}', ${prop.name});`,
+        );
       }
     }
   } else {

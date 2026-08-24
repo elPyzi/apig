@@ -1,19 +1,23 @@
-import { type IROperation } from '@models';
+import { type IROperation, type IRSchema } from '@models';
 import { toCamelCase, toPascalCase } from '@libs/string';
 import { getArgs } from '@services/codegen/common/get-args';
-import { buildArgsList, buildCallArgs } from '@services/codegen/common/build-args';
+import {
+  buildArgsList,
+  buildCallArgs,
+} from '@services/codegen/common/build-args';
 import { getResponseType } from '@services/codegen/common/get-response-type';
 import { getErrorTypeName } from '@services/codegen/common/generate-error-types';
 
 export const generateSwrMutationHook = (
   operation: IROperation,
+  allSchemas: IRSchema[],
   errorHandling = false,
   rawResponse = false,
   errorClass = 'ApigError',
 ): string => {
   const fnName = toCamelCase(operation.id);
   const hookName = `use${toPascalCase(operation.id)}Mutation`;
-  const baseType = getResponseType(operation.response);
+  const baseType = getResponseType(operation.response, allSchemas);
   const responseType = rawResponse ? `ApigResponse<${baseType}>` : baseType;
   const errorType = errorHandling
     ? operation.errors?.length

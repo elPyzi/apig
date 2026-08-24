@@ -30,7 +30,8 @@ export {
   type TypeStyle,
 } from './config';
 
-export { HTTP_METHODS, toHttpMethodLower } from './ir';
+export { HTTP_METHODS, toHttpMethodLower, QUERY_STYLES } from './ir';
+export type { QueryStyle } from './ir';
 
 export type {
   HttpMethod,
@@ -45,7 +46,7 @@ export type {
   IRType,
 } from './ir';
 
-export { banner } from '@constants';
+export { banner, DOCS_BASE, getVersion } from '@constants';
 
 export type {
   ApigPlugin,
@@ -58,6 +59,7 @@ export type {
   YupOptions,
   FakerOptions,
   MswOptions,
+  McpOptions,
   TanstackQueryOptions,
   TanstackHookStrategy,
   SwrOptions,
@@ -68,3 +70,5 @@ export type {
 } from './plugin';
 export { QUERY_KEYS_STYLE } from './plugin';
 export type { LoadSpecResult } from './swagger';
+export { DEFAULTS } from './defaults';
+export type { TanstackFramework, SwrFramework } from './plugin';

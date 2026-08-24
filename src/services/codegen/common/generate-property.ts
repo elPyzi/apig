@@ -1,10 +1,15 @@
-import type { IRProperty } from '@models';
+import type { IRProperty, IRSchema } from '@models';
 import { generateTypeValue } from '@services/codegen/common/generate-type-value';
 import { buildJsDoc } from '@services/codegen/common/jsdoc';
 
-export const generateProperty = (prop: IRProperty): string => {
+export const generateProperty = (
+  prop: IRProperty,
+  allSchemas: IRSchema[],
+): string => {
   const optional = prop.required ? '' : '?';
-  const type = prop.schema ? generateTypeValue(prop.schema) : prop.type;
+  const type = prop.schema
+    ? generateTypeValue(prop.schema, allSchemas)
+    : prop.type;
   const doc = buildJsDoc({
     description: prop.description,
     deprecated: prop.deprecated,

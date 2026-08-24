@@ -8,6 +8,7 @@ import { generateTypeValue } from '@services/codegen/common/generate-type-value'
 export const generateSchema = (
   schema: IRSchema,
   config: ApigConfig,
+  allSchemas: IRSchema[],
 ): string => {
   if (schema.isEnum) return generateEnumSchema(schema, config);
 
@@ -16,14 +17,20 @@ export const generateSchema = (
     schema.type === 'oneOf' ||
     schema.type === 'anyOf'
   ) {
-    return generateComposition(schema);
+    return generateComposition(schema, allSchemas);
   }
 
-  if (schema.type === 'object') return generateObject(schema, config);
+  if (schema.type === 'object')
+    return generateObject(schema, config, allSchemas);
 
   if (schema.name) {
     const name = toPascalCase(schema.name);
-    const value = generateTypeValue(schema);
+    // A schema declares itself here, so it must not resolve to a reference to
+    // itself — pass the list without this entry.
+    const value = generateTypeValue(
+      schema,
+      allSchemas.filter((s) => s !== schema),
+    );
     return `export type ${name} = ${value};`;
   }
 

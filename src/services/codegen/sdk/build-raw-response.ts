@@ -21,7 +21,7 @@ export const buildRawResponseBody = (
   if (client === HTTP_CLIENTS.FETCH) {
     const bare = stripThen(call);
     const errorLine = withError
-      ? `  if (!r.ok) throw new ${errorClass}(r.status, await r.json());\n`
+      ? `  if (!r.ok) throw new ${errorClass}(r.status, await parseErrorBody(r));\n`
       : '';
     return [
       `  const r = await ${bare};`,
@@ -33,16 +33,28 @@ export const buildRawResponseBody = (
     const lines = [`  const r = await ${call};`];
     if (withError) {
       lines.unshift(`  try {`);
-      lines.push(`    ${ret(`{ body: r.data as ${responseType}, status: r.status, headers: r.headers }`).trimStart()}`);
+      lines.push(
+        `    ${ret(`{ body: r.data as ${responseType}, status: r.status, headers: r.headers }`).trimStart()}`,
+      );
       lines.push(`  } catch (e: unknown) {`);
-      lines.push(`    if (e && typeof e === 'object' && 'isAxiosError' in e) {`);
-      lines.push(`      const ae = e as { response?: { status: number; data: unknown } };`);
-      lines.push(`      throw new ${errorClass}(ae.response?.status, ae.response?.data);`);
+      lines.push(
+        `    if (e && typeof e === 'object' && 'isAxiosError' in e) {`,
+      );
+      lines.push(
+        `      const ae = e as { response?: { status: number; data: unknown } };`,
+      );
+      lines.push(
+        `      throw new ${errorClass}(ae.response?.status, ae.response?.data);`,
+      );
       lines.push(`    }`);
       lines.push(`    throw e;`);
       lines.push(`  }`);
     } else {
-      lines.push(ret(`{ body: r.data as ${responseType}, status: r.status, headers: r.headers }`));
+      lines.push(
+        ret(
+          `{ body: r.data as ${responseType}, status: r.status, headers: r.headers }`,
+        ),
+      );
     }
     return lines.join('\n');
   }
@@ -92,7 +104,9 @@ export const buildRawResponseBody = (
   const rawCall = call.replace(/^(\w+)</, '$1.raw<');
   const lines = [
     `  const r = await ${rawCall};`,
-    ret(`{ body: r._data as ${responseType}, status: r.status, headers: r.headers }`),
+    ret(
+      `{ body: r._data as ${responseType}, status: r.status, headers: r.headers }`,
+    ),
   ];
   if (withError) {
     return [

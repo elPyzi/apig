@@ -1,17 +1,16 @@
 import { describe, test, expect } from 'bun:test';
-import type { OpenAPIV3 } from 'openapi-types';
 import { buildBody } from '../build-body';
 import { schemaNames, makeOperation } from './fixtures';
 
 describe('buildBody', () => {
-  describe('нет тела', () => {
-    test('нет requestBody в null', () => {
+  describe('no body', () => {
+    test('a missing requestBody becomes null', () => {
       expect(buildBody(makeOperation(), schemaNames)).toBeNull();
     });
   });
 
   describe('application/json', () => {
-    test('contentType в json', () => {
+    test('contentType becomes json', () => {
       const result = buildBody(
         makeOperation({
           requestBody: {
@@ -24,7 +23,7 @@ describe('buildBody', () => {
       expect(result?.contentType).toBe('json');
     });
 
-    test('schema обрабатывается', () => {
+    test('the schema is handled', () => {
       const result = buildBody(
         makeOperation({
           requestBody: {
@@ -42,10 +41,10 @@ describe('buildBody', () => {
       );
 
       expect(result?.schema.type).toBe('object');
-      expect(result?.schema.properties?.[0].name).toBe('name');
+      expect(result?.schema.properties?.[0]!.name).toBe('name');
     });
 
-    test('required: true пробрасывается', () => {
+    test('required: true is carried through', () => {
       const result = buildBody(
         makeOperation({
           requestBody: {
@@ -59,7 +58,7 @@ describe('buildBody', () => {
       expect(result?.required).toBe(true);
     });
 
-    test('required отсутствует в false', () => {
+    test('a missing required becomes false', () => {
       const result = buildBody(
         makeOperation({
           requestBody: {
@@ -74,7 +73,7 @@ describe('buildBody', () => {
   });
 
   describe('multipart/form-data', () => {
-    test('contentType в multipart', () => {
+    test('contentType becomes multipart', () => {
       const result = buildBody(
         makeOperation({
           requestBody: {
@@ -87,7 +86,7 @@ describe('buildBody', () => {
       expect(result?.contentType).toBe('multipart');
     });
 
-    test('schema обрабатывается', () => {
+    test('the schema is handled', () => {
       const result = buildBody(
         makeOperation({
           requestBody: {
@@ -105,12 +104,12 @@ describe('buildBody', () => {
       );
 
       expect(result?.schema.type).toBe('object');
-      expect(result?.schema.properties?.[0].name).toBe('file');
+      expect(result?.schema.properties?.[0]!.name).toBe('file');
     });
   });
 
   describe('application/octet-stream', () => {
-    test('contentType в multipart', () => {
+    test('contentType becomes multipart', () => {
       const result = buildBody(
         makeOperation({
           requestBody: {
@@ -126,8 +125,8 @@ describe('buildBody', () => {
     });
   });
 
-  describe('приоритет', () => {
-    test('json имеет приоритет над multipart', () => {
+  describe('precedence', () => {
+    test('json takes precedence over multipart', () => {
       const result = buildBody(
         makeOperation({
           requestBody: {
@@ -144,8 +143,8 @@ describe('buildBody', () => {
     });
   });
 
-  describe('неизвестный content-type', () => {
-    test('text/plain в null', () => {
+  describe('unknown content-type', () => {
+    test('text/plain becomes null', () => {
       const result = buildBody(
         makeOperation({
           requestBody: {

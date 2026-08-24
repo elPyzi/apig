@@ -299,12 +299,6 @@ export interface ApigConfig {
   rename?: Record<string, string>;
 
   /**
-   * Validate the OpenAPI spec before generation.
-   * @default true
-   */
-  validate?: boolean;
-
-  /**
    * Lifecycle hooks executed at specific points during generation.
    * @example { afterAllFilesWrite: "prettier --write ./src/api" }
    */

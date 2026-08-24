@@ -3,12 +3,12 @@ import { buildResponse } from '../build-response';
 import { schemaNames, makeOperation, jsonResponse } from './fixtures';
 
 describe('buildResponse', () => {
-  describe('нет ответа', () => {
-    test('нет responses в null', () => {
+  describe('no response', () => {
+    test('missing responses become null', () => {
       expect(buildResponse(makeOperation(), schemaNames)).toBeNull();
     });
 
-    test('200 без json schema в null', () => {
+    test('200 without a json schema becomes null', () => {
       const result = buildResponse(
         makeOperation({
           responses: {
@@ -21,7 +21,7 @@ describe('buildResponse', () => {
       expect(result).toBeNull();
     });
 
-    test('только 4xx ответы в null', () => {
+    test('only 4xx responses become null', () => {
       const result = buildResponse(
         makeOperation({
           responses: { '400': jsonResponse({ type: 'object' }) },
@@ -34,7 +34,7 @@ describe('buildResponse', () => {
   });
 
   describe('200', () => {
-    test('200 с json schema возвращает IRSchema', () => {
+    test('200 with a json schema returns an IRSchema', () => {
       const result = buildResponse(
         makeOperation({
           responses: { '200': jsonResponse({ type: 'object' }) },
@@ -46,7 +46,7 @@ describe('buildResponse', () => {
       expect(result?.type).toBe('object');
     });
 
-    test('schema обрабатывается рекурсивно', () => {
+    test('the schema is handled recursively', () => {
       const result = buildResponse(
         makeOperation({
           responses: {
@@ -66,7 +66,7 @@ describe('buildResponse', () => {
       });
     });
 
-    test('array response обрабатывается', () => {
+    test('an array response is handled', () => {
       const result = buildResponse(
         makeOperation({
           responses: {
@@ -82,7 +82,7 @@ describe('buildResponse', () => {
   });
 
   describe('201', () => {
-    test('201 с json schema возвращает IRSchema', () => {
+    test('201 with a json schema returns an IRSchema', () => {
       const result = buildResponse(
         makeOperation({
           responses: { '201': jsonResponse({ type: 'object' }) },
@@ -95,8 +95,8 @@ describe('buildResponse', () => {
     });
   });
 
-  describe('приоритет', () => {
-    test('200 имеет приоритет над 201', () => {
+  describe('precedence', () => {
+    test('200 takes precedence over 201', () => {
       const result = buildResponse(
         makeOperation({
           responses: {

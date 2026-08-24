@@ -1,31 +1,14 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "lib": ["ESNext"],
     "target": "ES2022",
     "module": "ESNext",
-    "moduleResolution": "bundler",
-    "verbatimModuleSyntax": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "strict": true,
-    "skipLibCheck": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"],
-      "@libs/*": ["src/libs/*"],
-      "@services/*": ["src/services/*"],
-      "@models": ["src/models"],
-      "@constants": ["src/constants"],
-      "@client": ["src/client"],
-      "@plugins": ["src/plugins"]
-    },
+    "noEmit": false,
     "declaration": true,
-    "declarationMap": true,
-    "emitDeclarationOnly": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false
+    "declarationMap": false,
+    "emitDeclarationOnly": true
   },
   "include": ["src"],
   "exclude": [

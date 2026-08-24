@@ -1,7 +1,10 @@
 import { HTTP_METHODS, banner, type IR, type IROperation } from '@models';
 import { toCamelCase } from '@libs/string';
 import { getArgs } from '@services/codegen/common/get-args';
-import { buildArgsList, buildCallArgs } from '@services/codegen/common/build-args';
+import {
+  buildArgsList,
+  buildCallArgs,
+} from '@services/codegen/common/build-args';
 
 export const buildQueryKeyExpr = (
   operation: IROperation,
@@ -35,5 +38,7 @@ export const buildQueryKeyEntry = (operation: IROperation): string => {
 export const generateQueryKeysFile = (ir: IR): string => {
   const getOps = ir.operations.filter((op) => op.method === HTTP_METHODS.GET);
   const entries = getOps.map(buildQueryKeyEntry).join('\n');
-  return [banner, '', 'export const queryKeys = {', entries, '};', ''].join('\n');
+  return [banner, '', 'export const queryKeys = {', entries, '};', ''].join(
+    '\n',
+  );
 };

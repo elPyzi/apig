@@ -4,6 +4,7 @@ export type {
   ApigConfig,
   ApigPlugin,
   PluginContext,
+  ExtraFile,
   HttpClient,
   HttpClients,
   PluginResult,
@@ -16,6 +17,30 @@ export type {
   EnumStyle,
   TypeStyle,
   LazyOrAsync,
+  Versioning,
+  LoggingConfig,
+  LogLevel,
+  FakerLocale,
+} from '@models';
+
+export type {
+  TypescriptOptions,
+  SdkOptions,
+  ZodOptions,
+  ValibotOptions,
+  YupOptions,
+  FakerOptions,
+  MswOptions,
+  McpOptions,
+  RhfOptions,
+  RhfResolver,
+  TanstackQueryOptions,
+  TanstackHookStrategy,
+  TanstackFramework,
+  SwrOptions,
+  SwrHookStrategy,
+  SwrFramework,
+  QueryKeysStyle,
 } from '@models';
 
 export {
@@ -26,6 +51,8 @@ export {
   ENUM_STYLES,
   TYPE_STYLES,
   FAKER_LOCALES,
+  LOG_LEVELS,
+  QUERY_KEYS_STYLE,
 } from '@models';
 
 export {
@@ -39,4 +66,5 @@ export {
   swr,
   msw,
   rhf,
+  mcp,
 } from '@plugins';

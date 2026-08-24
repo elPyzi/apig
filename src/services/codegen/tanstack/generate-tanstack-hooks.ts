@@ -1,4 +1,15 @@
-export { buildQueryKeyExpr, generateQueryKeyFn, buildQueryKeyEntry, generateQueryKeysFile } from './query-keys';
-export { generateQuery, generateInfiniteQuery, generateSuspenseQuery } from './generate-query';
+export {
+  buildQueryKeyExpr,
+  generateQueryKeyFn,
+  buildQueryKeyEntry,
+  generateQueryKeysFile,
+} from './query-keys';
+export {
+  generateQuery,
+  generateInfiniteQuery,
+  generateSuspenseQuery,
+} from './generate-query';
 export { generateTanstackMutation } from './generate-mutation';
 export { buildTanstackImports } from './build-imports';
+export { getFrameworkConfig } from './framework';
+export type { TanstackFrameworkConfig } from './framework';

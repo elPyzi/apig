@@ -11,7 +11,7 @@ import {
 } from '@travjek/apig';
 
 export default defineConfig({
-  input: 'https://petstore3.swagger.io/api/v3/openapi.json',
+  input: './openapi.json',
   output: './generated',
   plugins: [
     typescript(),

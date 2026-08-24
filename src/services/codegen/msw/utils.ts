@@ -7,12 +7,8 @@ export const primitiveMap: Record<string, string> = {
   boolean: 'faker.datatype.boolean()',
 };
 
-export const hasFakerPlugin = (config: ApigConfig): boolean => {
-  const plugins = config.plugins ?? [];
-  return plugins.some((p) =>
-    typeof p === 'string' ? p === 'faker' : p.name === 'faker',
-  );
-};
+export const hasFakerPlugin = (config: ApigConfig): boolean =>
+  (config.plugins ?? []).some((p) => p.name === 'faker');
 
 export const toMswPath = (path: string, baseUrl?: string): string => {
   const mswPath = path.replace(/\{(\w+)\}/g, ':$1');
@@ -25,12 +21,12 @@ export const getFakerResponse = (operation: IROperation): string | null => {
   if (response.name) return `generate${toPascalCase(response.name)}()`;
   if (response.type === 'array' && response.items?.name)
     return `[generate${toPascalCase(response.items.name)}()]`;
-  if (response.type && primitiveMap[response.type])
-    return primitiveMap[response.type];
-  return null;
+  return (response.type && primitiveMap[response.type]) || null;
 };
 
-export const getMswUsedGenerators = (operations: IROperation[]): Set<string> => {
+export const getMswUsedGenerators = (
+  operations: IROperation[],
+): Set<string> => {
   const usedGenerators = new Set<string>();
   for (const op of operations) {
     if (op.response?.name)

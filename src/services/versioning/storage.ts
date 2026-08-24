@@ -24,11 +24,12 @@ interface ParsedFolder {
 
 const parseFolder = (name: string): ParsedFolder | null => {
   const m = name.match(SNAPSHOT_RE);
-  if (!m) return null;
+  const [, snapshotId, apiVersion, generation] = m ?? [];
+  if (!snapshotId || !apiVersion || !generation) return null;
   return {
-    snapshotId: m[1],
-    apiVersion: m[2],
-    generation: parseInt(m[3], 10),
+    snapshotId,
+    apiVersion,
+    generation: parseInt(generation, 10),
     folderName: name,
   };
 };
@@ -116,7 +117,7 @@ export class VersionStorage {
           readFileSync(metaPath, 'utf-8'),
         ) as SnapshotMetadata;
         createdAt = meta.createdAt;
-      } catch (_) {
+      } catch {
         // If metadata is unreadable, treat as oldest
       }
       return { ...p, createdAt };
@@ -134,7 +135,9 @@ export class VersionStorage {
     return this.listWithMeta().map((e) => e.id);
   }
 
-  listWithMeta(pinVersions: string[] = []): Array<{ id: string; alias: string; createdAt: string; pinned: boolean }> {
+  listWithMeta(
+    pinVersions: string[] = [],
+  ): Array<{ id: string; alias: string; createdAt: string; pinned: boolean }> {
     const pinSet = new Set(pinVersions);
     return this.listParsed()
       .sort((a, b) => {
@@ -149,12 +152,20 @@ export class VersionStorage {
         let alias = `gen${p.generation}`;
         try {
           const meta = JSON.parse(
-            readFileSync(join(this.root, p.folderName, 'metadata.json'), 'utf-8'),
+            readFileSync(
+              join(this.root, p.folderName, 'metadata.json'),
+              'utf-8',
+            ),
           ) as SnapshotMetadata;
           createdAt = formatDate(new Date(meta.createdAt));
           if (meta.alias) alias = meta.alias;
-        } catch (_) {}
-        return { id: p.snapshotId, alias, createdAt, pinned: pinSet.has(p.snapshotId) };
+        } catch {}
+        return {
+          id: p.snapshotId,
+          alias,
+          createdAt,
+          pinned: pinSet.has(p.snapshotId),
+        };
       });
   }
 
@@ -196,7 +207,7 @@ export class VersionStorage {
           readFileSync(join(this.root, p.folderName, 'metadata.json'), 'utf-8'),
         ) as SnapshotMetadata;
         if (meta.alias === idOrAlias) matches.push(p.snapshotId);
-      } catch (_) {}
+      } catch {}
     }
     if (matches.length === 1) return matches[0]!;
     if (matches.length > 1) {

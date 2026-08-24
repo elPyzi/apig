@@ -38,7 +38,11 @@ export const registerGenerateCommand = (program: Command): void => {
           }
         } catch (error: unknown) {
           if (error instanceof ConfigValidationError) {
-            logger.validationError('Generation failed: Config validation failed', error.validationErrors, error.docLinks);
+            logger.validationError(
+              'Generation failed: Config validation failed',
+              error.validationErrors,
+              error.docLinks,
+            );
           } else {
             logger.error(`Generation failed: ${toMessage(error)}`);
           }
@@ -91,7 +95,7 @@ export const registerGenerateCommand = (program: Command): void => {
               );
             }
           }
-        } catch (_) {
+        } catch {
           // spec load failed during watch setup — ignore, will retry on change
         }
 
