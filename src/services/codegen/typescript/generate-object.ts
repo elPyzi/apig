@@ -7,6 +7,7 @@ import { generateEnumSchema } from '@services/codegen/typescript/generate-enum-s
 export const generateObject = (
   schema: IRSchema,
   config: ApigConfig,
+  allSchemas: IRSchema[],
 ): string => {
   if (!schema.name) return '';
 
@@ -18,15 +19,24 @@ export const generateObject = (
     .map((prop) => {
       if (prop.schema?.isEnum && prop.schema.enum) {
         const enumName = `${name}${toPascalCase(prop.name)}`;
-        extraTypes.push(generateEnumSchema({ ...prop.schema, name: enumName }, config));
+        extraTypes.push(
+          generateEnumSchema({ ...prop.schema, name: enumName }, config),
+        );
         const optional = prop.required ? '' : '?';
-        const doc = buildJsDoc({ description: prop.description, deprecated: prop.deprecated });
+        const doc = buildJsDoc({
+          description: prop.description,
+          deprecated: prop.deprecated,
+        });
         const docIndented = doc
-          ? doc.split('\n').map((l) => `  ${l}`).join('\n').trimEnd() + '\n'
+          ? doc
+              .split('\n')
+              .map((l) => `  ${l}`)
+              .join('\n')
+              .trimEnd() + '\n'
           : '';
         return `${docIndented}  ${prop.name}${optional}: ${enumName};`;
       }
-      return generateProperty(prop);
+      return generateProperty(prop, allSchemas);
     })
     .join('\n');
 

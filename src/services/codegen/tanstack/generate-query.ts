@@ -1,8 +1,11 @@
-import { type IROperation } from '@models';
+import { type IROperation, type IRSchema } from '@models';
 import { toCamelCase, toPascalCase } from '@libs/string';
 import { getResponseType } from '@services/codegen/common/get-response-type';
 import { getArgs } from '@services/codegen/common/get-args';
-import { buildArgsList, buildCallArgs } from '@services/codegen/common/build-args';
+import {
+  buildArgsList,
+  buildCallArgs,
+} from '@services/codegen/common/build-args';
 import { getErrorTypeName } from '@services/codegen/common/generate-error-types';
 import { buildQueryKeyExpr } from './query-keys';
 import type { TanstackFrameworkConfig } from './framework';
@@ -20,11 +23,15 @@ const buildErrorGeneric = (
 };
 
 const DEFAULT_FW: TanstackFrameworkConfig = {
-  pkg: '@tanstack/react-query', hookFn: 'use', typeFn: 'Use', exportPrefix: 'use',
+  pkg: '@tanstack/react-query',
+  hookFn: 'use',
+  typeFn: 'Use',
+  exportPrefix: 'use',
 };
 
 export const generateQuery = (
   operation: IROperation,
+  allSchemas: IRSchema[],
   queryKeysStyle: 'functions' | 'object',
   errorHandling = false,
   rawResponse = false,
@@ -33,7 +40,7 @@ export const generateQuery = (
 ): string => {
   const name = toCamelCase(operation.id);
   const pascalName = toPascalCase(operation.id);
-  const baseType = getResponseType(operation.response);
+  const baseType = getResponseType(operation.response, allSchemas);
   const responseType = rawResponse ? `ApigResponse<${baseType}>` : baseType;
   const errorType = buildErrorGeneric(operation, errorHandling, errorClass);
   const args = getArgs(operation);
@@ -60,13 +67,14 @@ export const generateQuery = (
 
 export const generateInfiniteQuery = (
   operation: IROperation,
+  allSchemas: IRSchema[],
   queryKeysStyle: 'functions' | 'object',
   errorClass = 'ApigError',
   fw: TanstackFrameworkConfig = DEFAULT_FW,
 ): string => {
   const name = toCamelCase(operation.id);
   const pascalName = toPascalCase(operation.id);
-  const responseType = getResponseType(operation.response);
+  const responseType = getResponseType(operation.response, allSchemas);
   const args = getArgs(operation);
   const argsList = buildArgsList(args);
   const callArgs = buildCallArgs(args);
@@ -91,11 +99,12 @@ export const generateInfiniteQuery = (
 
 export const generateSuspenseQuery = (
   operation: IROperation,
+  allSchemas: IRSchema[],
   fw: TanstackFrameworkConfig = DEFAULT_FW,
 ): string => {
   const name = toCamelCase(operation.id);
   const pascalName = toPascalCase(operation.id);
-  const responseType = getResponseType(operation.response);
+  const responseType = getResponseType(operation.response, allSchemas);
   const args = getArgs(operation);
   const argsList = buildArgsList(args);
   const callArgs = buildCallArgs(args);
