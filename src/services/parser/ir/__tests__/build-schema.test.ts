@@ -1,37 +1,36 @@
 import { describe, test, expect } from 'bun:test';
 import { buildSchema } from '@services/parser/ir';
-
 describe('buildSchema', () => {
-  describe('примитивные типы', () => {
-    test('string в string', () => {
+  describe('primitive types', () => {
+    test('string stays string', () => {
       expect(buildSchema({ type: 'string' }).type).toBe('string');
     });
 
-    test('integer в number', () => {
+    test('integer becomes number', () => {
       expect(buildSchema({ type: 'integer' }).type).toBe('number');
     });
 
-    test('number в number', () => {
+    test('number stays number', () => {
       expect(buildSchema({ type: 'number' }).type).toBe('number');
     });
 
-    test('boolean в boolean', () => {
+    test('boolean stays boolean', () => {
       expect(buildSchema({ type: 'boolean' }).type).toBe('boolean');
     });
 
-    test('null в null', () => {
+    test('null stays null', () => {
       expect(buildSchema({ type: 'null' }).type).toBe('null');
     });
 
-    test('неизвестный тип в unknown', () => {
+    test('an unknown type becomes unknown', () => {
       expect(
         buildSchema({ type: 'луууууччччч солнцаааа золотогооооо' }).type,
       ).toBe('unknown');
     });
   });
 
-  describe('строковые ограничения', () => {
-    test('пробрасывает minLength / maxLength / pattern', () => {
+  describe('string constraints', () => {
+    test('carries through minLength / maxLength / pattern', () => {
       const result = buildSchema({
         type: 'string',
         minLength: 3,
@@ -44,21 +43,21 @@ describe('buildSchema', () => {
       expect(result.pattern).toBe('^[a-z]+$');
     });
 
-    test('пробрасывает format', () => {
+    test('carries through format', () => {
       const result = buildSchema({ type: 'string', format: 'date-time' });
 
       expect(result.format).toBe('date-time');
     });
 
-    test('пробрасывает default', () => {
+    test('carries through default', () => {
       const result = buildSchema({ type: 'string', default: 'active' });
 
       expect(result.default).toBe('active');
     });
   });
 
-  describe('числовые ограничения', () => {
-    test('пробрасывает minimum / maximum', () => {
+  describe('numeric constraints', () => {
+    test('carries through minimum / maximum', () => {
       const result = buildSchema({ type: 'integer', minimum: 1, maximum: 100 });
 
       expect(result.minimum).toBe(1);
@@ -67,7 +66,7 @@ describe('buildSchema', () => {
   });
 
   describe('enum', () => {
-    test('isEnum: true и значения сохраняются', () => {
+    test('isEnum: true and the values are kept', () => {
       const result = buildSchema({
         type: 'string',
         enum: ['active', 'inactive'],
@@ -77,7 +76,7 @@ describe('buildSchema', () => {
       expect(result.enum).toEqual(['active', 'inactive']);
     });
 
-    test('числовые enum значения конвертируются в string', () => {
+    test('numeric enum values are converted to strings', () => {
       const result = buildSchema({ type: 'integer', enum: [1, 2, 3] });
 
       expect(result.enum).toEqual(['1', '2', '3']);
@@ -85,7 +84,7 @@ describe('buildSchema', () => {
   });
 
   describe('array', () => {
-    test('items рекурсивно обрабатывается', () => {
+    test('items is handled recursively', () => {
       const result = buildSchema({
         type: 'array',
         items: { type: 'string' },
@@ -95,7 +94,7 @@ describe('buildSchema', () => {
       expect(result.items?.type).toBe('string');
     });
 
-    test('пробрасывает minItems / maxItems', () => {
+    test('carries through minItems / maxItems', () => {
       const result = buildSchema({
         type: 'array',
         items: { type: 'string' },
@@ -107,7 +106,7 @@ describe('buildSchema', () => {
       expect(result.maxItems).toBe(10);
     });
 
-    test('вложенный array', () => {
+    test('nested array', () => {
       const result = buildSchema({
         type: 'array',
         items: { type: 'array', items: { type: 'number' } },
@@ -119,7 +118,7 @@ describe('buildSchema', () => {
   });
 
   describe('object', () => {
-    test('свойства с required корректно маппятся', () => {
+    test('required properties are mapped correctly', () => {
       const result = buildSchema({
         type: 'object',
         required: ['id'],
@@ -143,14 +142,14 @@ describe('buildSchema', () => {
       });
     });
 
-    test('object без properties в пустой массив properties', () => {
+    test('an object without properties becomes an empty properties array', () => {
       const result = buildSchema({ type: 'object' });
 
       expect(result.type).toBe('object');
       expect(result.properties).toEqual([]);
     });
 
-    test('вложенный объект рекурсивно обрабатывается', () => {
+    test('a nested object is handled recursively', () => {
       const result = buildSchema({
         type: 'object',
         properties: {
@@ -167,13 +166,13 @@ describe('buildSchema', () => {
       expect(address?.schema?.properties?.[0]?.name).toBe('city');
     });
 
-    test('nullable пробрасывается', () => {
+    test('nullable is carried through', () => {
       const result = buildSchema({ type: 'object', nullable: true });
 
       expect(result.nullable).toBe(true);
     });
 
-    test('description пробрасывается', () => {
+    test('description is carried through', () => {
       const result = buildSchema({ type: 'string', description: 'User ID' });
 
       expect(result.description).toBe('User ID');
@@ -181,13 +180,13 @@ describe('buildSchema', () => {
   });
 
   describe('composition (allOf / oneOf / anyOf)', () => {
-    test('allOf с одним элементом разворачивается', () => {
+    test('allOf with a single member is unwrapped', () => {
       const result = buildSchema({ allOf: [{ type: 'string' }] });
 
       expect(result.type).toBe('string');
     });
 
-    test('allOf с несколькими элементами в type allOf', () => {
+    test('allOf with several members becomes type allOf', () => {
       const result = buildSchema({
         allOf: [{ type: 'string' }, { type: 'number' }],
       });
@@ -196,7 +195,7 @@ describe('buildSchema', () => {
       expect(result.schemas).toHaveLength(2);
     });
 
-    test('oneOf в type oneOf со списком схем', () => {
+    test('oneOf becomes type oneOf with a schema list', () => {
       const result = buildSchema({
         oneOf: [{ type: 'string' }, { type: 'number' }],
       });
@@ -205,7 +204,7 @@ describe('buildSchema', () => {
       expect(result.schemas).toHaveLength(2);
     });
 
-    test('anyOf в type anyOf со списком схем', () => {
+    test('anyOf becomes type anyOf with a schema list', () => {
       const result = buildSchema({
         anyOf: [{ type: 'string' }, { type: 'number' }],
       });
@@ -214,7 +213,7 @@ describe('buildSchema', () => {
       expect(result.schemas).toHaveLength(2);
     });
 
-    test('discriminator пробрасывается', () => {
+    test('discriminator is carried through', () => {
       const result = buildSchema({
         oneOf: [{ type: 'string' }, { type: 'number' }],
         discriminator: { propertyName: 'type' },
@@ -224,28 +223,120 @@ describe('buildSchema', () => {
     });
   });
 
-  describe('цикличные ссылки', () => {
-    test('не уходит в бесконечную рекурсию', () => {
-      const userSchema = { type: 'object', properties: {} };
+  describe('circular references', () => {
+    test('does not recurse forever', () => {
+      const userSchema: any = { type: 'object', properties: {} };
       userSchema.properties.self = userSchema;
 
       const schemaNames = new Map([[userSchema, 'User']]);
       const result = buildSchema(userSchema, 'User', schemaNames);
 
-      expect(result.properties?.[0].schema).toEqual({
+      expect(result.properties?.[0]!.schema).toEqual({
         type: 'object',
         name: 'User',
       });
     });
 
-    test('name пробрасывается при разрыве цикла', () => {
+    test('name is kept when a cycle is broken', () => {
       const schema: any = { type: 'object', properties: {} };
       schema.properties.ref = schema;
 
       const schemaNames = new Map([[schema, 'MyModel']]);
       const result = buildSchema(schema, 'MyModel', schemaNames);
 
-      expect(result.properties?.[0].schema?.name).toBe('MyModel');
+      expect(result.properties?.[0]!.schema?.name).toBe('MyModel');
+    });
+  });
+
+  describe('OpenAPI 3.1', () => {
+    test('type: ["string", "null"] becomes a nullable string', () => {
+      const result = buildSchema({ type: ['string', 'null'] });
+
+      expect(result.type).toBe('string');
+      expect(result.nullable).toBe(true);
+    });
+
+    test('type: ["null"] alone becomes null', () => {
+      expect(buildSchema({ type: ['null'] }).type).toBe('null');
+    });
+
+    test('a type array without null keeps its single type', () => {
+      const result = buildSchema({ type: ['integer'] });
+
+      expect(result.type).toBe('number');
+      expect(result.nullable).toBeUndefined();
+    });
+
+    test('several types become anyOf', () => {
+      const result = buildSchema({ type: ['string', 'number', 'null'] });
+
+      expect(result.type).toBe('anyOf');
+      expect(result.nullable).toBe(true);
+      expect(result.schemas?.map((s) => s.type)).toEqual(['string', 'number']);
+    });
+
+    test('const becomes a single-value enum', () => {
+      const result = buildSchema({ type: 'string', const: 'widget' });
+
+      expect(result.isEnum).toBe(true);
+      expect(result.enum).toEqual(['widget']);
+    });
+
+    test('numeric exclusiveMinimum / exclusiveMaximum are carried through', () => {
+      const result = buildSchema({
+        type: 'number',
+        exclusiveMinimum: 0,
+        exclusiveMaximum: 10,
+      });
+
+      expect(result.exclusiveMinimum).toBe(0);
+      expect(result.exclusiveMaximum).toBe(10);
+      expect(result.minimum).toBeUndefined();
+      expect(result.maximum).toBeUndefined();
+    });
+
+    test('the 3.0 boolean form turns the neighbouring bound exclusive', () => {
+      const result = buildSchema({
+        type: 'number',
+        minimum: 1,
+        exclusiveMinimum: true,
+      });
+
+      expect(result.exclusiveMinimum).toBe(1);
+      expect(result.minimum).toBeUndefined();
+    });
+
+    test('prefixItems becomes a tuple', () => {
+      const result = buildSchema({
+        type: 'array',
+        prefixItems: [{ type: 'number' }, { type: 'string' }],
+      });
+
+      expect(result.type).toBe('tuple');
+      expect(result.prefixItems?.map((s) => s.type)).toEqual([
+        'number',
+        'string',
+      ]);
+      expect(result.items).toBeUndefined();
+    });
+
+    test('items alongside prefixItems types the variadic rest', () => {
+      const result = buildSchema({
+        type: 'array',
+        prefixItems: [{ type: 'number' }],
+        items: { type: 'boolean' },
+      });
+
+      expect(result.type).toBe('tuple');
+      expect(result.prefixItems).toHaveLength(1);
+      expect(result.items?.type).toBe('boolean');
+    });
+
+    test('a plain 3.0 minimum stays inclusive', () => {
+      const result = buildSchema({ type: 'number', minimum: 1 });
+
+      expect(result.minimum).toBe(1);
+      expect(result.exclusiveMinimum).toBeUndefined();
     });
   });
 });

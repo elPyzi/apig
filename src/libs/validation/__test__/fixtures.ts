@@ -1,5 +1,5 @@
 import type { ApigConfig, HttpClient } from '@models';
-import { sdk, tanstackQuery, typescript, zod, msw, faker } from '@plugins';
+import { sdk, tanstackQuery, typescript, zod, msw, faker, mcp } from '@plugins';
 
 const VALID_INPUT = 'https://petstore3.swagger.io/api/v3/openapi.json';
 const INVALID_INPUT = {
@@ -130,6 +130,17 @@ export const POSITIVE_CONFIGS = {
 } satisfies Record<string, ApigConfig>;
 
 export const NEGATIVE_CONFIGS = {
+  MCP_WITH_API_LOGGING: {
+    input: VALID_INPUT,
+    output: VALID_OUTPUT_STRING,
+    apiLogging: true,
+    plugins: [sdk(), zod(), mcp()],
+  },
+  MCP_WITHOUT_DEPENDENCIES: {
+    input: VALID_INPUT,
+    output: VALID_OUTPUT_STRING,
+    plugins: [typescript(), mcp()],
+  },
   MISSING_INPUT: {
     output: VALID_OUTPUT_STRING,
   },

@@ -3,12 +3,12 @@ import { buildErrors } from '../build-errors';
 import { schemaNames, makeOperation, jsonResponse } from './fixtures';
 
 describe('buildErrors', () => {
-  describe('нет ошибок', () => {
-    test('нет responses в пустой массив', () => {
+  describe('no errors', () => {
+    test('missing responses become an empty array', () => {
       expect(buildErrors(makeOperation(), schemaNames)).toEqual([]);
     });
 
-    test('только 200 в пустой массив', () => {
+    test('only 200 becomes an empty array', () => {
       const result = buildErrors(
         makeOperation({
           responses: { '200': jsonResponse({ type: 'object' }) },
@@ -19,7 +19,7 @@ describe('buildErrors', () => {
       expect(result).toEqual([]);
     });
 
-    test('только 201 в пустой массив', () => {
+    test('only 201 becomes an empty array', () => {
       const result = buildErrors(
         makeOperation({
           responses: { '201': jsonResponse({ type: 'object' }) },
@@ -31,8 +31,8 @@ describe('buildErrors', () => {
     });
   });
 
-  describe('одна ошибка', () => {
-    test('400 с json schema попадает в errors', () => {
+  describe('a single error', () => {
+    test('400 with a json schema lands in errors', () => {
       const result = buildErrors(
         makeOperation({
           responses: { '400': jsonResponse({ type: 'object' }) },
@@ -41,10 +41,10 @@ describe('buildErrors', () => {
       );
 
       expect(result).toHaveLength(1);
-      expect(result[0].status).toBe(400);
+      expect(result[0]!.status).toBe(400);
     });
 
-    test('404 с json schema попадает в errors', () => {
+    test('404 with a json schema lands in errors', () => {
       const result = buildErrors(
         makeOperation({
           responses: { '404': jsonResponse({ type: 'object' }) },
@@ -52,10 +52,10 @@ describe('buildErrors', () => {
         schemaNames,
       );
 
-      expect(result[0].status).toBe(404);
+      expect(result[0]!.status).toBe(404);
     });
 
-    test('500 с json schema попадает в errors', () => {
+    test('500 with a json schema lands in errors', () => {
       const result = buildErrors(
         makeOperation({
           responses: { '500': jsonResponse({ type: 'object' }) },
@@ -63,10 +63,10 @@ describe('buildErrors', () => {
         schemaNames,
       );
 
-      expect(result[0].status).toBe(500);
+      expect(result[0]!.status).toBe(500);
     });
 
-    test('schema ошибки обрабатывается', () => {
+    test('the error schema is handled', () => {
       const result = buildErrors(
         makeOperation({
           responses: {
@@ -79,13 +79,13 @@ describe('buildErrors', () => {
         schemaNames,
       );
 
-      expect(result[0].schema.type).toBe('object');
-      expect(result[0].schema.properties?.[0].name).toBe('message');
+      expect(result[0]!.schema.type).toBe('object');
+      expect(result[0]!.schema.properties?.[0]!.name).toBe('message');
     });
   });
 
-  describe('несколько ошибок', () => {
-    test('несколько 4xx попадают все', () => {
+  describe('several errors', () => {
+    test('every 4xx is collected', () => {
       const result = buildErrors(
         makeOperation({
           responses: {
@@ -104,7 +104,7 @@ describe('buildErrors', () => {
       expect(statuses).toContain(422);
     });
 
-    test('2xx игнорируются, 4xx собираются', () => {
+    test('2xx are ignored, 4xx are collected', () => {
       const result = buildErrors(
         makeOperation({
           responses: {
@@ -121,8 +121,8 @@ describe('buildErrors', () => {
     });
   });
 
-  describe('ошибки без json schema', () => {
-    test('4xx без json schema игнорируется', () => {
+  describe('errors without a json schema', () => {
+    test('4xx without a json schema is ignored', () => {
       const result = buildErrors(
         makeOperation({ responses: { '400': { description: 'Bad Request' } } }),
         schemaNames,
@@ -131,7 +131,7 @@ describe('buildErrors', () => {
       expect(result).toEqual([]);
     });
 
-    test('4xx с text/plain игнорируется', () => {
+    test('4xx with text/plain is ignored', () => {
       const result = buildErrors(
         makeOperation({
           responses: {

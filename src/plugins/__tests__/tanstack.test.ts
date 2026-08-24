@@ -6,34 +6,34 @@ import { HTTP_METHODS, DEFAULTS } from '@models';
 const DEFAULT_OPTS = DEFAULTS.PLUGINS.TANSTACK;
 
 describe('tanstack-query', () => {
-  describe('фабрика', () => {
-    test('возвращает плагин с правильными мета', () => {
+  describe('factory', () => {
+    test('returns a plugin with the right metadata', () => {
       const plugin = tanstackQuery();
       expect(plugin.name).toBe('tanstack-query');
       expect(plugin.fileName).toBe('tanstack');
       expect(plugin.scope).toBe('operations');
     });
 
-    test('queryKeysStyle: object добавляет generateRootFiles', () => {
+    test('queryKeysStyle: object adds generateRootFiles', () => {
       const plugin = tanstackQuery({ queryKeysStyle: 'object' });
       expect(plugin.generateRootFiles).toBeDefined();
     });
 
-    test('queryKeysStyle: functions не добавляет generateRootFiles', () => {
+    test('queryKeysStyle: functions adds no generateRootFiles', () => {
       const plugin = tanstackQuery({ queryKeysStyle: 'functions' });
       expect(plugin.generateRootFiles).toBeUndefined();
     });
 
-    test('generateRootFiles возвращает query-keys.ts', () => {
+    test('generateRootFiles returns query-keys.ts', () => {
       const plugin = tanstackQuery({ queryKeysStyle: 'object' });
       const files = plugin.generateRootFiles!(emptyIR, baseConfig);
       expect(files).toHaveLength(1);
-      expect(files[0].fileName).toBe('query-keys.ts');
+      expect(files[0]!.fileName).toBe('query-keys.ts');
     });
   });
 
-  describe('пустой IR', () => {
-    test('содержит banner и tanstack-query imports', () => {
+  describe('empty IR', () => {
+    test('contains the banner and tanstack-query imports', () => {
       const result = generateTanstack(emptyIR, baseConfig);
       expect(result.code).toContain('auto-generated');
       expect(result.code).toContain('@tanstack/react-query');
@@ -42,29 +42,29 @@ describe('tanstack-query', () => {
     });
   });
 
-  describe('GET операции (query)', () => {
+  describe('GET operations (query)', () => {
     const getOp = makeOperation({
       id: 'getUsers',
       method: HTTP_METHODS.GET,
       path: '/users',
     });
 
-    test('генерирует queryKey функцию', () => {
+    test('generates a queryKey function', () => {
       const result = generateTanstack(makeIR([getOp]), baseConfig);
       expect(result.code).toContain('getUsersQueryKey');
     });
 
-    test('генерирует queryOptions', () => {
+    test('generates queryOptions', () => {
       const result = generateTanstack(makeIR([getOp]), baseConfig);
       expect(result.code).toContain('getUsersQueryOptions');
     });
 
-    test('генерирует useGetUsersQuery хук', () => {
+    test('generates the useGetUsersQuery hook', () => {
       const result = generateTanstack(makeIR([getOp]), baseConfig);
       expect(result.code).toContain('useGetUsersQuery');
     });
 
-    test('exports содержит queryKey, queryOptions и хук', () => {
+    test('exports holds queryKey, queryOptions and the hook', () => {
       const result = generateTanstack(makeIR([getOp]), baseConfig);
       expect(result.exports).toContain('getUsersQueryKey');
       expect(result.exports).toContain('getUsersQueryOptions');
@@ -72,25 +72,25 @@ describe('tanstack-query', () => {
     });
   });
 
-  describe('mutation операции', () => {
+  describe('mutation operations', () => {
     const postOp = makeOperation({
       id: 'createUser',
       method: HTTP_METHODS.POST,
       path: '/users',
     });
 
-    test('генерирует useCreateUserMutation хук', () => {
+    test('generates the useCreateUserMutation hook', () => {
       const result = generateTanstack(makeIR([postOp]), baseConfig);
       expect(result.code).toContain('useCreateUserMutation');
     });
 
-    test('exports содержит mutation хук', () => {
+    test('exports holds the mutation hook', () => {
       expect(generateTanstack(makeIR([postOp]), baseConfig).exports).toContain(
         'useCreateUserMutation',
       );
     });
 
-    test('DELETE операция генерирует mutation', () => {
+    test('a DELETE operation generates a mutation', () => {
       const op = makeOperation({
         id: 'deleteUser',
         method: HTTP_METHODS.DELETE,
@@ -102,10 +102,10 @@ describe('tanstack-query', () => {
     });
   });
 
-  describe('опции', () => {
+  describe('options', () => {
     const getOp = makeOperation({ id: 'getItems', method: HTTP_METHODS.GET });
 
-    test('query: false не генерирует query хуки', () => {
+    test('query: false generates no query hooks', () => {
       const result = generateTanstack(
         makeIR([getOp]),
         baseConfig,
@@ -116,7 +116,7 @@ describe('tanstack-query', () => {
       expect(result.exports).not.toContain('useGetItemsQuery');
     });
 
-    test('mutation: false не генерирует mutation хуки', () => {
+    test('mutation: false generates no mutation hooks', () => {
       const postOp = makeOperation({
         id: 'createItem',
         method: HTTP_METHODS.POST,
@@ -131,7 +131,7 @@ describe('tanstack-query', () => {
       expect(result.exports).not.toContain('useCreateItemMutation');
     });
 
-    test('infinite: true генерирует infinite query', () => {
+    test('infinite: true generates an infinite query', () => {
       const result = generateTanstack(
         makeIR([getOp]),
         baseConfig,
@@ -142,7 +142,7 @@ describe('tanstack-query', () => {
       expect(result.exports).toContain('useInfinityGetItemsQuery');
     });
 
-    test('suspense: true генерирует suspense query', () => {
+    test('suspense: true generates a suspense query', () => {
       const result = generateTanstack(
         makeIR([getOp]),
         baseConfig,
@@ -157,7 +157,7 @@ describe('tanstack-query', () => {
   describe('queryKeysStyle: object', () => {
     const getOp = makeOperation({ id: 'getUsers', method: HTTP_METHODS.GET });
 
-    test('не генерирует отдельную queryKey функцию', () => {
+    test('generates no standalone queryKey function', () => {
       const result = generateTanstack(
         makeIR([getOp]),
         baseConfig,
@@ -168,7 +168,7 @@ describe('tanstack-query', () => {
       expect(result.exports).not.toContain('getUsersQueryKey');
     });
 
-    test('импортирует queryKeys из queryKeysImportPath', () => {
+    test('imports queryKeys from queryKeysImportPath', () => {
       const result = generateTanstack(
         makeIR([getOp]),
         baseConfig,
@@ -180,15 +180,15 @@ describe('tanstack-query', () => {
     });
   });
 
-  describe('импорт типов', () => {
-    test('импортирует response type если есть name', () => {
+  describe('type imports', () => {
+    test('imports the response type when it has a name', () => {
       const op = makeOperation({
         response: { type: 'object', name: 'User' },
       });
       expect(generateTanstack(makeIR([op]), baseConfig).code).toContain('User');
     });
 
-    test('импортирует SDK функцию', () => {
+    test('imports the SDK function', () => {
       const op = makeOperation({ id: 'getUsers', method: HTTP_METHODS.GET });
       expect(generateTanstack(makeIR([op]), baseConfig).code).toContain(
         "from './sdk'",
@@ -196,8 +196,8 @@ describe('tanstack-query', () => {
     });
   });
 
-  describe('несколько операций', () => {
-    test('генерирует хуки для всех операций', () => {
+  describe('several operations', () => {
+    test('generates hooks for every operation', () => {
       const ir = makeIR([
         makeOperation({
           id: 'getUsers',
@@ -224,11 +224,19 @@ describe('tanstack-query', () => {
 
   describe('framework', () => {
     const ir = makeIR([
-      makeOperation({ id: 'getUsers', method: HTTP_METHODS.GET, path: '/users' }),
-      makeOperation({ id: 'createUser', method: HTTP_METHODS.POST, path: '/users' }),
+      makeOperation({
+        id: 'getUsers',
+        method: HTTP_METHODS.GET,
+        path: '/users',
+      }),
+      makeOperation({
+        id: 'createUser',
+        method: HTTP_METHODS.POST,
+        path: '/users',
+      }),
     ]);
 
-    test('react (default) — импортирует из @tanstack/react-query с use* хуками', () => {
+    test('react (default) — imports from @tanstack/react-query with use* hooks', () => {
       const result = generateTanstack(ir, baseConfig);
       expect(result.code).toContain("from '@tanstack/react-query'");
       expect(result.code).toContain('useQuery');
@@ -237,18 +245,38 @@ describe('tanstack-query', () => {
       expect(result.exports).toContain('useCreateUserMutation');
     });
 
-    test('vue — импортирует из @tanstack/vue-query с use* хуками', () => {
-      const opts = { ...DEFAULT_OPTS, hookGenerationStrategies: {}, framework: 'vue' as const };
-      const result = generateTanstack(ir, baseConfig, './sdk', './query-keys', opts);
+    test('vue — imports from @tanstack/vue-query with use* hooks', () => {
+      const opts = {
+        ...DEFAULT_OPTS,
+        hookGenerationStrategies: {},
+        framework: 'vue' as const,
+      };
+      const result = generateTanstack(
+        ir,
+        baseConfig,
+        './sdk',
+        './query-keys',
+        opts,
+      );
       expect(result.code).toContain("from '@tanstack/vue-query'");
       expect(result.code).toContain('useQuery');
       expect(result.exports).toContain('useGetUsersQuery');
       expect(result.exports).toContain('useCreateUserMutation');
     });
 
-    test('solid — импортирует из @tanstack/solid-query с create* хуками', () => {
-      const opts = { ...DEFAULT_OPTS, hookGenerationStrategies: {}, framework: 'solid' as const };
-      const result = generateTanstack(ir, baseConfig, './sdk', './query-keys', opts);
+    test('solid — imports from @tanstack/solid-query with create* hooks', () => {
+      const opts = {
+        ...DEFAULT_OPTS,
+        hookGenerationStrategies: {},
+        framework: 'solid' as const,
+      };
+      const result = generateTanstack(
+        ir,
+        baseConfig,
+        './sdk',
+        './query-keys',
+        opts,
+      );
       expect(result.code).toContain("from '@tanstack/solid-query'");
       expect(result.code).toContain('createQuery');
       expect(result.code).toContain('createMutation');
@@ -256,9 +284,19 @@ describe('tanstack-query', () => {
       expect(result.exports).toContain('createCreateUserMutation');
     });
 
-    test('svelte — импортирует из @tanstack/svelte-query с create* хуками', () => {
-      const opts = { ...DEFAULT_OPTS, hookGenerationStrategies: {}, framework: 'svelte' as const };
-      const result = generateTanstack(ir, baseConfig, './sdk', './query-keys', opts);
+    test('svelte — imports from @tanstack/svelte-query with create* hooks', () => {
+      const opts = {
+        ...DEFAULT_OPTS,
+        hookGenerationStrategies: {},
+        framework: 'svelte' as const,
+      };
+      const result = generateTanstack(
+        ir,
+        baseConfig,
+        './sdk',
+        './query-keys',
+        opts,
+      );
       expect(result.code).toContain("from '@tanstack/svelte-query'");
       expect(result.code).toContain('createQuery');
       expect(result.exports).toContain('createGetUsersQuery');

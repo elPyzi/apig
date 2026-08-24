@@ -3,8 +3,8 @@ import { faker, generateFaker } from '../faker';
 import { baseConfig, emptyIR, makeSchema, makeProp, makeIR } from './fixtures';
 
 describe('faker', () => {
-  describe('фабрика', () => {
-    test('возвращает плагин с правильными мета', () => {
+  describe('factory', () => {
+    test('returns a plugin with the right metadata', () => {
       const plugin = faker();
       expect(plugin.name).toBe('faker');
       expect(plugin.fileName).toBe('faker');
@@ -12,8 +12,8 @@ describe('faker', () => {
     });
   });
 
-  describe('пустой IR', () => {
-    test('содержит banner и импорт faker', () => {
+  describe('empty IR', () => {
+    test('contains the banner and the faker import', () => {
       const result = generateFaker(emptyIR, baseConfig);
       expect(result.code).toContain('auto-generated');
       expect(result.code).toContain('@faker-js/faker');
@@ -23,7 +23,7 @@ describe('faker', () => {
   });
 
   describe('object schema', () => {
-    test('генерирует фабричную функцию', () => {
+    test('generates a factory function', () => {
       const ir = makeIR(
         [],
         [
@@ -39,7 +39,7 @@ describe('faker', () => {
       expect(result.code).toContain('(): User =>');
     });
 
-    test('несколько схем генерируются все', () => {
+    test('every one of several schemas is generated', () => {
       const ir = makeIR(
         [],
         [
@@ -61,7 +61,7 @@ describe('faker', () => {
     });
   });
 
-  describe('маппинг свойств по имени', () => {
+  describe('properties are mapped by name', () => {
     const makeUser = (prop: ReturnType<typeof makeProp>) =>
       makeIR(
         [],
@@ -177,7 +177,7 @@ describe('faker', () => {
     });
   });
 
-  describe('типы значений', () => {
+  describe('value types', () => {
     test('number → faker.number.int()', () => {
       const ir = makeIR(
         [],
@@ -219,7 +219,7 @@ describe('faker', () => {
   });
 
   describe('enum schema', () => {
-    test('enum генерирует faker.helpers.arrayElement', () => {
+    test('an enum generates faker.helpers.arrayElement', () => {
       const ir = makeIR(
         [],
         [
@@ -239,8 +239,8 @@ describe('faker', () => {
     });
   });
 
-  describe('ссылки между схемами', () => {
-    test('поле ссылающееся на другую схему вызывает generate функцию', () => {
+  describe('references between schemas', () => {
+    test('a field referencing another schema calls its generate function', () => {
       const ir = makeIR(
         [],
         [
@@ -266,7 +266,7 @@ describe('faker', () => {
       expect(generateFaker(ir, baseConfig).code).toContain('generateAddress()');
     });
 
-    test('array поле с ref вызывает faker.helpers.multiple', () => {
+    test('an array field with a ref calls faker.helpers.multiple', () => {
       const ir = makeIR(
         [],
         [
@@ -299,7 +299,7 @@ describe('faker', () => {
   });
 
   describe('imports', () => {
-    test('импортирует только object схемы как типы', () => {
+    test('imports only object schemas as types', () => {
       const ir = makeIR(
         [],
         [
@@ -322,7 +322,7 @@ describe('faker', () => {
   });
 
   describe('exports', () => {
-    test('exports содержит generate функции для object схем', () => {
+    test('exports holds generate functions for object schemas', () => {
       const ir = makeIR(
         [],
         [
@@ -336,12 +336,12 @@ describe('faker', () => {
       expect(generateFaker(ir, baseConfig).exports).toContain('generateUser');
     });
 
-    test('typeExports всегда пустой', () => {
+    test('typeExports is always empty', () => {
       const ir = makeIR([], [makeSchema({ name: 'User', type: 'object' })]);
       expect(generateFaker(ir, baseConfig).typeExports).toEqual([]);
     });
 
-    test('схема без name не попадает в exports', () => {
+    test('a schema without a name stays out of exports', () => {
       const ir = makeIR([], [makeSchema({ type: 'object' })]);
       expect(generateFaker(ir, baseConfig).exports).toHaveLength(0);
     });

@@ -2,29 +2,33 @@ import { describe, test, expect } from 'bun:test';
 import { valibot, generateValibot } from '../valibot';
 import { baseConfig, emptyIR, makeSchema, makeProp, makeIR } from './fixtures';
 import { DEFAULTS } from '@models';
+import type { IRSchema } from '@models';
 
-const opts = (overrides = {}) => ({ ...DEFAULTS.PLUGINS.VALIBOT, ...overrides });
+const opts = (overrides = {}) => ({
+  ...DEFAULTS.PLUGINS.VALIBOT,
+  ...overrides,
+});
 
 describe('valibot', () => {
-  describe('фабрика', () => {
-    test('возвращает плагин с правильными мета', () => {
+  describe('factory', () => {
+    test('returns a plugin with the right metadata', () => {
       const plugin = valibot();
       expect(plugin.name).toBe('valibot');
       expect(plugin.fileName).toBe('valibot');
       expect(plugin.scope).toBe('root');
     });
 
-    test('withTypes по умолчанию true', () => {
+    test('withTypes defaults to true', () => {
       expect(valibot().withTypes).toBe(true);
     });
 
-    test('withTypes: false пробрасывается', () => {
+    test('withTypes: false is carried through', () => {
       expect(valibot({ withTypes: false }).withTypes).toBe(false);
     });
   });
 
-  describe('пустой IR', () => {
-    test('содержит banner и импорт valibot', () => {
+  describe('empty IR', () => {
+    test('contains the banner and the valibot import', () => {
       const result = generateValibot(emptyIR, baseConfig);
       expect(result.code).toContain('auto-generated');
       expect(result.code).toContain("import * as v from 'valibot'");
@@ -32,7 +36,7 @@ describe('valibot', () => {
   });
 
   describe('object schema', () => {
-    test('генерирует v.object', () => {
+    test('generates v.object', () => {
       const ir = makeIR(
         [],
         [
@@ -49,7 +53,7 @@ describe('valibot', () => {
       expect(result.code).toContain('name: v.string()');
     });
 
-    test('optional поле с v.optional()', () => {
+    test('an optional field gets v.optional()', () => {
       const ir = makeIR(
         [],
         [
@@ -65,7 +69,7 @@ describe('valibot', () => {
       );
     });
 
-    test('withTypes: true генерирует InferOutput тип', () => {
+    test('withTypes: true generates an InferOutput type', () => {
       const ir = makeIR(
         [],
         [
@@ -81,7 +85,7 @@ describe('valibot', () => {
       );
     });
 
-    test('withTypes: false не генерирует тип', () => {
+    test('withTypes: false generates no type', () => {
       const ir = makeIR(
         [],
         [
@@ -102,8 +106,8 @@ describe('valibot', () => {
     });
   });
 
-  describe('строковые констрейнты', () => {
-    const prop = (schema) => ({
+  describe('string constraints', () => {
+    const prop = (schema: IRSchema) => ({
       name: 'f',
       required: true,
       type: 'string' as const,
@@ -182,7 +186,7 @@ describe('valibot', () => {
       expect(generateValibot(ir, baseConfig).code).toContain('v.isoDate()');
     });
 
-    test('minLength и maxLength через v.pipe', () => {
+    test('minLength and maxLength through v.pipe', () => {
       const ir = makeIR(
         [],
         [
@@ -199,7 +203,7 @@ describe('valibot', () => {
       expect(code).toContain('v.maxLength(20)');
     });
 
-    test('pattern через v.regex', () => {
+    test('pattern through v.regex', () => {
       const ir = makeIR(
         [],
         [
@@ -232,8 +236,8 @@ describe('valibot', () => {
     });
   });
 
-  describe('числовые констрейнты', () => {
-    test('minimum и maximum через v.pipe', () => {
+  describe('numeric constraints', () => {
+    test('minimum and maximum through v.pipe', () => {
       const ir = makeIR(
         [],
         [
@@ -258,7 +262,7 @@ describe('valibot', () => {
   });
 
   describe('nullable', () => {
-    test('nullable property через v.nullable()', () => {
+    test('a nullable property through v.nullable()', () => {
       const ir = makeIR(
         [],
         [
@@ -288,7 +292,7 @@ describe('valibot', () => {
       enum: ['active', 'inactive'],
     });
 
-    test('union style генерирует v.picklist', () => {
+    test('union style generates v.picklist', () => {
       const result = generateValibot(makeIR([], [enumSchema]), {
         ...baseConfig,
         enumStyle: 'union',
@@ -296,7 +300,7 @@ describe('valibot', () => {
       expect(result.code).toContain("v.picklist(['active', 'inactive'])");
     });
 
-    test('union style генерирует InferOutput тип', () => {
+    test('union style generates an InferOutput type', () => {
       const result = generateValibot(makeIR([], [enumSchema]), {
         ...baseConfig,
         enumStyle: 'union',
@@ -304,7 +308,7 @@ describe('valibot', () => {
       expect(result.code).toContain('v.InferOutput<typeof StatusSchema>');
     });
 
-    test('const style генерирует as const + picklist(Object.values)', () => {
+    test('const style generates as const + picklist(Object.values)', () => {
       const result = generateValibot(makeIR([], [enumSchema]), {
         ...baseConfig,
         enumStyle: 'const',
@@ -313,7 +317,7 @@ describe('valibot', () => {
       expect(result.code).toContain('v.picklist(Object.values(Status))');
     });
 
-    test('enum style генерирует v.enum', () => {
+    test('enum style generates v.enum', () => {
       const result = generateValibot(makeIR([], [enumSchema]), {
         ...baseConfig,
         enumStyle: 'enum',
@@ -324,7 +328,7 @@ describe('valibot', () => {
   });
 
   describe('composition', () => {
-    test('allOf генерирует v.intersect', () => {
+    test('allOf generates v.intersect', () => {
       const ir = makeIR(
         [],
         [
@@ -341,7 +345,7 @@ describe('valibot', () => {
       expect(generateValibot(ir, baseConfig).code).toContain('v.intersect([');
     });
 
-    test('oneOf генерирует v.union', () => {
+    test('oneOf generates v.union', () => {
       const ir = makeIR(
         [],
         [
@@ -358,7 +362,7 @@ describe('valibot', () => {
       expect(generateValibot(ir, baseConfig).code).toContain('v.union([');
     });
 
-    test('oneOf с discriminator генерирует v.variant', () => {
+    test('oneOf with a discriminator generates v.variant', () => {
       const ir = makeIR(
         [],
         [
@@ -380,12 +384,12 @@ describe('valibot', () => {
   });
 
   describe('exports', () => {
-    test('exports содержит имена с суффиксом', () => {
+    test('exports holds suffixed names', () => {
       const ir = makeIR([], [makeSchema({ name: 'User', type: 'object' })]);
       expect(generateValibot(ir, baseConfig).exports).toContain('UserSchema');
     });
 
-    test('typeExports содержит имена без суффикса', () => {
+    test('typeExports holds unsuffixed names', () => {
       const ir = makeIR([], [makeSchema({ name: 'User', type: 'object' })]);
       expect(generateValibot(ir, baseConfig).typeExports).toContain('User');
     });

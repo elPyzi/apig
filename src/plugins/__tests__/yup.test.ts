@@ -2,37 +2,55 @@ import { describe, test, expect } from 'bun:test';
 import { yup, generateYup } from '../yup';
 import { baseConfig, emptyIR, makeSchema, makeProp, makeIR } from './fixtures';
 import { DEFAULTS } from '@models';
+import type { IRSchema } from '@models';
 
 const opts = (overrides = {}) => ({ ...DEFAULTS.PLUGINS.YUP, ...overrides });
 
 describe('yup', () => {
-  describe('фабрика', () => {
-    test('возвращает плагин с правильными мета', () => {
+  describe('factory', () => {
+    test('returns a plugin with the right metadata', () => {
       const plugin = yup();
       expect(plugin.name).toBe('yup');
       expect(plugin.fileName).toBe('yup');
       expect(plugin.scope).toBe('root');
     });
 
-    test('withTypes по умолчанию true — генерирует тип', () => {
+    test('withTypes defaults to true — generates the type', () => {
       const ir = makeIR(
         [],
-        [makeSchema({ name: 'User', type: 'object', properties: [makeProp('id', 'number')] })],
+        [
+          makeSchema({
+            name: 'User',
+            type: 'object',
+            properties: [makeProp('id', 'number')],
+          }),
+        ],
       );
       expect(generateYup(ir, baseConfig).code).toContain('export type User =');
     });
 
-    test('withTypes: false не генерирует тип', () => {
+    test('withTypes: false generates no type', () => {
       const ir = makeIR(
         [],
-        [makeSchema({ name: 'User', type: 'object', properties: [makeProp('id', 'number')] })],
+        [
+          makeSchema({
+            name: 'User',
+            type: 'object',
+            properties: [makeProp('id', 'number')],
+          }),
+        ],
       );
-      expect(generateYup(ir, baseConfig, { withTypes: false, schemaSuffix: 'Schema' }).code).not.toContain('export type User =');
+      expect(
+        generateYup(ir, baseConfig, {
+          withTypes: false,
+          schemaSuffix: 'Schema',
+        }).code,
+      ).not.toContain('export type User =');
     });
   });
 
-  describe('пустой IR', () => {
-    test('содержит banner и импорт yup', () => {
+  describe('empty IR', () => {
+    test('contains the banner and the yup import', () => {
       const result = generateYup(emptyIR, baseConfig);
       expect(result.code).toContain('auto-generated');
       expect(result.code).toContain("import * as yup from 'yup'");
@@ -40,7 +58,7 @@ describe('yup', () => {
   });
 
   describe('object schema', () => {
-    test('генерирует yup.object', () => {
+    test('generates yup.object', () => {
       const ir = makeIR(
         [],
         [
@@ -57,7 +75,7 @@ describe('yup', () => {
       expect(result.code).toContain('name: yup.string()');
     });
 
-    test('required свойство с .required()', () => {
+    test('a required property gets .required()', () => {
       const ir = makeIR(
         [],
         [
@@ -71,7 +89,7 @@ describe('yup', () => {
       expect(generateYup(ir, baseConfig).code).toContain('.required()');
     });
 
-    test('optional свойство с .optional()', () => {
+    test('an optional property gets .optional()', () => {
       const ir = makeIR(
         [],
         [
@@ -85,7 +103,7 @@ describe('yup', () => {
       expect(generateYup(ir, baseConfig).code).toContain('.optional()');
     });
 
-    test('withTypes: true генерирует InferType', () => {
+    test('withTypes: true generates InferType', () => {
       const ir = makeIR(
         [],
         [
@@ -101,7 +119,7 @@ describe('yup', () => {
       );
     });
 
-    test('withTypes: false не генерирует тип', () => {
+    test('withTypes: false generates no type', () => {
       const ir = makeIR(
         [],
         [
@@ -118,8 +136,8 @@ describe('yup', () => {
     });
   });
 
-  describe('строковые констрейнты', () => {
-    const prop = (schema) => ({
+  describe('string constraints', () => {
+    const prop = (schema: IRSchema) => ({
       name: 'f',
       required: true,
       type: 'string' as const,
@@ -170,7 +188,7 @@ describe('yup', () => {
       expect(generateYup(ir, baseConfig).code).toContain('yup.string().url()');
     });
 
-    test('minLength и maxLength', () => {
+    test('minLength and maxLength', () => {
       const ir = makeIR(
         [],
         [
@@ -186,7 +204,7 @@ describe('yup', () => {
       expect(code).toContain('.max(50)');
     });
 
-    test('pattern через .matches()', () => {
+    test('pattern through .matches()', () => {
       const ir = makeIR(
         [],
         [
@@ -215,8 +233,8 @@ describe('yup', () => {
     });
   });
 
-  describe('числовые констрейнты', () => {
-    test('minimum и maximum', () => {
+  describe('numeric constraints', () => {
+    test('minimum and maximum', () => {
       const ir = makeIR(
         [],
         [
@@ -241,7 +259,7 @@ describe('yup', () => {
   });
 
   describe('nullable', () => {
-    test('nullable property через .nullable()', () => {
+    test('a nullable property through .nullable()', () => {
       const ir = makeIR(
         [],
         [
@@ -264,7 +282,7 @@ describe('yup', () => {
   });
 
   describe('array schema', () => {
-    test('генерирует yup.array().of()', () => {
+    test('generates yup.array().of()', () => {
       const ir = makeIR(
         [],
         [
@@ -287,7 +305,7 @@ describe('yup', () => {
       );
     });
 
-    test('minItems и maxItems', () => {
+    test('minItems and maxItems', () => {
       const ir = makeIR(
         [],
         [
@@ -324,7 +342,7 @@ describe('yup', () => {
       enum: ['active', 'inactive'],
     });
 
-    test('union style генерирует yup.mixed().oneOf()', () => {
+    test('union style generates yup.mixed().oneOf()', () => {
       const result = generateYup(makeIR([], [enumSchema]), {
         ...baseConfig,
         enumStyle: 'union',
@@ -332,7 +350,7 @@ describe('yup', () => {
       expect(result.code).toContain("yup.mixed().oneOf(['active', 'inactive']");
     });
 
-    test('union style генерирует InferType тип', () => {
+    test('union style generates an InferType type', () => {
       const result = generateYup(makeIR([], [enumSchema]), {
         ...baseConfig,
         enumStyle: 'union',
@@ -340,7 +358,7 @@ describe('yup', () => {
       expect(result.code).toContain('yup.InferType<typeof StatusSchema>');
     });
 
-    test('const style генерирует as const объект', () => {
+    test('const style generates an as const object', () => {
       const result = generateYup(makeIR([], [enumSchema]), {
         ...baseConfig,
         enumStyle: 'const',
@@ -348,7 +366,7 @@ describe('yup', () => {
       expect(result.code).toContain('as const');
     });
 
-    test('enum style генерирует TypeScript enum', () => {
+    test('enum style generates a TypeScript enum', () => {
       const result = generateYup(makeIR([], [enumSchema]), {
         ...baseConfig,
         enumStyle: 'enum',
@@ -358,7 +376,7 @@ describe('yup', () => {
   });
 
   describe('composition', () => {
-    test('allOf генерирует .concat()', () => {
+    test('allOf generates .concat()', () => {
       const ir = makeIR(
         [],
         [
@@ -375,7 +393,7 @@ describe('yup', () => {
       expect(generateYup(ir, baseConfig).code).toContain('.concat(');
     });
 
-    test('oneOf генерирует yup.mixed().oneOf()', () => {
+    test('oneOf generates yup.mixed().oneOf()', () => {
       const ir = makeIR(
         [],
         [
@@ -394,12 +412,12 @@ describe('yup', () => {
   });
 
   describe('exports', () => {
-    test('exports содержит имена с суффиксом', () => {
+    test('exports holds suffixed names', () => {
       const ir = makeIR([], [makeSchema({ name: 'User', type: 'object' })]);
       expect(generateYup(ir, baseConfig).exports).toContain('UserSchema');
     });
 
-    test('typeExports содержит имена без суффикса', () => {
+    test('typeExports holds unsuffixed names', () => {
       const ir = makeIR([], [makeSchema({ name: 'User', type: 'object' })]);
       expect(generateYup(ir, baseConfig).typeExports).toContain('User');
     });

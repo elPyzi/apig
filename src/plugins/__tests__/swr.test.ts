@@ -4,106 +4,106 @@ import { baseConfig, emptyIR, makeOperation, makeIR } from './fixtures';
 import { HTTP_METHODS } from '@models';
 
 describe('swr', () => {
-  describe('фабрика', () => {
-    test('возвращает плагин с правильными мета', () => {
+  describe('factory', () => {
+    test('returns a plugin with the right metadata', () => {
       const plugin = swr();
       expect(plugin.name).toBe('swr');
       expect(plugin.fileName).toBe('swr');
       expect(plugin.scope).toBe('operations');
     });
 
-    test('queryKeysStyle: object добавляет generateRootFiles', () => {
+    test('queryKeysStyle: object adds generateRootFiles', () => {
       const plugin = swr({ queryKeysStyle: 'object' });
       expect(plugin.generateRootFiles).toBeDefined();
     });
 
-    test('queryKeysStyle: functions не добавляет generateRootFiles', () => {
+    test('queryKeysStyle: functions adds no generateRootFiles', () => {
       expect(
         swr({ queryKeysStyle: 'functions' }).generateRootFiles,
       ).toBeUndefined();
     });
 
-    test('generateRootFiles возвращает swr-keys.ts', () => {
+    test('generateRootFiles returns swr-keys.ts', () => {
       const files = swr({ queryKeysStyle: 'object' }).generateRootFiles!(
         emptyIR,
         baseConfig,
       );
       expect(files).toHaveLength(1);
-      expect(files[0].fileName).toBe('swr-keys.ts');
+      expect(files[0]!.fileName).toBe('swr-keys.ts');
     });
   });
 
-  describe('пустой IR', () => {
-    test('содержит banner', () => {
+  describe('empty IR', () => {
+    test('contains the banner', () => {
       const result = generateSwr(emptyIR, baseConfig);
       expect(result.code).toContain('auto-generated');
     });
 
-    test('пустые exports', () => {
+    test('empty exports', () => {
       const result = generateSwr(emptyIR, baseConfig);
       expect(result.exports).toEqual([]);
       expect(result.typeExports).toEqual([]);
     });
   });
 
-  describe('GET операции', () => {
+  describe('GET operations', () => {
     const getOp = makeOperation({
       id: 'getUsers',
       method: HTTP_METHODS.GET,
       path: '/users',
     });
 
-    test('генерирует swrKey функцию', () => {
+    test('generates an swrKey function', () => {
       expect(generateSwr(makeIR([getOp]), baseConfig).code).toContain(
         'getUsersSwrKey',
       );
     });
 
-    test('генерирует useGetUsers хук', () => {
+    test('generates the useGetUsers hook', () => {
       expect(generateSwr(makeIR([getOp]), baseConfig).code).toContain(
         'useGetUsers',
       );
     });
 
-    test('exports содержит swrKey и хук', () => {
+    test('exports holds swrKey and the hook', () => {
       const result = generateSwr(makeIR([getOp]), baseConfig);
       expect(result.exports).toContain('getUsersSwrKey');
       expect(result.exports).toContain('useGetUsers');
     });
 
-    test('использует useSWR в теле хука', () => {
+    test('uses useSWR in the hook body', () => {
       expect(generateSwr(makeIR([getOp]), baseConfig).code).toContain(
         'useSWR<',
       );
     });
   });
 
-  describe('mutation операции', () => {
+  describe('mutation operations', () => {
     const postOp = makeOperation({
       id: 'createUser',
       method: HTTP_METHODS.POST,
       path: '/users',
     });
 
-    test('импортирует useSWRMutation при наличии mutations', () => {
+    test('imports useSWRMutation when there are mutations', () => {
       expect(generateSwr(makeIR([postOp]), baseConfig).code).toContain(
         "import useSWRMutation from 'swr/mutation'",
       );
     });
 
-    test('генерирует useCreateUserMutation хук', () => {
+    test('generates the useCreateUserMutation hook', () => {
       expect(generateSwr(makeIR([postOp]), baseConfig).code).toContain(
         'useCreateUserMutation',
       );
     });
 
-    test('exports содержит mutation хук', () => {
+    test('exports holds the mutation hook', () => {
       expect(generateSwr(makeIR([postOp]), baseConfig).exports).toContain(
         'useCreateUserMutation',
       );
     });
 
-    test('DELETE генерирует mutation', () => {
+    test('DELETE generates a mutation', () => {
       const op = makeOperation({
         id: 'deleteUser',
         method: HTTP_METHODS.DELETE,
@@ -114,7 +114,7 @@ describe('swr', () => {
       );
     });
 
-    test('PUT генерирует mutation', () => {
+    test('PUT generates a mutation', () => {
       const op = makeOperation({
         id: 'updateUser',
         method: HTTP_METHODS.PUT,
@@ -129,7 +129,7 @@ describe('swr', () => {
   describe('queryKeysStyle: object', () => {
     const getOp = makeOperation({ id: 'getUsers', method: HTTP_METHODS.GET });
 
-    test('не генерирует отдельный swrKey', () => {
+    test('generates no standalone swrKey', () => {
       const result = generateSwr(
         makeIR([getOp]),
         baseConfig,
@@ -140,7 +140,7 @@ describe('swr', () => {
       expect(result.exports).not.toContain('getUsersSwrKey');
     });
 
-    test('импортирует swrKeys из swrKeysImportPath', () => {
+    test('imports swrKeys from swrKeysImportPath', () => {
       const result = generateSwr(
         makeIR([getOp]),
         baseConfig,
@@ -152,15 +152,15 @@ describe('swr', () => {
     });
   });
 
-  describe('импорт типов', () => {
-    test('импортирует response type если есть name', () => {
+  describe('type imports', () => {
+    test('imports the response type when it has a name', () => {
       const op = makeOperation({
         response: { type: 'object', name: 'User' },
       });
       expect(generateSwr(makeIR([op]), baseConfig).code).toContain('User');
     });
 
-    test('импортирует body type если есть name', () => {
+    test('imports the body type when it has a name', () => {
       const op = makeOperation({
         method: HTTP_METHODS.POST,
         body: {
@@ -174,8 +174,8 @@ describe('swr', () => {
     });
   });
 
-  describe('несколько операций', () => {
-    test('генерирует хуки для всех операций', () => {
+  describe('several operations', () => {
+    test('generates hooks for every operation', () => {
       const ir = makeIR([
         makeOperation({ id: 'getUsers', method: HTTP_METHODS.GET }),
         makeOperation({
@@ -192,8 +192,8 @@ describe('swr', () => {
     });
   });
 
-  describe('кастомный sdkImportPath', () => {
-    test('использует кастомный путь sdk', () => {
+  describe('custom sdkImportPath', () => {
+    test('uses a custom sdk path', () => {
       const ir = makeIR([
         makeOperation({ id: 'getUsers', method: HTTP_METHODS.GET }),
       ]);

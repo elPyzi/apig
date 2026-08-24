@@ -1,13 +1,14 @@
 import { describe, test, expect } from 'bun:test';
 import { msw, generateMsw } from '../msw';
 import { baseConfig, emptyIR, makeOperation, makeIR } from './fixtures';
+import { faker } from '../faker';
 import { HTTP_METHODS } from '@models';
 
-const configWithFaker = { ...baseConfig, plugins: [{ name: 'faker' }] };
+const configWithFaker = { ...baseConfig, plugins: [faker()] };
 
 describe('msw', () => {
-  describe('фабрика', () => {
-    test('возвращает плагин с правильными мета', () => {
+  describe('factory', () => {
+    test('returns a plugin with the right metadata', () => {
       const plugin = msw();
       expect(plugin.name).toBe('msw');
       expect(plugin.fileName).toBe('msw');
@@ -15,38 +16,38 @@ describe('msw', () => {
     });
   });
 
-  describe('валидация конфигурации', () => {
-    test('бросает ошибку если faker плагин не подключён', () => {
+  describe('config validation', () => {
+    test('throws when the faker plugin is missing', () => {
       expect(() => generateMsw(emptyIR, baseConfig)).toThrow(
         'msw plugin requires faker plugin',
       );
     });
 
-    test('не бросает ошибку если faker плагин подключён', () => {
+    test('does not throw when the faker plugin is present', () => {
       expect(() => generateMsw(emptyIR, configWithFaker)).not.toThrow();
     });
   });
 
-  describe('пустой IR', () => {
-    test('содержит banner и импорт msw', () => {
+  describe('empty IR', () => {
+    test('contains the banner and the msw import', () => {
       const result = generateMsw(emptyIR, configWithFaker);
       expect(result.code).toContain('auto-generated');
       expect(result.code).toContain("import { http, HttpResponse } from 'msw'");
     });
 
-    test('содержит пустой массив handlers', () => {
+    test('contains an empty handlers array', () => {
       const result = generateMsw(emptyIR, configWithFaker);
       expect(result.code).toContain('export const handlers = [');
       expect(result.exports).toContain('handlers');
     });
 
-    test('typeExports всегда пустой', () => {
+    test('typeExports is always empty', () => {
       expect(generateMsw(emptyIR, configWithFaker).typeExports).toEqual([]);
     });
   });
 
-  describe('GET операции', () => {
-    test('генерирует http.get handler', () => {
+  describe('GET operations', () => {
+    test('generates an http.get handler', () => {
       const ir = makeIR([
         makeOperation({ method: HTTP_METHODS.GET, path: '/users' }),
       ]);
@@ -55,7 +56,7 @@ describe('msw', () => {
       expect(result.code).toContain('/users');
     });
 
-    test('GET handler с response возвращает HttpResponse.json()', () => {
+    test('a GET handler with a response returns HttpResponse.json()', () => {
       const ir = makeIR([
         makeOperation({
           method: HTTP_METHODS.GET,
@@ -68,7 +69,7 @@ describe('msw', () => {
       );
     });
 
-    test('GET handler без response возвращает 204', () => {
+    test('a GET handler without a response returns 204', () => {
       const ir = makeIR([
         makeOperation({
           method: HTTP_METHODS.GET,
@@ -82,7 +83,7 @@ describe('msw', () => {
     });
   });
 
-  describe('POST/PUT/PATCH/DELETE операции', () => {
+  describe('POST/PUT/PATCH/DELETE operations', () => {
     test('POST → http.post handler', () => {
       const ir = makeIR([
         makeOperation({ method: HTTP_METHODS.POST, path: '/users' }),
@@ -112,8 +113,8 @@ describe('msw', () => {
     });
   });
 
-  describe('несколько операций', () => {
-    test('все операции присутствуют в handlers', () => {
+  describe('several operations', () => {
+    test('every operation is present in handlers', () => {
       const ir = makeIR([
         makeOperation({
           id: 'getUsers',
@@ -132,14 +133,14 @@ describe('msw', () => {
     });
   });
 
-  describe('импорт faker при наличии ответа', () => {
-    test('не импортирует faker если ответов нет', () => {
+  describe('imports faker when there is a response', () => {
+    test('does not import faker when there are no responses', () => {
       const ir = makeIR([makeOperation({ response: null })]);
       const code = generateMsw(ir, configWithFaker).code;
       expect(code).not.toContain('@faker-js/faker');
     });
 
-    test('импортирует generate-функцию при наличии response schema name', () => {
+    test('imports the generate function when the response schema has a name', () => {
       const ir = makeIR([
         makeOperation({
           response: { type: 'object', name: 'User' },
@@ -151,7 +152,7 @@ describe('msw', () => {
   });
 
   describe('exports', () => {
-    test('exports содержит handlers', () => {
+    test('exports holds handlers', () => {
       const result = generateMsw(emptyIR, configWithFaker);
       expect(result.exports).toEqual(['handlers']);
     });

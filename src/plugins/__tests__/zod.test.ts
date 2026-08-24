@@ -1,27 +1,28 @@
 import { describe, test, expect } from 'bun:test';
 import { zod, generateZod } from '../zod';
 import { baseConfig, emptyIR, makeSchema, makeProp, makeIR } from './fixtures';
+import type { IRSchema } from '@models';
 
 describe('zod', () => {
-  describe('фабрика', () => {
-    test('возвращает плагин с правильными мета', () => {
+  describe('factory', () => {
+    test('returns a plugin with the right metadata', () => {
       const plugin = zod();
       expect(plugin.name).toBe('zod');
       expect(plugin.fileName).toBe('zod');
       expect(plugin.scope).toBe('root');
     });
 
-    test('withTypes по умолчанию true', () => {
+    test('withTypes defaults to true', () => {
       const plugin = zod();
       expect(plugin.withTypes).toBe(true);
     });
 
-    test('withTypes: false пробрасывается', () => {
+    test('withTypes: false is carried through', () => {
       const plugin = zod({ withTypes: false });
       expect(plugin.withTypes).toBe(false);
     });
 
-    test('schemaSuffix по умолчанию Schema', () => {
+    test('schemaSuffix defaults to Schema', () => {
       const ir = makeIR(
         [],
         [
@@ -35,7 +36,7 @@ describe('zod', () => {
       expect(generateZod(ir, baseConfig).code).toContain('UserSchema');
     });
 
-    test('кастомный schemaSuffix', () => {
+    test('custom schemaSuffix', () => {
       const ir = makeIR(
         [],
         [
@@ -58,8 +59,8 @@ describe('zod', () => {
     });
   });
 
-  describe('пустой IR', () => {
-    test('содержит banner и импорт zod', () => {
+  describe('empty IR', () => {
+    test('contains the banner and the zod import', () => {
       const result = generateZod(emptyIR, baseConfig);
       expect(result.code).toContain('auto-generated');
       expect(result.code).toContain("import { z } from 'zod'");
@@ -69,7 +70,7 @@ describe('zod', () => {
   });
 
   describe('object schema', () => {
-    test('генерирует z.object', () => {
+    test('generates z.object', () => {
       const ir = makeIR(
         [],
         [
@@ -86,7 +87,7 @@ describe('zod', () => {
       expect(result.code).toContain('name: z.string()');
     });
 
-    test('required поле без .optional()', () => {
+    test('a required field has no .optional()', () => {
       const ir = makeIR(
         [],
         [
@@ -102,7 +103,7 @@ describe('zod', () => {
       expect(result.code).not.toContain('id: z.number().optional()');
     });
 
-    test('optional поле с .optional()', () => {
+    test('an optional field gets .optional()', () => {
       const ir = makeIR(
         [],
         [
@@ -118,7 +119,7 @@ describe('zod', () => {
       );
     });
 
-    test('withTypes: true генерирует z.infer тип', () => {
+    test('withTypes: true generates a z.infer type', () => {
       const ir = makeIR(
         [],
         [
@@ -134,7 +135,7 @@ describe('zod', () => {
       );
     });
 
-    test('withTypes: false не генерирует тип', () => {
+    test('withTypes: false generates no type', () => {
       const ir = makeIR(
         [],
         [
@@ -157,7 +158,7 @@ describe('zod', () => {
       expect(result.typeExports).toEqual([]);
     });
 
-    test('input: true генерирует z.input тип', () => {
+    test('input: true generates a z.input type', () => {
       const ir = makeIR(
         [],
         [
@@ -179,7 +180,7 @@ describe('zod', () => {
       expect(result.code).toContain('z.input<typeof UserSchema>');
     });
 
-    test('output: true генерирует z.output тип', () => {
+    test('output: true generates a z.output type', () => {
       const ir = makeIR(
         [],
         [
@@ -202,13 +203,13 @@ describe('zod', () => {
     });
   });
 
-  describe('строковые констрейнты', () => {
+  describe('string constraints', () => {
     const schemaWithStr = (
       format?: string,
       min?: number,
       max?: number,
       pattern?: string,
-    ) => ({
+    ): IRSchema => ({
       type: 'string',
       format,
       minLength: min,
@@ -302,7 +303,7 @@ describe('zod', () => {
       );
     });
 
-    test('minLength и maxLength', () => {
+    test('minLength and maxLength', () => {
       const ir = makeIR(
         [],
         [
@@ -373,8 +374,8 @@ describe('zod', () => {
     });
   });
 
-  describe('числовые констрейнты', () => {
-    test('minimum и maximum', () => {
+  describe('numeric constraints', () => {
+    test('minimum and maximum', () => {
       const ir = makeIR(
         [],
         [
@@ -399,7 +400,7 @@ describe('zod', () => {
   });
 
   describe('array schema', () => {
-    test('генерирует z.array', () => {
+    test('generates z.array', () => {
       const ir = makeIR(
         [],
         [
@@ -420,7 +421,7 @@ describe('zod', () => {
       expect(generateZod(ir, baseConfig).code).toContain('z.array(z.string())');
     });
 
-    test('minItems и maxItems', () => {
+    test('minItems and maxItems', () => {
       const ir = makeIR(
         [],
         [
@@ -450,7 +451,7 @@ describe('zod', () => {
   });
 
   describe('nullable', () => {
-    test('nullable object без .nullable() (только object properties)', () => {
+    test('a nullable object has no .nullable() (object properties only)', () => {
       const ir = makeIR(
         [],
         [makeSchema({ name: 'A', type: 'object', nullable: true })],
@@ -488,7 +489,7 @@ describe('zod', () => {
       enum: ['active', 'inactive'],
     });
 
-    test('union style (default) генерирует z.enum', () => {
+    test('union style (default) generates z.enum', () => {
       const result = generateZod(makeIR([], [enumSchema]), {
         ...baseConfig,
         enumStyle: 'union',
@@ -496,7 +497,7 @@ describe('zod', () => {
       expect(result.code).toContain("z.enum(['active', 'inactive'])");
     });
 
-    test('union style генерирует z.infer тип', () => {
+    test('union style generates a z.infer type', () => {
       const result = generateZod(makeIR([], [enumSchema]), {
         ...baseConfig,
         enumStyle: 'union',
@@ -506,7 +507,7 @@ describe('zod', () => {
       );
     });
 
-    test('const style генерирует as const + nativeEnum', () => {
+    test('const style generates as const + nativeEnum', () => {
       const result = generateZod(makeIR([], [enumSchema]), {
         ...baseConfig,
         enumStyle: 'const',
@@ -515,7 +516,7 @@ describe('zod', () => {
       expect(result.code).toContain('z.nativeEnum(Status)');
     });
 
-    test('enum style генерирует native enum + nativeEnum', () => {
+    test('enum style generates a native enum + nativeEnum', () => {
       const result = generateZod(makeIR([], [enumSchema]), {
         ...baseConfig,
         enumStyle: 'enum',
@@ -524,7 +525,7 @@ describe('zod', () => {
       expect(result.code).toContain('z.nativeEnum(Status)');
     });
 
-    test('validateResponse генерирует validate функцию', () => {
+    test('validateResponse generates a validate function', () => {
       const result = generateZod(makeIR([], [enumSchema]), baseConfig, {
         schemaSuffix: 'Schema',
         infer: true,
@@ -539,7 +540,7 @@ describe('zod', () => {
   });
 
   describe('composition', () => {
-    test('allOf генерирует .and()', () => {
+    test('allOf generates .and()', () => {
       const ir = makeIR(
         [],
         [
@@ -556,7 +557,7 @@ describe('zod', () => {
       expect(generateZod(ir, baseConfig).code).toContain('.and(');
     });
 
-    test('oneOf генерирует z.union', () => {
+    test('oneOf generates z.union', () => {
       const ir = makeIR(
         [],
         [
@@ -573,7 +574,7 @@ describe('zod', () => {
       expect(generateZod(ir, baseConfig).code).toContain('z.union([');
     });
 
-    test('oneOf с discriminator генерирует z.discriminatedUnion', () => {
+    test('oneOf with a discriminator generates z.discriminatedUnion', () => {
       const ir = makeIR(
         [],
         [
@@ -595,7 +596,7 @@ describe('zod', () => {
   });
 
   describe('exports', () => {
-    test('exports содержит имена схем с суффиксом', () => {
+    test('exports holds suffixed schema names', () => {
       const ir = makeIR(
         [],
         [
@@ -608,12 +609,12 @@ describe('zod', () => {
       expect(result.exports).toContain('PostSchema');
     });
 
-    test('typeExports содержит имена без суффикса', () => {
+    test('typeExports holds unsuffixed names', () => {
       const ir = makeIR([], [makeSchema({ name: 'User', type: 'object' })]);
       expect(generateZod(ir, baseConfig).typeExports).toContain('User');
     });
 
-    test('схема без name не попадает в exports', () => {
+    test('a schema without a name stays out of exports', () => {
       const ir = makeIR([], [makeSchema({ type: 'object' })]);
       expect(generateZod(ir, baseConfig).exports).toHaveLength(0);
     });

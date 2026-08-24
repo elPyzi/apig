@@ -1,10 +1,10 @@
 import { describe, test, expect } from 'bun:test';
 import { buildIR } from '../build-ir';
-import { schemaNames, makeSpec, jsonResponse } from './fixtures';
+import { schemaNames, makeSpec } from './fixtures';
 
 describe('buildIR', () => {
-  describe('пустой spec', () => {
-    test('нет paths и schemas в пустые массивы', () => {
+  describe('empty spec', () => {
+    test('missing paths and schemas become empty arrays', () => {
       const result = buildIR(makeSpec(), schemaNames);
 
       expect(result.operations).toEqual([]);
@@ -12,8 +12,8 @@ describe('buildIR', () => {
     });
   });
 
-  describe('schemas из components', () => {
-    test('компоненты превращаются в IRSchema', () => {
+  describe('schemas from components', () => {
+    test('components become IRSchemas', () => {
       const result = buildIR(
         makeSpec({}, { User: { type: 'object' }, Post: { type: 'object' } }),
         schemaNames,
@@ -22,18 +22,18 @@ describe('buildIR', () => {
       expect(result.schemas).toHaveLength(2);
     });
 
-    test('name схемы пробрасывается', () => {
+    test('the schema name is carried through', () => {
       const result = buildIR(
         makeSpec({}, { User: { type: 'object' } }),
         schemaNames,
       );
 
-      expect(result.schemas[0].name).toBe('User');
+      expect(result.schemas[0]!.name).toBe('User');
     });
   });
 
-  describe('операции', () => {
-    test('GET эндпоинт превращается в operation', () => {
+  describe('operations', () => {
+    test('a GET endpoint becomes an operation', () => {
       const result = buildIR(
         makeSpec({
           '/users': {
@@ -47,12 +47,12 @@ describe('buildIR', () => {
       );
 
       expect(result.operations).toHaveLength(1);
-      expect(result.operations[0].id).toBe('getUsers');
-      expect(result.operations[0].method).toBe('GET');
-      expect(result.operations[0].path).toBe('/users');
+      expect(result.operations[0]!.id).toBe('getUsers');
+      expect(result.operations[0]!.method).toBe('GET');
+      expect(result.operations[0]!.path).toBe('/users');
     });
 
-    test('несколько методов на одном пути в разные операции', () => {
+    test('several methods on one path become separate operations', () => {
       const result = buildIR(
         makeSpec({
           '/users': {
@@ -69,7 +69,7 @@ describe('buildIR', () => {
       expect(methods).toContain('POST');
     });
 
-    test('несколько путей в несколько операций', () => {
+    test('several paths become several operations', () => {
       const result = buildIR(
         makeSpec({
           '/users': { get: { operationId: 'getUsers', responses: {} } },
@@ -81,7 +81,7 @@ describe('buildIR', () => {
       expect(result.operations).toHaveLength(2);
     });
 
-    test('tag берётся первый из массива', () => {
+    test('the tag is taken from the first array entry', () => {
       const result = buildIR(
         makeSpec({
           '/users': {
@@ -95,10 +95,10 @@ describe('buildIR', () => {
         schemaNames,
       );
 
-      expect(result.operations[0].tag).toBe('users');
+      expect(result.operations[0]!.tag).toBe('users');
     });
 
-    test('нет тегов в tag default', () => {
+    test('no tags falls back to the default tag', () => {
       const result = buildIR(
         makeSpec({
           '/users': { get: { operationId: 'getUsers', responses: {} } },
@@ -106,10 +106,10 @@ describe('buildIR', () => {
         schemaNames,
       );
 
-      expect(result.operations[0].tag).toBe('default');
+      expect(result.operations[0]!.tag).toBe('default');
     });
 
-    test('нет operationId в генерируется из метода и пути', () => {
+    test('a missing operationId is derived from the method and path', () => {
       const result = buildIR(
         makeSpec({
           '/users/{id}': {
@@ -119,10 +119,10 @@ describe('buildIR', () => {
         schemaNames,
       );
 
-      expect(result.operations[0].id).toBe('get__users_id_');
+      expect(result.operations[0]!.id).toBe('get__users_id_');
     });
 
-    test('deprecated пробрасывается', () => {
+    test('deprecated is carried through', () => {
       const result = buildIR(
         makeSpec({
           '/users': {
@@ -132,10 +132,10 @@ describe('buildIR', () => {
         schemaNames,
       );
 
-      expect(result.operations[0].deprecated).toBe(true);
+      expect(result.operations[0]!.deprecated).toBe(true);
     });
 
-    test('deprecated по умолчанию false', () => {
+    test('deprecated defaults to false', () => {
       const result = buildIR(
         makeSpec({
           '/users': { get: { operationId: 'getUsers', responses: {} } },
@@ -143,10 +143,10 @@ describe('buildIR', () => {
         schemaNames,
       );
 
-      expect(result.operations[0].deprecated).toBe(false);
+      expect(result.operations[0]!.deprecated).toBe(false);
     });
 
-    test('summary и description пробрасываются', () => {
+    test('summary and description are carried through', () => {
       const result = buildIR(
         makeSpec({
           '/users': {
@@ -161,11 +161,11 @@ describe('buildIR', () => {
         schemaNames,
       );
 
-      expect(result.operations[0].summary).toBe('Get all users');
-      expect(result.operations[0].description).toBe('Returns a list');
+      expect(result.operations[0]!.summary).toBe('Get all users');
+      expect(result.operations[0]!.description).toBe('Returns a list');
     });
 
-    test('нет errors в операции если нет 4xx', () => {
+    test('no errors on the operation when there is no 4xx', () => {
       const result = buildIR(
         makeSpec({
           '/users': {
@@ -178,10 +178,10 @@ describe('buildIR', () => {
         schemaNames,
       );
 
-      expect(result.operations[0].errors).toBeUndefined();
+      expect(result.operations[0]!.errors).toBeUndefined();
     });
 
-    test('errors появляются если есть 4xx с json schema', () => {
+    test('errors appear when a 4xx has a json schema', () => {
       const result = buildIR(
         makeSpec({
           '/users': {
@@ -201,8 +201,8 @@ describe('buildIR', () => {
         schemaNames,
       );
 
-      expect(result.operations[0].errors).toHaveLength(1);
-      expect(result.operations[0].errors?.[0].status).toBe(400);
+      expect(result.operations[0]!.errors).toHaveLength(1);
+      expect(result.operations[0]!.errors?.[0]!.status).toBe(400);
     });
   });
 });

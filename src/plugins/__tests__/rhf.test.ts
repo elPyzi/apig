@@ -19,57 +19,57 @@ const yupOpts = {
 };
 
 describe('rhf', () => {
-  describe('фабрика', () => {
-    test('возвращает плагин с правильными мета', () => {
+  describe('factory', () => {
+    test('returns a plugin with the right metadata', () => {
       const plugin = rhf({ resolver: 'zod' });
       expect(plugin.name).toBe('rhf');
       expect(plugin.fileName).toBe('rhf');
       expect(plugin.scope).toBe('root');
     });
 
-    test('schemaSuffix по умолчанию Schema', () => {
+    test('schemaSuffix defaults to Schema', () => {
       const ir = makeIR([], [makeSchema({ name: 'User', type: 'object' })]);
       const result = rhf({ resolver: 'zod' }).generate!(ir, baseConfig);
       expect(result.code).toContain('UserSchema');
     });
 
-    test("schemasImportPath по умолчанию './zod' для zod", () => {
+    test("schemasImportPath defaults to './zod' for zod", () => {
       const ir = makeIR([], [makeSchema({ name: 'User', type: 'object' })]);
       const result = rhf({ resolver: 'zod' }).generate!(ir, baseConfig);
       expect(result.code).toContain("from './zod'");
     });
   });
 
-  describe('пустой IR', () => {
-    test('содержит banner', () => {
+  describe('empty IR', () => {
+    test('contains the banner', () => {
       const result = generateRhf(emptyIR, baseConfig, zodOpts);
       expect(result.code).toContain('auto-generated');
     });
 
-    test('exports пустой при отсутствии схем', () => {
+    test('exports is empty when there are no schemas', () => {
       const result = generateRhf(emptyIR, baseConfig, zodOpts);
       expect(result.exports).toEqual([]);
     });
 
-    test('typeExports всегда пустой', () => {
+    test('typeExports is always empty', () => {
       expect(generateRhf(emptyIR, baseConfig, zodOpts).typeExports).toEqual([]);
     });
   });
 
   describe('resolver: zod', () => {
-    test('импортирует zodResolver из @hookform/resolvers/zod', () => {
+    test('imports zodResolver from @hookform/resolvers/zod', () => {
       const result = generateRhf(emptyIR, baseConfig, zodOpts);
       expect(result.code).toContain('zodResolver');
       expect(result.code).toContain('@hookform/resolvers/zod');
     });
 
-    test('генерирует resolver для схемы', () => {
+    test('generates a resolver for the schema', () => {
       const ir = makeIR([], [makeSchema({ name: 'User', type: 'object' })]);
       const result = generateRhf(ir, baseConfig, zodOpts);
       expect(result.code).toContain('userResolver = zodResolver(UserSchema)');
     });
 
-    test('экспортирует resolver', () => {
+    test('exports the resolver', () => {
       const ir = makeIR([], [makeSchema({ name: 'User', type: 'object' })]);
       expect(generateRhf(ir, baseConfig, zodOpts).exports).toContain(
         'userResolver',
@@ -78,13 +78,13 @@ describe('rhf', () => {
   });
 
   describe('resolver: valibot', () => {
-    test('импортирует valibotResolver из @hookform/resolvers/valibot', () => {
+    test('imports valibotResolver from @hookform/resolvers/valibot', () => {
       const result = generateRhf(emptyIR, baseConfig, valibotOpts);
       expect(result.code).toContain('valibotResolver');
       expect(result.code).toContain('@hookform/resolvers/valibot');
     });
 
-    test('генерирует resolver для схемы', () => {
+    test('generates a resolver for the schema', () => {
       const ir = makeIR(
         [],
         [makeSchema({ name: 'LoginForm', type: 'object' })],
@@ -97,13 +97,13 @@ describe('rhf', () => {
   });
 
   describe('resolver: yup', () => {
-    test('импортирует yupResolver из @hookform/resolvers/yup', () => {
+    test('imports yupResolver from @hookform/resolvers/yup', () => {
       const result = generateRhf(emptyIR, baseConfig, yupOpts);
       expect(result.code).toContain('yupResolver');
       expect(result.code).toContain('@hookform/resolvers/yup');
     });
 
-    test('генерирует resolver для схемы', () => {
+    test('generates a resolver for the schema', () => {
       const ir = makeIR([], [makeSchema({ name: 'Profile', type: 'object' })]);
       expect(generateRhf(ir, baseConfig, yupOpts).code).toContain(
         'profileResolver = yupResolver(ProfileSchema)',
@@ -111,8 +111,8 @@ describe('rhf', () => {
     });
   });
 
-  describe('несколько схем', () => {
-    test('генерирует resolver для каждой схемы', () => {
+  describe('several schemas', () => {
+    test('generates a resolver for every schema', () => {
       const ir = makeIR(
         [],
         [
@@ -126,7 +126,7 @@ describe('rhf', () => {
       expect(result.exports).toHaveLength(2);
     });
 
-    test('импортирует все schema names в одном import', () => {
+    test('imports every schema name in a single import', () => {
       const ir = makeIR(
         [],
         [
@@ -139,16 +139,16 @@ describe('rhf', () => {
     });
   });
 
-  describe('схема без name', () => {
-    test('схема без name игнорируется', () => {
+  describe('schema without a name', () => {
+    test('a schema without a name is ignored', () => {
       const ir = makeIR([], [makeSchema({ type: 'object' })]);
       const result = generateRhf(ir, baseConfig, zodOpts);
       expect(result.exports).toHaveLength(0);
     });
   });
 
-  describe('кастомный schemasImportPath', () => {
-    test('использует кастомный путь импорта', () => {
+  describe('custom schemasImportPath', () => {
+    test('uses a custom import path', () => {
       const ir = makeIR([], [makeSchema({ name: 'User', type: 'object' })]);
       const opts = {
         resolver: 'zod' as const,
@@ -161,8 +161,8 @@ describe('rhf', () => {
     });
   });
 
-  describe('кастомный schemaSuffix', () => {
-    test('использует кастомный суффикс', () => {
+  describe('custom schemaSuffix', () => {
+    test('uses a custom suffix', () => {
       const ir = makeIR([], [makeSchema({ name: 'User', type: 'object' })]);
       const opts = {
         resolver: 'zod' as const,

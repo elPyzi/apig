@@ -1,0 +1,41 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "Tuples", "version": "1.0.0" },
+  "paths": {
+    "/points": {
+      "get": {
+        "operationId": "getPoint",
+        "tags": ["points"],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Point" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Point": {
+        "type": "object",
+        "required": ["coords", "rest"],
+        "properties": {
+          "coords": {
+            "type": "array",
+            "prefixItems": [{ "type": "number" }, { "type": "number" }]
+          },
+          "rest": {
+            "type": "array",
+            "prefixItems": [{ "type": "string" }],
+            "items": { "type": "number" }
+          }
+        }
+      }
+    }
+  }
+}
