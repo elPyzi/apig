@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { createRequire } from 'module';
 import { Command } from 'commander';
 
 import { registerGenerateCommand } from './commands/generate';
@@ -9,15 +8,14 @@ import { registerConfigCommand } from './commands/config';
 import { registerVersionsCommands } from './commands/versions';
 import { runStart } from './start';
 import { logger } from '@libs/logger';
-
-const VERSION = '0.0.1';
+import { getVersion } from '@constants';
 
 const program = new Command();
 
 program
   .name('apig')
   .description('@travjek/apig — OpenAPI code generator')
-  .version(VERSION)
+  .version(getVersion())
   .addHelpCommand('help', 'Display help for a command');
 
 registerGenerateCommand(program);

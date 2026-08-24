@@ -23,7 +23,6 @@ import {
   generateQueryKeysFile,
   getFrameworkConfig,
 } from '../libs';
-import type { TanstackFrameworkConfig } from '../libs';
 
 const DEFAULT_OPTS = DEFAULTS.PLUGINS.TANSTACK;
 
@@ -85,7 +84,7 @@ export const generateTanstack = (
   customErrorImportPath?: string,
 ): PluginResult => {
   const fw = getFrameworkConfig(opts.framework);
-  const typesImport = getTypesImport(config);
+  const typesImport = getTypesImport(config, 'operations');
   const style = opts.queryKeysStyle;
 
   const sdkFunctions: string[] = [];
@@ -108,14 +107,27 @@ export const generateTanstack = (
   }
 
   // Determine which hook types are actually generated (accounting for strategies)
-  const usedHooks = { query: false, mutation: false, infinite: false, suspense: false };
+  const usedHooks = {
+    query: false,
+    mutation: false,
+    infinite: false,
+    suspense: false,
+  };
   for (const op of ir.operations) {
     const isGet = op.method === HTTP_METHODS.GET;
     const strategy = opts.hookGenerationStrategies?.[op.id];
-    if (strategy ? (strategy.query ?? false) : (isGet && opts.query)) usedHooks.query = true;
-    if (strategy ? (strategy.mutation ?? false) : (!isGet && opts.mutation)) usedHooks.mutation = true;
-    if (strategy ? (strategy.infinite ?? false) : (isGet && opts.infinite)) usedHooks.infinite = true;
-    if (strategy ? (strategy.suspense ?? false) : (isGet && opts.suspense && opts.query)) usedHooks.suspense = true;
+    if (strategy ? (strategy.query ?? false) : isGet && opts.query)
+      usedHooks.query = true;
+    if (strategy ? (strategy.mutation ?? false) : !isGet && opts.mutation)
+      usedHooks.mutation = true;
+    if (strategy ? (strategy.infinite ?? false) : isGet && opts.infinite)
+      usedHooks.infinite = true;
+    if (
+      strategy
+        ? (strategy.suspense ?? false)
+        : isGet && opts.suspense && opts.query
+    )
+      usedHooks.suspense = true;
   }
 
   const lines: string[] = [
@@ -126,7 +138,9 @@ export const generateTanstack = (
   ];
 
   if (sdkErrorTypes.length > 0)
-    lines.push(`import type { ${sdkErrorTypes.join(', ')} } from '${sdkImportPath}';`);
+    lines.push(
+      `import type { ${sdkErrorTypes.join(', ')} } from '${sdkImportPath}';`,
+    );
   if (style === 'object')
     lines.push(`import { queryKeys } from '${queryKeysImportPath}';`);
   if (usedTypes.size > 0)
@@ -139,11 +153,24 @@ export const generateTanstack = (
     lines.push(`import type { ${errCfg.className} } from '${errorPath}';`);
     if (config.rawResponse)
       lines.push(`import type { ApigResponse } from '${configImportPath}';`);
-  } else if (errCfg.enabled || config.rawResponse || usedHooks.query || usedHooks.infinite || usedHooks.suspense) {
+  } else if (
+    errCfg.enabled ||
+    config.rawResponse ||
+    usedHooks.query ||
+    usedHooks.infinite ||
+    usedHooks.suspense
+  ) {
     const named = [
-      (errCfg.enabled || usedHooks.query || usedHooks.infinite || usedHooks.suspense) ? errCfg.className : '',
+      errCfg.enabled ||
+      usedHooks.query ||
+      usedHooks.infinite ||
+      usedHooks.suspense
+        ? errCfg.className
+        : '',
       config.rawResponse ? 'ApigResponse' : '',
-    ].filter(Boolean).join(', ');
+    ]
+      .filter(Boolean)
+      .join(', ');
     lines.push(`import type { ${named} } from '${configImportPath}';`);
   }
 
@@ -154,10 +181,16 @@ export const generateTanstack = (
   for (const op of ir.operations) {
     const isGet = op.method === HTTP_METHODS.GET;
     const strategy = opts.hookGenerationStrategies?.[op.id];
-    const genQuery = strategy ? (strategy.query ?? false) : (isGet && opts.query);
-    const genMutation = strategy ? (strategy.mutation ?? false) : (!isGet && opts.mutation);
-    const genInfinite = strategy ? (strategy.infinite ?? false) : (isGet && opts.infinite);
-    const genSuspense = strategy ? (strategy.suspense ?? false) : (isGet && opts.suspense && opts.query);
+    const genQuery = strategy ? (strategy.query ?? false) : isGet && opts.query;
+    const genMutation = strategy
+      ? (strategy.mutation ?? false)
+      : !isGet && opts.mutation;
+    const genInfinite = strategy
+      ? (strategy.infinite ?? false)
+      : isGet && opts.infinite;
+    const genSuspense = strategy
+      ? (strategy.suspense ?? false)
+      : isGet && opts.suspense && opts.query;
 
     const name = toCamelCase(op.id);
     const pascalName = toPascalCase(op.id);
@@ -167,26 +200,50 @@ export const generateTanstack = (
         lines.push(generateQueryKeyFn(op));
         lines.push('');
       }
-      lines.push(generateQuery(op, style, errorHandling, rawResponse, errCfg.className, fw));
+      lines.push(
+        generateQuery(
+          op,
+          ir.schemas,
+          style,
+          errorHandling,
+          rawResponse,
+          errCfg.className,
+          fw,
+        ),
+      );
       lines.push('');
       if (style === 'functions') exports.push(`${name}QueryKey`);
-      exports.push(`${name}QueryOptions`, `${fw.exportPrefix}${pascalName}Query`);
+      exports.push(
+        `${name}QueryOptions`,
+        `${fw.exportPrefix}${pascalName}Query`,
+      );
     }
 
     if (genInfinite) {
-      lines.push(generateInfiniteQuery(op, style, errCfg.className, fw));
+      lines.push(
+        generateInfiniteQuery(op, ir.schemas, style, errCfg.className, fw),
+      );
       lines.push('');
       exports.push(`${fw.exportPrefix}Infinity${pascalName}Query`);
     }
 
     if (genSuspense) {
-      lines.push(generateSuspenseQuery(op, fw));
+      lines.push(generateSuspenseQuery(op, ir.schemas, fw));
       lines.push('');
       exports.push(`${fw.exportPrefix}Suspense${pascalName}Query`);
     }
 
     if (genMutation) {
-      lines.push(generateTanstackMutation(op, errorHandling, rawResponse, errCfg.className, fw));
+      lines.push(
+        generateTanstackMutation(
+          op,
+          ir.schemas,
+          errorHandling,
+          rawResponse,
+          errCfg.className,
+          fw,
+        ),
+      );
       lines.push('');
       exports.push(`${fw.exportPrefix}${pascalName}Mutation`);
     }

@@ -1,5 +1,4 @@
 import type { ApigConfig } from '@models';
-import { logger } from '@libs/logger';
 
 export const getClientImport = (
   config: ApigConfig,
@@ -11,15 +10,8 @@ export const getClientImport = (
 
   const { name, path, export: exportName } = config.httpClient;
 
-  if (!path) {
-    logger.error(`httpClient.path is required for ${name}`);
-    throw new Error(`httpClient.path is required for ${name}`);
-  }
-
-  if (!exportName) {
-    logger.error(`httpClient.export is required for ${name}`);
-    throw new Error(`httpClient.export is required for ${name}`);
-  }
+  if (!path) throw new Error(`httpClient.path is required for ${name}`);
+  if (!exportName) throw new Error(`httpClient.export is required for ${name}`);
 
   return { name: exportName, path: resolvedPath ?? path };
 };

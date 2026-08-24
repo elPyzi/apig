@@ -105,7 +105,7 @@ class Logger {
   }
 
   hook(command: string): void {
-    console.log(`${c('gray', '.:')  } Running hook: ${command}`);
+    console.log(`${c('gray', '.:')} Running hook: ${command}`);
   }
 
   debug(message: string): void {
@@ -126,7 +126,9 @@ class Logger {
     const duration = stats.endedAt - stats.startedAt;
 
     if (this.isMinimal()) {
-      console.log(`${c('green', '✓')} ${c('green', `Generation completed`)} ${c('gray', `(${duration}ms)`)}`);
+      console.log(
+        `${c('green', '✓')} ${c('green', `Generation completed`)} ${c('gray', `(${duration}ms)`)}`,
+      );
       this.flushWarnings();
     } else {
       console.log(c('gray', '─'.repeat(24)));

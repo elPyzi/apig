@@ -30,7 +30,9 @@ import {
  */
 export const swr = (options: SwrOptions = {}): ApigPlugin => {
   const style = options.queryKeysStyle ?? DEFAULTS.PLUGINS.SWR.queryKeysStyle;
-  const hookGenerationStrategies = options.hookGenerationStrategies ?? DEFAULTS.PLUGINS.SWR.hookGenerationStrategies;
+  const hookGenerationStrategies =
+    options.hookGenerationStrategies ??
+    DEFAULTS.PLUGINS.SWR.hookGenerationStrategies;
   const framework = options.framework ?? DEFAULTS.PLUGINS.SWR.framework;
 
   const plugin: ApigPlugin = {
@@ -68,12 +70,15 @@ export const generateSwr = (
   sdkImportPath = './sdk',
   swrKeysImportPath = './swr-keys',
   style: 'functions' | 'object' = 'functions',
-  hookGenerationStrategies: Record<string, { query?: boolean; mutation?: boolean }> = {},
+  hookGenerationStrategies: Record<
+    string,
+    { query?: boolean; mutation?: boolean }
+  > = {},
   configImportPath = './config',
   customErrorImportPath?: string,
   framework: SwrFramework = DEFAULTS.PLUGINS.SWR.framework,
 ): PluginResult => {
-  const typesImport = getTypesImport(config);
+  const typesImport = getTypesImport(config, 'operations');
   const errCfg = getErrorConfig(config);
   const errorHandling = errCfg.enabled;
   const rawResponse = config.rawResponse === true;
@@ -89,13 +94,16 @@ export const generateSwr = (
 
   const sdkFunctions = ir.operations.map((op) => toCamelCase(op.id));
   const sdkErrorTypes = errCfg.enabled
-    ? ir.operations.filter((op) => op.errors?.length).map((op) => `${toPascalCase(op.id)}Errors`)
+    ? ir.operations
+        .filter((op) => op.errors?.length)
+        .map((op) => `${toPascalCase(op.id)}Errors`)
     : [];
 
   const usedTypes = new Set<string>();
   for (const op of ir.operations) {
     if (op.response?.name) usedTypes.add(toPascalCase(op.response.name));
-    if (op.response?.items?.name) usedTypes.add(toPascalCase(op.response.items.name));
+    if (op.response?.items?.name)
+      usedTypes.add(toPascalCase(op.response.items.name));
     if (op.body?.schema.name) usedTypes.add(toPascalCase(op.body.schema.name));
   }
 
@@ -107,7 +115,9 @@ export const generateSwr = (
   } else {
     if (mutationOps.length > 0) {
       lines.push("import useSWRMutation from 'swr/mutation';");
-      lines.push("import type { SWRMutationConfiguration } from 'swr/mutation';");
+      lines.push(
+        "import type { SWRMutationConfiguration } from 'swr/mutation';",
+      );
     }
     if (queryOps.length > 0) {
       lines.push(`import useSWR, { type SWRConfiguration } from 'swr';`);
@@ -115,10 +125,14 @@ export const generateSwr = (
   }
 
   if (sdkFunctions.length > 0) {
-    lines.push(`import { ${sdkFunctions.join(', ')} } from '${sdkImportPath}';`);
+    lines.push(
+      `import { ${sdkFunctions.join(', ')} } from '${sdkImportPath}';`,
+    );
   }
   if (sdkErrorTypes.length > 0) {
-    lines.push(`import type { ${sdkErrorTypes.join(', ')} } from '${sdkImportPath}';`);
+    lines.push(
+      `import type { ${sdkErrorTypes.join(', ')} } from '${sdkImportPath}';`,
+    );
   }
 
   if (style === 'object' && queryOps.length > 0) {
@@ -126,7 +140,9 @@ export const generateSwr = (
   }
 
   if (usedTypes.size > 0) {
-    lines.push(`import type { ${[...usedTypes].join(', ')} } from '${typesImport}';`);
+    lines.push(
+      `import type { ${[...usedTypes].join(', ')} } from '${typesImport}';`,
+    );
   }
 
   if (errCfg.enabled && errCfg.importPath) {
@@ -138,7 +154,9 @@ export const generateSwr = (
     const named = [
       errCfg.enabled ? errCfg.className : '',
       config.rawResponse ? 'ApigResponse' : '',
-    ].filter(Boolean).join(', ');
+    ]
+      .filter(Boolean)
+      .join(', ');
     lines.push(`import type { ${named} } from '${configImportPath}';`);
   }
 
@@ -152,13 +170,30 @@ export const generateSwr = (
       lines.push('');
       exports.push(`${toCamelCase(op.id)}SwrKey`);
     }
-    lines.push(generateSwrQueryHook(op, style, errorHandling, rawResponse, errCfg.className));
+    lines.push(
+      generateSwrQueryHook(
+        op,
+        ir.schemas,
+        style,
+        errorHandling,
+        rawResponse,
+        errCfg.className,
+      ),
+    );
     lines.push('');
     exports.push(`use${toPascalCase(op.id)}`);
   }
 
   for (const op of mutationOps) {
-    lines.push(generateSwrMutationHook(op, errorHandling, rawResponse, errCfg.className));
+    lines.push(
+      generateSwrMutationHook(
+        op,
+        ir.schemas,
+        errorHandling,
+        rawResponse,
+        errCfg.className,
+      ),
+    );
     lines.push('');
     exports.push(`use${toPascalCase(op.id)}Mutation`);
   }

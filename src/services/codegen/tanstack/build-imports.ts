@@ -1,7 +1,12 @@
 import type { TanstackFrameworkConfig } from './framework';
 
 export const buildTanstackImports = (
-  opts: { query?: boolean; mutation?: boolean; infinite?: boolean; suspense?: boolean },
+  opts: {
+    query?: boolean;
+    mutation?: boolean;
+    infinite?: boolean;
+    suspense?: boolean;
+  },
   fw: TanstackFrameworkConfig,
 ): string => {
   const h = fw.hookFn;

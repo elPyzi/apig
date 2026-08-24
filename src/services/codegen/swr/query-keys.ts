@@ -1,7 +1,10 @@
 import { HTTP_METHODS, banner, type IR, type IROperation } from '@models';
 import { toCamelCase } from '@libs/string';
 import { getArgs } from '@services/codegen/common/get-args';
-import { buildArgsList, buildCallArgs } from '@services/codegen/common/build-args';
+import {
+  buildArgsList,
+  buildCallArgs,
+} from '@services/codegen/common/build-args';
 
 export const generateSwrKeyFn = (operation: IROperation): string => {
   const name = toCamelCase(operation.id);

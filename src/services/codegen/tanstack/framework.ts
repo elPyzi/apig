@@ -12,11 +12,32 @@ export interface TanstackFrameworkConfig {
 }
 
 const FRAMEWORK_CONFIGS: Record<TanstackFramework, TanstackFrameworkConfig> = {
-  react:  { pkg: '@tanstack/react-query',  hookFn: 'use',    typeFn: 'Use',    exportPrefix: 'use' },
-  vue:    { pkg: '@tanstack/vue-query',    hookFn: 'use',    typeFn: 'Use',    exportPrefix: 'use' },
-  solid:  { pkg: '@tanstack/solid-query',  hookFn: 'create', typeFn: 'Create', exportPrefix: 'create' },
-  svelte: { pkg: '@tanstack/svelte-query', hookFn: 'create', typeFn: 'Create', exportPrefix: 'create' },
+  react: {
+    pkg: '@tanstack/react-query',
+    hookFn: 'use',
+    typeFn: 'Use',
+    exportPrefix: 'use',
+  },
+  vue: {
+    pkg: '@tanstack/vue-query',
+    hookFn: 'use',
+    typeFn: 'Use',
+    exportPrefix: 'use',
+  },
+  solid: {
+    pkg: '@tanstack/solid-query',
+    hookFn: 'create',
+    typeFn: 'Create',
+    exportPrefix: 'create',
+  },
+  svelte: {
+    pkg: '@tanstack/svelte-query',
+    hookFn: 'create',
+    typeFn: 'Create',
+    exportPrefix: 'create',
+  },
 };
 
-export const getFrameworkConfig = (framework: TanstackFramework = 'react'): TanstackFrameworkConfig =>
-  FRAMEWORK_CONFIGS[framework];
+export const getFrameworkConfig = (
+  framework: TanstackFramework = 'react',
+): TanstackFrameworkConfig => FRAMEWORK_CONFIGS[framework];

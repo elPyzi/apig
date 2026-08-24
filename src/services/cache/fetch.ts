@@ -9,7 +9,9 @@ const isUrl = (input: string): boolean =>
 
 export const fetchWithCache = async (
   input: string,
-): Promise<{ hit: true; ir: IR } | { hit: false; text: string; etag?: string }> => {
+): Promise<
+  { hit: true; ir: IR } | { hit: false; text: string; etag?: string }
+> => {
   const key = inputKey(input);
   const meta = readMeta(key);
 
