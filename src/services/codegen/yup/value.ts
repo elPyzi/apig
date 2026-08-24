@@ -12,18 +12,33 @@ export const generateYupValue = (
   }
 
   if (schema.type === 'allOf' && schema.schemas) {
-    const [first, ...rest] = schema.schemas.map((s) => generateYupValue(s, allSchemas, suffix));
-    return withNullable(rest.reduce((acc, s) => `${acc}.concat(${s})`, first), schema);
+    const [first, ...rest] = schema.schemas.map((s) =>
+      generateYupValue(s, allSchemas, suffix),
+    );
+    if (!first) return withNullable('yup.mixed()', schema);
+    return withNullable(
+      rest.reduce((acc, s) => `${acc}.concat(${s})`, first),
+      schema,
+    );
   }
 
   if ((schema.type === 'oneOf' || schema.type === 'anyOf') && schema.schemas) {
-    const variants = schema.schemas.map((s) => generateYupValue(s, allSchemas, suffix));
+    const variants = schema.schemas.map((s) =>
+      generateYupValue(s, allSchemas, suffix),
+    );
     return withNullable(`yup.mixed().oneOf([${variants.join(', ')}])`, schema);
   }
 
   if (schema.isEnum && schema.enum) {
     const values = schema.enum.map((v) => `'${v}'`).join(', ');
     return withNullable(`yup.mixed().oneOf([${values}])`, schema);
+  }
+
+  if (schema.type === 'tuple' && schema.prefixItems) {
+    const members = schema.prefixItems
+      .map((s) => generateYupValue(s, allSchemas, suffix))
+      .join(', ');
+    return withNullable(`yup.tuple([${members}])`, schema);
   }
 
   if (schema.type === 'array' && schema.items) {
@@ -35,16 +50,23 @@ export const generateYupValue = (
 
   if (schema.type === 'object' && schema.properties) {
     const fields = schema.properties
-      .map((prop) => `${prop.name}: ${generateYupProperty(prop, allSchemas, suffix)}`)
+      .map(
+        (prop) =>
+          `${prop.name}: ${generateYupProperty(prop, allSchemas, suffix)}`,
+      )
       .join(', ');
     return withNullable(`yup.object({ ${fields} })`, schema);
   }
 
   switch (schema.type) {
-    case 'string':  return withNullable(yupString(schema), schema);
-    case 'number':  return withNullable(yupNumber(schema), schema);
-    case 'boolean': return withNullable('yup.boolean()', schema);
-    default:        return withNullable('yup.mixed()', schema);
+    case 'string':
+      return withNullable(yupString(schema), schema);
+    case 'number':
+      return withNullable(yupNumber(schema), schema);
+    case 'boolean':
+      return withNullable('yup.boolean()', schema);
+    default:
+      return withNullable('yup.mixed()', schema);
   }
 };
 

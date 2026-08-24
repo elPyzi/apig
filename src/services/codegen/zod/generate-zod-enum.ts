@@ -14,11 +14,15 @@ export const generateZodEnum = (
   const lines: string[] = [];
 
   if (enumStyle === 'enum') {
-    const members = schema.enum!.map((v) => `  ${toPascalCase(v)} = '${v}'`).join(',\n');
+    const members = schema
+      .enum!.map((v) => `  ${toPascalCase(v)} = '${v}'`)
+      .join(',\n');
     lines.push(`export enum ${name} {\n${members}\n}`);
     lines.push(`export const ${varName} = z.nativeEnum(${name});`);
   } else if (enumStyle === 'const') {
-    const members = schema.enum!.map((v) => `  ${toPascalCase(v)}: '${v}'`).join(',\n');
+    const members = schema
+      .enum!.map((v) => `  ${toPascalCase(v)}: '${v}'`)
+      .join(',\n');
     lines.push(`export const ${name} = {\n${members}\n} as const;`);
     if (opts.withTypes)
       lines.push(`export type ${name} = typeof ${name}[keyof typeof ${name}];`);
@@ -30,7 +34,8 @@ export const generateZodEnum = (
   }
 
   if (opts.validateResponse) {
-    const retType = opts.withTypes && opts.infer ? name : `z.infer<typeof ${varName}>`;
+    const retType =
+      opts.withTypes && opts.infer ? name : `z.infer<typeof ${varName}>`;
     lines.push(
       `export const validate${name}Response = (data: unknown): ${retType} => ${varName}.parse(data);`,
     );

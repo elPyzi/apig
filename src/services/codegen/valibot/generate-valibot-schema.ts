@@ -26,10 +26,17 @@ export const generateValibotSchema = (
 
   if (schema.type === 'object' && schema.properties) {
     const fields = schema.properties
-      .map((prop) => `  ${prop.name}: ${generateValibotProperty(prop, allSchemas, opts.schemaSuffix)},`)
+      .map(
+        (prop) =>
+          `  ${prop.name}: ${generateValibotProperty(prop, allSchemas, opts.schemaSuffix)},`,
+      )
       .join('\n');
     lines.push(`export const ${varName} = v.object({\n${fields}\n});`);
-  } else if (schema.type === 'allOf' || schema.type === 'oneOf' || schema.type === 'anyOf') {
+  } else if (
+    schema.type === 'allOf' ||
+    schema.type === 'oneOf' ||
+    schema.type === 'anyOf'
+  ) {
     lines.push(
       `export const ${varName} = ${generateValibotValue(
         schema,

@@ -18,6 +18,7 @@ export type IRType =
   | 'boolean'
   | 'object'
   | 'array'
+  | 'tuple'
   | 'null'
   | 'unknown'
   | 'allOf'
@@ -29,6 +30,11 @@ export interface IRSchema {
   name?: string;
   properties?: IRProperty[];
   items?: IRSchema;
+  /**
+   * Fixed leading members of a 3.1 tuple (`prefixItems`). When `items` is also
+   * set it types the remaining, variadic members.
+   */
+  prefixItems?: IRSchema[];
   enum?: string[];
   isEnum?: boolean;
   required?: string[];
@@ -48,12 +54,25 @@ export interface IRSchema {
   // number constraints
   minimum?: number;
   maximum?: number;
+  /** Exclusive bound — from 3.1's numeric form or 3.0's boolean flag. */
+  exclusiveMinimum?: number;
+  exclusiveMaximum?: number;
   // array constraints
   minItems?: number;
   maxItems?: number;
   // misc
   default?: unknown;
 }
+
+/** How an array or object query parameter is serialized into the query string. */
+export const QUERY_STYLES = {
+  FORM: 'form',
+  SPACE_DELIMITED: 'spaceDelimited',
+  PIPE_DELIMITED: 'pipeDelimited',
+  DEEP_OBJECT: 'deepObject',
+} as const;
+
+export type QueryStyle = (typeof QUERY_STYLES)[keyof typeof QUERY_STYLES];
 
 export interface IRProperty {
   name: string;
@@ -64,6 +83,10 @@ export interface IRProperty {
   description?: string;
   /** Whether this property is marked as deprecated */
   deprecated?: boolean;
+  /** Serialization style — only meaningful for query parameters. */
+  style?: QueryStyle;
+  /** Whether each array member gets its own key. Defaults to true for `form`. */
+  explode?: boolean;
 }
 
 export interface IRParams {

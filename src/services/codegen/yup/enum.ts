@@ -14,13 +14,17 @@ export const generateYupEnum = (
   const lines: string[] = [];
 
   if (enumStyle === 'enum') {
-    const members = schema.enum!.map((v) => `  ${toPascalCase(v)} = '${v}'`).join(',\n');
+    const members = schema
+      .enum!.map((v) => `  ${toPascalCase(v)} = '${v}'`)
+      .join(',\n');
     lines.push(`export enum ${name} {\n${members}\n}`);
     lines.push(
       `export const ${varName} = yup.mixed<${name}>().oneOf(Object.values(${name}) as ${name}[]).required();`,
     );
   } else if (enumStyle === 'const') {
-    const members = schema.enum!.map((v) => `  ${toPascalCase(v)}: '${v}'`).join(',\n');
+    const members = schema
+      .enum!.map((v) => `  ${toPascalCase(v)}: '${v}'`)
+      .join(',\n');
     lines.push(`export const ${name} = {\n${members}\n} as const;`);
     if (opts.withTypes)
       lines.push(`export type ${name} = typeof ${name}[keyof typeof ${name}];`);
@@ -28,7 +32,9 @@ export const generateYupEnum = (
       `export const ${varName} = yup.mixed<${name}>().oneOf(Object.values(${name}) as ${name}[]).required();`,
     );
   } else {
-    lines.push(`export const ${varName} = yup.mixed().oneOf([${values}] as const).required();`);
+    lines.push(
+      `export const ${varName} = yup.mixed().oneOf([${values}] as const).required();`,
+    );
     if (opts.withTypes)
       lines.push(`export type ${name} = yup.InferType<typeof ${varName}>;`);
   }

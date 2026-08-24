@@ -8,7 +8,10 @@ export const typeMap: Record<string, string> = {
   integer: 'faker.number.int()',
 };
 
-export const generateValue = (prop: IRProperty, schemas: IRSchema[]): string => {
+export const generateValue = (
+  prop: IRProperty,
+  schemas: IRSchema[],
+): string => {
   const schema = prop.schema;
 
   if (!schema) return typeMap[prop.type] ?? 'faker.lorem.word()';
@@ -20,6 +23,25 @@ export const generateValue = (prop: IRProperty, schemas: IRSchema[]): string => 
   if (schema.isEnum && schema.enum) {
     const values = schema.enum.map((v) => `'${v}'`).join(', ');
     return `faker.helpers.arrayElement([${values}])`;
+  }
+
+  if (schema.type === 'tuple' && schema.prefixItems) {
+    // each member is generated as if it were a property, to reuse the ref,
+    // inline-object and primitive handling below
+    const members = schema.prefixItems
+      .map((member, i) =>
+        generateValue(
+          {
+            name: `${prop.name}${i}`,
+            required: true,
+            type: member.type,
+            schema: member,
+          },
+          schemas,
+        ),
+      )
+      .join(', ');
+    return `[${members}]`;
   }
 
   if (schema.type === 'array' && schema.items) {
@@ -59,7 +81,9 @@ export const generateValue = (prop: IRProperty, schemas: IRSchema[]): string => 
     case nameLower.includes('date'):
       return 'faker.date.past().toISOString()';
     case nameLower.includes('status'):
-      return schema.type === 'number' ? 'faker.number.int()' : 'faker.lorem.word()';
+      return schema.type === 'number'
+        ? 'faker.number.int()'
+        : 'faker.lorem.word()';
     case nameLower === 'id' || nameLower.includes('id'):
       return 'faker.number.int()';
     default:

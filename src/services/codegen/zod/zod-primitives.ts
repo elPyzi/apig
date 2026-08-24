@@ -4,12 +4,22 @@ export const zodString = (schema: IRSchema): string => {
   if (schema.format === 'binary') return 'z.instanceof(File)';
   let s = 'z.string()';
   switch (schema.format) {
-    case 'email':      s = 'z.string().email()'; break;
-    case 'uuid':       s = 'z.string().uuid()'; break;
+    case 'email':
+      s = 'z.string().email()';
+      break;
+    case 'uuid':
+      s = 'z.string().uuid()';
+      break;
     case 'uri':
-    case 'url':        s = 'z.string().url()'; break;
-    case 'date-time':  s = 'z.string().datetime()'; break;
-    case 'date':       s = 'z.string().date()'; break;
+    case 'url':
+      s = 'z.string().url()';
+      break;
+    case 'date-time':
+      s = 'z.string().datetime()';
+      break;
+    case 'date':
+      s = 'z.string().date()';
+      break;
   }
   if (schema.minLength !== undefined) s += `.min(${schema.minLength})`;
   if (schema.maxLength !== undefined) s += `.max(${schema.maxLength})`;
@@ -21,6 +31,10 @@ export const zodNumber = (schema: IRSchema): string => {
   let s = 'z.number()';
   if (schema.minimum !== undefined) s += `.min(${schema.minimum})`;
   if (schema.maximum !== undefined) s += `.max(${schema.maximum})`;
+  if (schema.exclusiveMinimum !== undefined)
+    s += `.gt(${schema.exclusiveMinimum})`;
+  if (schema.exclusiveMaximum !== undefined)
+    s += `.lt(${schema.exclusiveMaximum})`;
   return s;
 };
 

@@ -12,11 +12,16 @@ const isSwagger2 = (spec: Record<string, unknown>): boolean =>
 const convertToV3 = (spec: Record<string, unknown>): Record<string, unknown> =>
   upgrade(spec, '3.0') as Record<string, unknown>;
 
-export const loadSpecFromText = async (text: string, config: ApigConfig): Promise<LoadSpecResult> => {
+export const loadSpecFromText = async (
+  text: string,
+  _config: ApigConfig,
+): Promise<LoadSpecResult> => {
   const loaded = await load(text, { plugins: [fetchUrls(), readFiles()] });
 
   if (loaded.errors?.length) {
-    throw new Error(`Failed to load specification: ${loaded.errors.map((e) => e.message).join(', ')}`);
+    throw new Error(
+      `Failed to load specification: ${loaded.errors.map((e) => e.message).join(', ')}`,
+    );
   }
 
   let filesystem = loaded.filesystem;
@@ -31,7 +36,9 @@ export const loadSpecFromText = async (text: string, config: ApigConfig): Promis
   const { specification, errors } = dereference(filesystem);
 
   if (errors?.length) {
-    logger.warn(`${errors.length} unresolvable $ref(s) in specification — affected fields will be typed as unknown`);
+    logger.warn(
+      `${errors.length} unresolvable $ref(s) in specification — affected fields will be typed as unknown`,
+    );
   }
 
   const spec = specification as unknown as OpenAPIV3.Document;
@@ -51,7 +58,9 @@ export const loadSpec = async (config: ApigConfig): Promise<LoadSpecResult> => {
   const loaded = await load(input, { plugins: [fetchUrls(), readFiles()] });
 
   if (loaded.errors?.length) {
-    throw new Error(`Failed to load specification: ${loaded.errors.map((e) => e.message).join(', ')}`);
+    throw new Error(
+      `Failed to load specification: ${loaded.errors.map((e) => e.message).join(', ')}`,
+    );
   }
 
   let filesystem = loaded.filesystem;
@@ -66,7 +75,9 @@ export const loadSpec = async (config: ApigConfig): Promise<LoadSpecResult> => {
   const { specification, errors } = dereference(filesystem);
 
   if (errors?.length) {
-    logger.warn(`${errors.length} unresolvable $ref(s) in specification — affected fields will be typed as unknown`);
+    logger.warn(
+      `${errors.length} unresolvable $ref(s) in specification — affected fields will be typed as unknown`,
+    );
   }
 
   const spec = specification as unknown as OpenAPIV3.Document;
