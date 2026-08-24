@@ -2,6 +2,8 @@ import { writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { checkbox, input, select, confirm } from '@inquirer/prompts';
 
+import { DOCS_BASE } from '@constants';
+
 const quote = (s: string) => `'${s}'`;
 
 interface StartAnswers {
@@ -31,6 +33,7 @@ const PLUGIN_FACTORIES: Record<string, string> = {
   yup: 'yup',
   faker: 'faker',
   msw: 'msw',
+  mcp: 'mcp',
 };
 
 const PLUGIN_LABELS: Record<string, string> = {
@@ -43,6 +46,7 @@ const PLUGIN_LABELS: Record<string, string> = {
   yup: 'Yup schemas',
   faker: 'Faker factories (mock data)',
   msw: 'MSW handlers (API mocking)',
+  mcp: 'MCP server (expose the API to AI assistants)',
 };
 
 const buildPluginCall = (plugin: string, answers: StartAnswers): string => {
@@ -81,7 +85,7 @@ const buildConfig = (answers: StartAnswers): string => {
   const httpClient = buildHttpClient(answers);
 
   const lines: string[] = [
-    `// @travjek/apig — https://travjek.dev/docs`,
+    `// @travjek/apig — ${DOCS_BASE}`,
     `import { defineConfig, ${usedFactories.join(', ')} } from '@travjek/apig';`,
     ``,
     `export default defineConfig({`,
@@ -117,7 +121,7 @@ const buildConfig = (answers: StartAnswers): string => {
 export const runStart = async (): Promise<void> => {
   console.log('');
   console.log('  @travjek/apig — interactive setup');
-  console.log('  docs: https://travjek.dev/docs');
+  console.log(`  docs: ${DOCS_BASE}`);
   console.log('');
 
   const plugins = await checkbox({

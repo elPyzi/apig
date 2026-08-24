@@ -30,6 +30,7 @@ export const yup = (options: YupOptions = {}): ApigPlugin => {
     fileName: 'yup',
     scope: 'root',
     withTypes: opts.withTypes,
+    schemaSuffix: opts.schemaSuffix,
     generate: (ir, config) => generateYup(ir, config, opts),
   };
 };

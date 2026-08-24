@@ -8,6 +8,7 @@ import {
   TYPE_STYLES,
 } from '@models';
 import type { ApigConfig } from '@models';
+import { DOCS_BASE } from '@constants';
 
 const GROUP_BY_VALUES = Object.values(GROUP_BY);
 const HTTP_CLIENT_VALUES = Object.values(HTTP_CLIENTS);
@@ -17,8 +18,10 @@ const LOG_LEVEL_VALUES = Object.values(LOG_LEVELS);
 const FORMATTER_VALUES = Object.values(FORMATTERS);
 const TYPE_STYLE_VALUES = Object.values(TYPE_STYLES);
 
-const DOCS_BASE = 'https://example.com/docs';
-
+/**
+ * Per-option documentation links, also the source of truth for typo detection.
+ * Keep in sync with `ApigConfig`.
+ */
 const DOCS_LINKS: Record<string, string> = {
   name: `${DOCS_BASE}/config/name`,
   input: `${DOCS_BASE}/config/input`,
@@ -78,8 +81,19 @@ export class ConfigValidationError extends Error {
 
 const KNOWN_KEYS = new Set(Object.keys(DOCS_LINKS));
 
-export const validateConfig = (config: ApigConfig): void => {
+/**
+ * Validates a config object loaded from the user's `apig.config.ts`.
+ * The input is whatever that module exported, so it is typed as `unknown` —
+ * checking it is exactly this function's job.
+ */
+export const validateConfig = (input: unknown): void => {
   const errors: string[] = [];
+
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    throw new ConfigValidationError(['config must be an object']);
+  }
+
+  const config = input as ApigConfig;
 
   // unknown keys
   for (const key of Object.keys(config)) {
@@ -113,7 +127,10 @@ export const validateConfig = (config: ApigConfig): void => {
 
   // output
   if (config.output !== undefined) {
-    if (typeof config.output !== 'string' && typeof config.output !== 'object') {
+    if (
+      typeof config.output !== 'string' &&
+      typeof config.output !== 'object'
+    ) {
       errors.push(`output must be a string or object`);
     }
     if (typeof config.output === 'object' && !config.output.path) {
@@ -175,17 +192,50 @@ export const validateConfig = (config: ApigConfig): void => {
   if (Array.isArray(config.plugins) && config.plugins.length > 0) {
     const TYPE_PLUGINS = ['zod', 'valibot', 'yup'];
 
+    // Plugins whose output imports from another plugin's output
+    const PLUGIN_DEPENDENCIES: Record<string, string[]> = {
+      msw: ['faker'],
+      mcp: ['sdk', 'zod'],
+    };
+
     // Duplicate plugin names
     const names = config.plugins.map((p) => p.name);
+
+    for (const [plugin, required] of Object.entries(PLUGIN_DEPENDENCIES)) {
+      if (!names.includes(plugin)) continue;
+      const missing = required.filter((dep) => !names.includes(dep));
+      if (missing.length > 0) {
+        errors.push(
+          `plugin "${plugin}" requires ${missing.map((d) => `${d}()`).join(' and ')} — its output imports from them`,
+        );
+      }
+    }
+
+    // rhf imports the schemas it builds resolvers from
+    if (names.includes('rhf') && !TYPE_PLUGINS.some((p) => names.includes(p))) {
+      errors.push(
+        `plugin "rhf" requires a validation plugin — add zod(), valibot() or yup()`,
+      );
+    }
+
+    // An MCP server speaks JSON-RPC over stdout, so anything else written there
+    // corrupts the stream — and apiLogging puts a console.log in every SDK call.
+    if (names.includes('mcp') && config.apiLogging === true) {
+      errors.push(
+        `apiLogging cannot be used with the mcp() plugin — its console.log output corrupts the MCP stdio transport`,
+      );
+    }
     const duplicateNames = names.filter((n, i) => names.indexOf(n) !== i);
-    for (const name of [...new Set(duplicateNames)]) {
+    for (const name of new Set(duplicateNames)) {
       errors.push(`plugin "${name}" is listed more than once`);
     }
 
     // Duplicate output filenames (would silently overwrite each other)
     const fileNames = config.plugins.map((p) => p.fileName);
-    const duplicateFiles = fileNames.filter((f, i) => fileNames.indexOf(f) !== i);
-    for (const fileName of [...new Set(duplicateFiles)]) {
+    const duplicateFiles = fileNames.filter(
+      (f, i) => fileNames.indexOf(f) !== i,
+    );
+    for (const fileName of new Set(duplicateFiles)) {
       errors.push(
         `plugins output to the same file "${fileName}.ts" — only the last one would be written`,
       );
@@ -272,13 +322,22 @@ export const validateConfig = (config: ApigConfig): void => {
     if (typeof config.filter !== 'object' || Array.isArray(config.filter)) {
       errors.push(`filter must be an object`);
     } else {
-      if (config.filter.tags !== undefined && !Array.isArray(config.filter.tags)) {
+      if (
+        config.filter.tags !== undefined &&
+        !Array.isArray(config.filter.tags)
+      ) {
         errors.push(`filter.tags must be an array of strings`);
       }
-      if (config.filter.exclude !== undefined && !Array.isArray(config.filter.exclude)) {
+      if (
+        config.filter.exclude !== undefined &&
+        !Array.isArray(config.filter.exclude)
+      ) {
         errors.push(`filter.exclude must be an array of strings`);
       }
-      if (config.filter.deprecated !== undefined && typeof config.filter.deprecated !== 'boolean') {
+      if (
+        config.filter.deprecated !== undefined &&
+        typeof config.filter.deprecated !== 'boolean'
+      ) {
         errors.push(`filter.deprecated must be a boolean`);
       }
     }
@@ -289,7 +348,9 @@ export const validateConfig = (config: ApigConfig): void => {
     if (typeof config.rename !== 'object' || Array.isArray(config.rename)) {
       errors.push(`rename must be an object (Record<string, string>)`);
     } else {
-      const invalidValues = Object.entries(config.rename).filter(([, v]) => typeof v !== 'string');
+      const invalidValues = Object.entries(config.rename).filter(
+        ([, v]) => typeof v !== 'string',
+      );
       if (invalidValues.length > 0) {
         errors.push(
           `rename values must be strings — invalid keys: ${invalidValues.map(([k]) => `"${k}"`).join(', ')}`,
@@ -312,31 +373,53 @@ export const validateConfig = (config: ApigConfig): void => {
 
   // versioning
   if (config.versioning !== undefined) {
-    if (typeof config.versioning !== 'object' || Array.isArray(config.versioning)) {
+    if (
+      typeof config.versioning !== 'object' ||
+      Array.isArray(config.versioning)
+    ) {
       errors.push(`versioning must be an object`);
     } else {
-      if (config.versioning.enabled !== undefined && typeof config.versioning.enabled !== 'boolean') {
+      if (
+        config.versioning.enabled !== undefined &&
+        typeof config.versioning.enabled !== 'boolean'
+      ) {
         errors.push(`versioning.enabled must be a boolean`);
       }
-      if (config.versioning.storage !== undefined && typeof config.versioning.storage !== 'string') {
+      if (
+        config.versioning.storage !== undefined &&
+        typeof config.versioning.storage !== 'string'
+      ) {
         errors.push(`versioning.storage must be a string (directory path)`);
       }
-      if (config.versioning.saveSpec !== undefined && typeof config.versioning.saveSpec !== 'boolean') {
+      if (
+        config.versioning.saveSpec !== undefined &&
+        typeof config.versioning.saveSpec !== 'boolean'
+      ) {
         errors.push(`versioning.saveSpec must be a boolean`);
       }
       if (config.versioning.maxSaves !== undefined) {
-        if (typeof config.versioning.maxSaves !== 'number' || config.versioning.maxSaves < 1) {
+        if (
+          typeof config.versioning.maxSaves !== 'number' ||
+          config.versioning.maxSaves < 1
+        ) {
           errors.push(`versioning.maxSaves must be a positive number`);
         }
       }
       if (config.versioning.pinVersions !== undefined) {
         if (!Array.isArray(config.versioning.pinVersions)) {
-          errors.push(`versioning.pinVersions must be an array of snapshot IDs`);
-        } else if (config.versioning.pinVersions.some((v) => typeof v !== 'string')) {
+          errors.push(
+            `versioning.pinVersions must be an array of snapshot IDs`,
+          );
+        } else if (
+          config.versioning.pinVersions.some((v) => typeof v !== 'string')
+        ) {
           errors.push(`versioning.pinVersions must contain only strings`);
         }
       }
-      if (config.versioning.aliasTemplate !== undefined && typeof config.versioning.aliasTemplate !== 'string') {
+      if (
+        config.versioning.aliasTemplate !== undefined &&
+        typeof config.versioning.aliasTemplate !== 'string'
+      ) {
         errors.push(`versioning.aliasTemplate must be a string`);
       }
     }

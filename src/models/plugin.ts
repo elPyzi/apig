@@ -51,6 +51,12 @@ export interface ApigPlugin {
    * Default: true.
    */
   withTypes?: boolean;
+  /**
+   * Suffix this plugin appends to generated schema names.
+   * Exposed so plugins that import those schemas (`rhf`, `mcp`) can resolve the
+   * names without the user keeping two options in sync by hand.
+   */
+  schemaSuffix?: string;
 }
 
 /** Options for the `typescript()` plugin — generates TypeScript types from schemas. */
@@ -147,6 +153,20 @@ export interface FakerOptions {
 
 /** Options for the `msw()` plugin — generates Mock Service Worker handlers. */
 export interface MswOptions {}
+
+/** Options for the `mcp()` plugin — generates an MCP server over the SDK. */
+export interface McpOptions {
+  /**
+   * Server name reported to the MCP client.
+   * @default "apig"
+   */
+  name?: string;
+  /**
+   * Server version reported to the MCP client.
+   * @default "1.0.0"
+   */
+  version?: string;
+}
 
 export const QUERY_KEYS_STYLE = {
   FUNCTIONS: 'functions',

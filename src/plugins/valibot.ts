@@ -30,6 +30,7 @@ export const valibot = (options: ValibotOptions = {}): ApigPlugin => {
     fileName: 'valibot',
     scope: 'root',
     withTypes: opts.withTypes,
+    schemaSuffix: opts.schemaSuffix,
     generate: (ir, config) => generateValibot(ir, config, opts),
   };
 };

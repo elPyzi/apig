@@ -95,6 +95,7 @@ export const zod = (options: ZodOptions = {}): ApigPlugin => {
     fileName: 'zod',
     scope: 'root',
     withTypes: opts.withTypes,
+    schemaSuffix: opts.schemaSuffix,
     generate: (ir, config) => generateZod(ir, config, opts),
   };
 };

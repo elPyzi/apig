@@ -12,7 +12,7 @@ export const DEFAULTS = {
   CONFIG: {
     output: '.apig/generated',
     httpClient: {
-      name:'fetch'
+      name: 'fetch',
     },
     formatter: 'none',
     fileNaming: 'kebab-case',
@@ -71,6 +71,11 @@ export const DEFAULTS = {
 
     RHF: {
       schemaSuffix: 'Schema',
+    },
+
+    MCP: {
+      name: 'apig',
+      version: '1.0.0',
     },
   },
 } as const;
