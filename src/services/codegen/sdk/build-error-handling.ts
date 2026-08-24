@@ -1,6 +1,5 @@
 import { HTTP_CLIENTS } from '@models';
 
-
 const stripThen = (call: string): string =>
   call.replace(/\.then\(r => r\.json\(\)[^)]*\)$/, '');
 
@@ -14,7 +13,7 @@ export const buildErrorHandlingBody = (
     const bare = stripThen(call);
     return [
       `  const r = await ${bare};`,
-      `  if (!r.ok) throw new ${errorClass}(r.status, await r.json());`,
+      `  if (!r.ok) throw new ${errorClass}(r.status, await parseErrorBody(r));`,
       `  return r.json() as Promise<${responseType}>;`,
     ].join('\n');
   }

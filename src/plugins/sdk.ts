@@ -16,6 +16,10 @@ import {
   APIG_CONFIG_FILE,
   generateErrorType,
   getErrorConfig,
+  needsQueryHelper,
+  needsParseErrorHelper,
+  TO_QUERY_FN,
+  PARSE_ERROR_FN,
 } from '../libs';
 
 /**
@@ -29,19 +33,47 @@ export const sdk = (): ApigPlugin => ({
   name: 'sdk',
   fileName: 'sdk',
   scope: 'operations',
-  generate: (ir, config, ctx) => generateSdk(ir, config, ctx?.configImportPath ?? './config', ctx?.customErrorImportPath, ctx?.clientImportPath),
-  generateRootFiles: (_ir, config) => {
+  generate: (ir, config, ctx) =>
+    generateSdk(
+      ir,
+      config,
+      ctx?.configImportPath ?? './config',
+      ctx?.customErrorImportPath,
+      ctx?.clientImportPath,
+    ),
+  generateRootFiles: (ir, config) => {
     const errCfg = getErrorConfig(config);
     const withError = errCfg.enabled && !errCfg.importPath;
     const withResponse = config.rawResponse === true;
-    if (!withError && !withResponse) return [];
-    return [{ fileName: `${APIG_CONFIG_FILE}.ts`, code: buildApigConfigFile(withError, withResponse) }];
+    const withQuery = needsQueryHelper(ir, config);
+    const withParseError = needsParseErrorHelper(config, errCfg.enabled);
+    if (!withError && !withResponse && !withQuery && !withParseError) return [];
+    return [
+      {
+        fileName: `${APIG_CONFIG_FILE}.ts`,
+        code: buildApigConfigFile(
+          withError,
+          withResponse,
+          withQuery,
+          withParseError,
+        ),
+      },
+    ];
   },
 });
 
-export const generateSdk = (ir: IR, config: ApigConfig, configImportPath = './config', customErrorImportPath?: string, clientImportPath?: string): PluginResult => {
-  const { name: clientName, path: clientPath } = getClientImport(config, clientImportPath);
-  const typesImport = getTypesImport(config);
+export const generateSdk = (
+  ir: IR,
+  config: ApigConfig,
+  configImportPath = './config',
+  customErrorImportPath?: string,
+  clientImportPath?: string,
+): PluginResult => {
+  const { name: clientName, path: clientPath } = getClientImport(
+    config,
+    clientImportPath,
+  );
+  const typesImport = getTypesImport(config, 'operations');
   const baseUrl = getBaseUrl(config);
 
   const usedTypes = new Set<string>();
@@ -70,18 +102,27 @@ export const generateSdk = (ir: IR, config: ApigConfig, configImportPath = './co
     );
   }
 
-  if (errCfg.enabled) {
-    if (errCfg.importPath) {
-      const errorPath = customErrorImportPath ?? errCfg.importPath;
-      lines.push(`import { ${errCfg.className} } from '${errorPath}';`);
-      if (config.rawResponse)
-        lines.push(`import type { ApigResponse } from '${configImportPath}';`);
-    } else {
-      lines.push(`import { ${errCfg.className} } from '${configImportPath}';`);
-      if (config.rawResponse)
-        lines.push(`import type { ApigResponse } from '${configImportPath}';`);
-    }
-  } else if (config.rawResponse) {
+  const configValueImports: string[] = [];
+
+  if (errCfg.enabled && errCfg.importPath) {
+    const errorPath = customErrorImportPath ?? errCfg.importPath;
+    lines.push(`import { ${errCfg.className} } from '${errorPath}';`);
+  } else if (errCfg.enabled) {
+    configValueImports.push(errCfg.className);
+  }
+
+  if (needsParseErrorHelper(config, errCfg.enabled))
+    configValueImports.push(PARSE_ERROR_FN);
+
+  if (needsQueryHelper(ir, config)) configValueImports.push(TO_QUERY_FN);
+
+  if (configValueImports.length > 0) {
+    lines.push(
+      `import { ${configValueImports.join(', ')} } from '${configImportPath}';`,
+    );
+  }
+
+  if (config.rawResponse) {
     lines.push(`import type { ApigResponse } from '${configImportPath}';`);
   }
 
@@ -89,13 +130,15 @@ export const generateSdk = (ir: IR, config: ApigConfig, configImportPath = './co
 
   for (const operation of ir.operations) {
     if (errCfg.enabled) {
-      const errorType = generateErrorType(operation);
+      const errorType = generateErrorType(operation, ir.schemas);
       if (errorType) {
         lines.push(errorType);
         lines.push('');
       }
     }
-    lines.push(generateFunction(operation, clientName, baseUrl, config));
+    lines.push(
+      generateFunction(operation, ir.schemas, clientName, baseUrl, config),
+    );
     lines.push('');
   }
 

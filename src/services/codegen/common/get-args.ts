@@ -1,4 +1,4 @@
-import type { IROperation } from '@models';
+import type { IRProperty, IRSchema, IROperation } from '@models';
 import { toPascalCase } from '@libs/string';
 
 export type FnArg = {
@@ -7,13 +7,47 @@ export type FnArg = {
   required: boolean;
 };
 
+/**
+ * TypeScript type for a parameter value.
+ *
+ * Arrays matter here: the runtime `toQuery` helper has always serialized them,
+ * but typing them as `string` made an array impossible to pass without a cast.
+ */
+const paramType = (param: IRProperty, allowArrays: boolean): string => {
+  const schema = param.schema;
+
+  if (schema?.isEnum && schema.enum) {
+    return schema.enum.map((v) => `'${v}'`).join(' | ');
+  }
+
+  if (allowArrays && schema?.type === 'array') {
+    const item = schema.items ? scalarType(schema.items) : 'string';
+    // a union item type needs Array<> so the `|` does not swallow the `[]`
+    return item.includes('|') ? `Array<${item}>` : `${item}[]`;
+  }
+
+  return scalarType(schema, param.type);
+};
+
+const scalarType = (schema?: IRSchema, fallback?: string): string => {
+  if (schema?.isEnum && schema.enum) {
+    return schema.enum.map((v) => `'${v}'`).join(' | ');
+  }
+
+  const type = schema?.type ?? fallback;
+  if (type === 'number') return 'number';
+  if (type === 'boolean') return 'boolean';
+  return 'string';
+};
+
 export const getArgs = (operation: IROperation): FnArg[] => {
   const args: FnArg[] = [];
 
   for (const param of operation.params.path) {
     args.push({
       name: param.name,
-      type: param.type === 'number' ? 'number' : 'string',
+      // a path segment is always a single value
+      type: paramType(param, false),
       required: true,
     });
   }
@@ -22,13 +56,7 @@ export const getArgs = (operation: IROperation): FnArg[] => {
     const queryFields = operation.params.query
       .map((p) => {
         const optional = p.required ? '' : '?';
-        let type: string;
-        if (p.schema?.isEnum && p.schema.enum) {
-          type = p.schema.enum.map((v) => `'${v}'`).join(' | ');
-        } else {
-          type = p.type === 'number' ? 'number' : 'string';
-        }
-        return `${p.name}${optional}: ${type}`;
+        return `${p.name}${optional}: ${paramType(p, true)}`;
       })
       .join('; ');
 
@@ -76,6 +104,22 @@ export const getArgs = (operation: IROperation): FnArg[] => {
         required: operation.body.required,
       });
     }
+  }
+
+  if (operation.params.header.length > 0) {
+    // header names routinely contain dashes, so every key is quoted
+    const headerFields = operation.params.header
+      .map((p) => {
+        const optional = p.required ? '' : '?';
+        return `'${p.name}'${optional}: ${paramType(p, false)}`;
+      })
+      .join('; ');
+
+    args.push({
+      name: 'headers',
+      type: `{ ${headerFields} }`,
+      required: operation.params.header.some((p) => p.required),
+    });
   }
 
   return args;
