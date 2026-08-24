@@ -22,7 +22,7 @@ export const faker = (): ApigPlugin => ({
 });
 
 export const generateFaker = (ir: IR, config: ApigConfig): PluginResult => {
-  const typesImport = getTypesImport(config);
+  const typesImport = getTypesImport(config, 'root');
 
   const usedTypes = ir.schemas
     .filter((s) => s.name && (s.type === 'object' || s.isEnum))

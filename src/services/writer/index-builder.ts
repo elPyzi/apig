@@ -1,4 +1,3 @@
-import { join } from 'path';
 import type { ApigConfig, ApigPlugin, PluginResult } from '@models';
 import type { IR, IROperation } from '@models';
 import { applyNaming } from '@libs/string';

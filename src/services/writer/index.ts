@@ -11,7 +11,6 @@ import { filterOperations } from '@libs/operations/filter';
 import { renameOperations } from '@libs/operations/rename';
 import { formatFiles } from '@libs/operations/format';
 import { generateEndpoints } from '@libs/operations/endpoints';
-import { applyNaming } from '@libs/string';
 
 import {
   makeWriteFn,
@@ -68,21 +67,46 @@ const generateFromIR = (
     case GROUP_BY.TAGS: {
       writeRootPlugins(ir, config, outputPath, plugins, results, writeFn);
       const tagMap = buildTagMap(ir.operations);
-      writeByTags(ir, config, outputPath, plugins, results, tagMap, writeFn, dryRun);
+      writeByTags(
+        ir,
+        config,
+        outputPath,
+        plugins,
+        results,
+        tagMap,
+        writeFn,
+        dryRun,
+      );
       writePluginRootFiles(ir, config, outputPath, plugins, writeFn);
       indexContent = buildIndexTags(plugins, results, tagMap, config);
       break;
     }
     case GROUP_BY.ENDPOINTS: {
       writeRootPlugins(ir, config, outputPath, plugins, results, writeFn);
-      writeByEndpoints(ir, config, outputPath, plugins, results, writeFn, dryRun);
+      writeByEndpoints(
+        ir,
+        config,
+        outputPath,
+        plugins,
+        results,
+        writeFn,
+        dryRun,
+      );
       writePluginRootFiles(ir, config, outputPath, plugins, writeFn);
       indexContent = buildIndexEndpoints(ir, plugins, results, config);
       break;
     }
     case GROUP_BY.OPERATIONS: {
       writeRootPlugins(ir, config, outputPath, plugins, results, writeFn);
-      writeByOperations(ir, config, outputPath, plugins, results, writeFn, dryRun);
+      writeByOperations(
+        ir,
+        config,
+        outputPath,
+        plugins,
+        results,
+        writeFn,
+        dryRun,
+      );
       writePluginRootFiles(ir, config, outputPath, plugins, writeFn);
       indexContent = buildIndexOperations(ir, plugins, results, config);
       break;
@@ -102,25 +126,70 @@ const generateFromIR = (
   logger.br();
 };
 
+const startRun = (config: ApigConfig): void => {
+  validateConfig(config);
+  resetBaseUrlWarning();
+  logger.setLevel(config.cliLogging?.level ?? LOG_LEVELS.MINIMAL);
+};
+
+const createStats = (operations = 0, schemas = 0): GenerationStats => ({
+  operations,
+  schemas,
+  createdFiles: 0,
+  updatedFiles: 0,
+  deletedFiles: 0,
+  startedAt: Date.now(),
+  endedAt: 0,
+});
+
+const runAfterAllFilesWrite = (config: ApigConfig): void => {
+  const command = config.hooks?.afterAllFilesWrite;
+  if (!command) return;
+
+  logger.hook(command);
+  try {
+    execSync(command, { stdio: 'inherit' });
+  } catch {
+    logger.error(`Hook failed: ${command}`);
+  }
+};
+
+interface EmitOptions {
+  ir: IR;
+  config: ApigConfig;
+  dryRun: boolean;
+  stats: GenerationStats;
+  /** Runs after files are written and formatted, before the user's hook. */
+  afterWrite?: () => void;
+}
+
+/** Shared tail of `write` and `checkout`: clean, generate, format, hooks, summary. */
+const emit = ({ ir, config, dryRun, stats, afterWrite }: EmitOptions): void => {
+  const outputPath = resolveOutputPath(config);
+  if (!dryRun) cleanOutput(outputPath, config, stats);
+
+  generateFromIR(ir, config, outputPath, dryRun, stats);
+
+  if (!dryRun) {
+    if (config.formatter && config.formatter !== FORMATTERS.NONE) {
+      formatFiles(outputPath, config.formatter);
+    }
+
+    afterWrite?.();
+    runAfterAllFilesWrite(config);
+  }
+
+  stats.endedAt = Date.now();
+  logger.summary(stats);
+};
+
 export const write = async (
   config: ApigConfig,
   { dryRun = false }: WriteOptions = {},
 ): Promise<void> => {
-  validateConfig(config);
-  resetBaseUrlWarning();
+  startRun(config);
 
-  const cliLevel = config.cliLogging?.level ?? LOG_LEVELS.MINIMAL;
-  logger.setLevel(cliLevel);
-
-  const stats: GenerationStats = {
-    operations: 0,
-    schemas: 0,
-    createdFiles: 0,
-    updatedFiles: 0,
-    deletedFiles: 0,
-    startedAt: Date.now(),
-    endedAt: 0,
-  };
+  const stats = createStats();
 
   if (dryRun) {
     logger.stage('Dry run — no files will be written');
@@ -132,7 +201,12 @@ export const write = async (
     load(config),
     new Promise<never>((_, reject) => {
       timeoutId = setTimeout(
-        () => reject(new Error(`Specification loading timed out after ${LOAD_TIMEOUT_MS / 1000}s — check your input URL or file`)),
+        () =>
+          reject(
+            new Error(
+              `Specification loading timed out after ${LOAD_TIMEOUT_MS / 1000}s — check your input URL or file`,
+            ),
+          ),
         LOAD_TIMEOUT_MS,
       );
     }),
@@ -140,7 +214,10 @@ export const write = async (
 
   const ir = {
     ...rawIr,
-    operations: renameOperations(filterOperations(rawIr.operations, config), config),
+    operations: renameOperations(
+      filterOperations(rawIr.operations, config),
+      config,
+    ),
   };
 
   stats.operations = ir.operations.length;
@@ -153,36 +230,20 @@ export const write = async (
   logger.success('IR built');
   logger.br();
 
-  const outputPath = resolveOutputPath(config);
-  if (!dryRun) cleanOutput(outputPath, config);
-
-  generateFromIR(ir, config, outputPath, dryRun, stats);
-
-  if (!dryRun) {
-    if (config.formatter && config.formatter !== FORMATTERS.NONE) {
-      formatFiles(outputPath, config.formatter);
-    }
-
-    if (config.versioning?.enabled) {
+  emit({
+    ir,
+    config,
+    dryRun,
+    stats,
+    afterWrite: () => {
+      if (!config.versioning?.enabled) return;
       logger.detail('Saving snapshot...');
       const folder = saveSnapshot({ ir, spec, config });
       logger.section('Snapshot', folder);
       logger.success('Snapshot saved');
       logger.br();
-    }
-
-    if (config.hooks?.afterAllFilesWrite) {
-      logger.hook(config.hooks.afterAllFilesWrite);
-      try {
-        execSync(config.hooks.afterAllFilesWrite, { stdio: 'inherit' });
-      } catch (_) {
-        logger.error(`Hook failed: ${config.hooks.afterAllFilesWrite}`);
-      }
-    }
-  }
-
-  stats.endedAt = Date.now();
-  logger.summary(stats);
+    },
+  });
 };
 
 export const checkout = async (
@@ -190,11 +251,7 @@ export const checkout = async (
   config: ApigConfig,
   { dryRun = false }: WriteOptions = {},
 ): Promise<void> => {
-  validateConfig(config);
-  resetBaseUrlWarning();
-
-  const cliLevel = config.cliLogging?.level ?? LOG_LEVELS.MINIMAL;
-  logger.setLevel(cliLevel);
+  startRun(config);
 
   const versioning = config.versioning ?? {};
   const storagePath = resolve(versioning.storage ?? '.apig/versions');
@@ -208,36 +265,7 @@ export const checkout = async (
   logger.section('Created', formatDate(new Date(meta.createdAt)));
   logger.br();
 
-  const stats: GenerationStats = {
-    operations: ir.operations.length,
-    schemas: ir.schemas.length,
-    createdFiles: 0,
-    updatedFiles: 0,
-    deletedFiles: 0,
-    startedAt: Date.now(),
-    endedAt: 0,
-  };
+  const stats = createStats(ir.operations.length, ir.schemas.length);
 
-  const outputPath = resolveOutputPath(config);
-  if (!dryRun) cleanOutput(outputPath, config);
-
-  generateFromIR(ir, config, outputPath, dryRun, stats);
-
-  if (!dryRun) {
-    if (config.formatter && config.formatter !== FORMATTERS.NONE) {
-      formatFiles(outputPath, config.formatter);
-    }
-
-    if (config.hooks?.afterAllFilesWrite) {
-      logger.hook(config.hooks.afterAllFilesWrite);
-      try {
-        execSync(config.hooks.afterAllFilesWrite, { stdio: 'inherit' });
-      } catch (_) {
-        logger.error(`Hook failed: ${config.hooks.afterAllFilesWrite}`);
-      }
-    }
-  }
-
-  stats.endedAt = Date.now();
-  logger.summary(stats);
+  emit({ ir, config, dryRun, stats });
 };

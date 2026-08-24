@@ -9,7 +9,7 @@ import {
   banner,
   DEFAULTS,
 } from '@models';
-import { toPascalCase, toCamelCase } from '../libs';
+import { toPascalCase, toCamelCase, getRootPluginImport } from '../libs';
 
 const RESOLVER_META: Record<RhfResolver, { pkg: string; fn: string }> = {
   zod: { pkg: '@hookform/resolvers/zod', fn: 'zodResolver' },
@@ -19,12 +19,14 @@ const RESOLVER_META: Record<RhfResolver, { pkg: string; fn: string }> = {
 
 export const generateRhf = (
   ir: IR,
-  _config: ApigConfig,
-  opts: Required<RhfOptions>,
+  config: ApigConfig,
+  opts: RhfOptions & { schemaSuffix: string },
 ): PluginResult => {
   const meta = RESOLVER_META[opts.resolver];
   const suffix = opts.schemaSuffix;
-  const schemasPath = opts.schemasImportPath;
+  const schemasPath =
+    opts.schemasImportPath ??
+    getRootPluginImport(config, opts.resolver, 'root');
 
   const schemas = ir.schemas.filter((s): s is IRSchema & { name: string } =>
     Boolean(s.name),
@@ -69,10 +71,10 @@ export const generateRhf = (
  * @example rhf({ resolver: "zod" })
  */
 export const rhf = (options: RhfOptions): ApigPlugin => {
-  const opts: Required<RhfOptions> = {
+  const opts = {
     resolver: options.resolver,
     schemaSuffix: options.schemaSuffix ?? DEFAULTS.PLUGINS.RHF.schemaSuffix,
-    schemasImportPath: options.schemasImportPath ?? `./${options.resolver}`,
+    schemasImportPath: options.schemasImportPath,
   };
 
   return {
