@@ -37,7 +37,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/elPyzi/apig"
+    "url": "git+https://github.com/elPyzi/apig.git"
   },
   "bin": {
     "apig": "./dist/cli.js"
