@@ -3,11 +3,23 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 /**
- * Documentation site root. Placeholder until the site ships — swap this one
- * literal and every doc link (banner, `apig start`, config validation errors)
- * follows.
+ * Documentation site root — used by the banner, `apig start`/`apig config`,
+ * and as the fallback link in config validation errors.
  */
-export const DOCS_BASE = 'https://example.com/docs';
+export const DOCS_BASE = 'https://apig-docs.vercel.app/en/docs/get-started/introduction';
+
+/**
+ * The single-page config reference. There are no per-option anchors on the
+ * site, so every `defineConfig` field's doc link points here.
+ */
+export const CONFIG_DOCS_URL =
+  'https://apig-docs.vercel.app/en/docs/get-started/configuration';
+
+/** Guide pages that cover one config field in depth. */
+export const GUIDE_DOCS = {
+  errorHandling: 'https://apig-docs.vercel.app/en/docs/guides/error-handling',
+  versioning: 'https://apig-docs.vercel.app/en/docs/guides/versioning',
+} as const;
 
 /**
  * Package version, read from the nearest package.json at runtime so `apig --version`

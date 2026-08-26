@@ -3,9 +3,10 @@ import { existsSync, writeFileSync } from 'fs';
 import type { Command } from 'commander';
 
 import { logger } from '@libs/logger';
+import { DOCS_BASE } from '@constants';
 import { PRESETS, PRESET_NAMES } from '../presets';
 
-const CONFIG_TEMPLATE = `// @travjek/apig — https://travjek.dev/docs
+const CONFIG_TEMPLATE = `// @travjek/apig — ${DOCS_BASE}
 import { defineConfig, typescript, sdk, tanstackQuery } from '@travjek/apig';
 
 export default defineConfig({

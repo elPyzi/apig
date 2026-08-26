@@ -8,7 +8,7 @@ import {
   TYPE_STYLES,
 } from '@models';
 import type { ApigConfig } from '@models';
-import { DOCS_BASE } from '@constants';
+import { CONFIG_DOCS_URL, GUIDE_DOCS } from '@constants';
 
 const GROUP_BY_VALUES = Object.values(GROUP_BY);
 const HTTP_CLIENT_VALUES = Object.values(HTTP_CLIENTS);
@@ -23,30 +23,30 @@ const TYPE_STYLE_VALUES = Object.values(TYPE_STYLES);
  * Keep in sync with `ApigConfig`.
  */
 const DOCS_LINKS: Record<string, string> = {
-  name: `${DOCS_BASE}/config/name`,
-  input: `${DOCS_BASE}/config/input`,
-  output: `${DOCS_BASE}/config/output`,
-  groupBy: `${DOCS_BASE}/config/group-by`,
-  httpClient: `${DOCS_BASE}/config/http-client`,
-  fileNaming: `${DOCS_BASE}/config/file-naming`,
-  functionNaming: `${DOCS_BASE}/config/function-naming`,
-  enumStyle: `${DOCS_BASE}/config/enum-style`,
-  typeStyle: `${DOCS_BASE}/config/type-style`,
-  formatter: `${DOCS_BASE}/config/formatter`,
-  plugins: `${DOCS_BASE}/config/plugins`,
-  errorHandling: `${DOCS_BASE}/config/error-handling`,
-  rawResponse: `${DOCS_BASE}/config/raw-response`,
-  filter: `${DOCS_BASE}/config/filter`,
-  rename: `${DOCS_BASE}/config/rename`,
-  hooks: `${DOCS_BASE}/config/hooks`,
-  versioning: `${DOCS_BASE}/config/versioning`,
-  baseUrl: `${DOCS_BASE}/config/base-url`,
-  index: `${DOCS_BASE}/config/index`,
-  endpointsMap: `${DOCS_BASE}/config/endpoints-map`,
-  apiLogging: `${DOCS_BASE}/config/api-logging`,
-  cliLogging: `${DOCS_BASE}/config/cli-logging`,
-  comment: `${DOCS_BASE}/config/comment`,
-  cache: `${DOCS_BASE}/config/cache`,
+  name: CONFIG_DOCS_URL,
+  input: CONFIG_DOCS_URL,
+  output: CONFIG_DOCS_URL,
+  groupBy: CONFIG_DOCS_URL,
+  httpClient: CONFIG_DOCS_URL,
+  fileNaming: CONFIG_DOCS_URL,
+  functionNaming: CONFIG_DOCS_URL,
+  enumStyle: CONFIG_DOCS_URL,
+  typeStyle: CONFIG_DOCS_URL,
+  formatter: CONFIG_DOCS_URL,
+  plugins: CONFIG_DOCS_URL,
+  errorHandling: GUIDE_DOCS.errorHandling,
+  rawResponse: CONFIG_DOCS_URL,
+  filter: CONFIG_DOCS_URL,
+  rename: CONFIG_DOCS_URL,
+  hooks: CONFIG_DOCS_URL,
+  versioning: GUIDE_DOCS.versioning,
+  baseUrl: CONFIG_DOCS_URL,
+  index: CONFIG_DOCS_URL,
+  endpointsMap: CONFIG_DOCS_URL,
+  apiLogging: CONFIG_DOCS_URL,
+  cliLogging: CONFIG_DOCS_URL,
+  comment: CONFIG_DOCS_URL,
+  cache: CONFIG_DOCS_URL,
 };
 
 const extractFieldsFromErrors = (errors: string[]): string[] => {
@@ -67,7 +67,7 @@ export class ConfigValidationError extends Error {
 
   constructor(errors: string[]) {
     const fields = extractFieldsFromErrors(errors);
-    const links: Record<string, string> = { docs: `${DOCS_BASE}/config` };
+    const links: Record<string, string> = { docs: CONFIG_DOCS_URL };
     for (const field of fields) {
       if (DOCS_LINKS[field]) links[field] = DOCS_LINKS[field];
     }

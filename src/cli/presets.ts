@@ -1,10 +1,12 @@
+import { DOCS_BASE } from '@constants';
+
 export interface Preset {
   name: string;
   description: string;
   template: string;
 }
 
-const header = `// @travjek/apig — https://travjek.dev/docs`;
+const header = `// @travjek/apig — ${DOCS_BASE}`;
 const inputLine = `  input: 'https://api.example.com/openapi.json',`;
 const outputBlock = `  output: {
     path: 'src/api/generated',
