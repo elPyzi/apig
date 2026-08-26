@@ -6,7 +6,8 @@ import { fileURLToPath } from 'url';
  * Documentation site root — used by the banner, `apig start`/`apig config`,
  * and as the fallback link in config validation errors.
  */
-export const DOCS_BASE = 'https://apig-docs.vercel.app/en/docs/get-started/introduction';
+export const DOCS_BASE =
+  'https://apig-docs.vercel.app/en/docs/get-started/introduction';
 
 /**
  * The single-page config reference. There are no per-option anchors on the
