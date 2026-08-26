@@ -1,6 +1,6 @@
 {
   "name": "@travjek/apig",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "type": "module",
   "description": "OpenAPI code generator for TypeScript with a plugin system — generates types, SDK, Zod/Valibot/Yup schemas, TanStack Query / SWR hooks, React Hook Form resolvers, Faker factories and MSW handlers",
   "keywords": [
@@ -35,6 +35,7 @@
   "readme": "README.npm.md",
   "author": "danilapyzhikov",
   "license": "MIT",
+  "homepage": "https://apig-docs.vercel.app",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/elPyzi/apig.git"

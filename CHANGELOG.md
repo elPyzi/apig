@@ -2,6 +2,14 @@
 
 All notable changes to `@travjek/apig` will be documented in this file.
 
+## [0.10.1]
+
+### Fixed
+- `homepage` in `package.json` pointed at the GitHub README instead of the docs site
+- Doc links in the banner, `apig start`/`apig config`, and config-validation errors pointed at a placeholder domain (`example.com`) instead of the real docs site
+
+---
+
 ## [0.10.0]
 
 ### Added
