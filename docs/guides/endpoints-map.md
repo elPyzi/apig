@@ -6,11 +6,11 @@ When `endpointsMap: true` is set, apig generates an `endpoints.ts` file with a t
 
 ```ts
 defineConfig({
-  input: './openapi.json',
-  output: './src/api',
+  input: "./openapi.json",
+  output: "./src/api",
   endpointsMap: true,
   plugins: [typescript(), sdk()],
-})
+});
 ```
 
 ## Output example
@@ -18,11 +18,11 @@ defineConfig({
 ```ts
 // endpoints.ts
 export const ENDPOINTS = {
-  getUsers: '/users',
-  createUser: '/users',
-  getUserById: '/users/{id}',
-  updateUser: '/users/{id}',
-  deleteUser: '/users/{id}',
+  getUsers: "/users",
+  createUser: "/users",
+  getUserById: "/users/{id}",
+  updateUser: "/users/{id}",
+  deleteUser: "/users/{id}",
 } as const;
 
 export type EndpointKey = keyof typeof ENDPOINTS;
@@ -33,11 +33,11 @@ Paths are kept in the original OpenAPI format (`{id}`), not converted to Express
 ## Usage
 
 ```ts
-import { ENDPOINTS } from './api/endpoints'
+import { ENDPOINTS } from "./api/endpoints";
 
-console.log(ENDPOINTS.getUsers) // '/users'
+console.log(ENDPOINTS.getUsers); // '/users'
 
-const key: EndpointKey = 'getUsers'
+const key: EndpointKey = "getUsers";
 ```
 
 Useful for logging, analytics, permission checks — anywhere you need to reference API paths without hardcoding strings.

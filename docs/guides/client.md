@@ -7,13 +7,13 @@ When `errorHandling` is enabled (the default, `true`), apig generates an `ApigEr
 ```ts
 // generated ./src/api/config.ts
 export class ApigError<T = unknown> extends Error {
-  status: number
-  body: T
+  status: number;
+  body: T;
   constructor(status: number, body: T) {
-    super(`ApigError ${status}`)
-    this.name = 'ApigError'
-    this.status = status
-    this.body = body
+    super(`ApigError ${status}`);
+    this.name = "ApigError";
+    this.status = status;
+    this.body = body;
   }
 }
 ```
@@ -23,15 +23,15 @@ Generated SDK functions throw this class on non-2xx responses.
 ### Catching errors
 
 ```ts
-import { ApigError } from './api/config'
-import { getUser } from './api/sdk'
+import { ApigError } from "./api/config";
+import { getUser } from "./api/sdk";
 
 try {
-  const user = await getUser('123')
+  const user = await getUser("123");
 } catch (e) {
   if (e instanceof ApigError) {
-    console.log(e.status) // 404
-    console.log(e.body)   // the server's response body
+    console.log(e.status); // 404
+    console.log(e.body); // the server's response body
   }
 }
 ```
@@ -41,8 +41,8 @@ try {
 A small runtime library with type-safe guard functions — useful when importing the generated `ApigError` class directly is inconvenient (e.g. from shared utilities outside the output directory).
 
 ```ts
-import { isApigError, isApigStatus } from '@travjek/apig/client'
-import type { ApigErrorLike } from '@travjek/apig/client'
+import { isApigError, isApigStatus } from "@travjek/apig/client";
+import type { ApigErrorLike } from "@travjek/apig/client";
 ```
 
 ### `isApigError(error)`
@@ -50,14 +50,14 @@ import type { ApigErrorLike } from '@travjek/apig/client'
 Checks that an error was thrown by a generated SDK (by `error.name === 'ApigError'`), without importing the concrete class:
 
 ```ts
-import { isApigError } from '@travjek/apig/client'
+import { isApigError } from "@travjek/apig/client";
 
 try {
-  await getUser('123')
+  await getUser("123");
 } catch (e) {
   if (isApigError(e)) {
-    console.log(e.status)
-    console.log(e.body)
+    console.log(e.status);
+    console.log(e.body);
   }
 }
 ```
@@ -81,9 +81,9 @@ You can replace the `ApigError` class with your own via `defineConfig`:
 
 ```ts
 defineConfig({
-  errorHandling: { path: './lib/MyCustomError', export: 'MyCustomError' },
+  errorHandling: { path: "./lib/MyCustomError", export: "MyCustomError" },
   plugins: [sdk()],
-})
+});
 ```
 
 Generated functions will throw `MyCustomError` instead of `ApigError`. The class must be importable from the given path.
@@ -94,7 +94,7 @@ Generated functions will throw `MyCustomError` instead of `ApigError`. The class
 defineConfig({
   errorHandling: false,
   plugins: [sdk()],
-})
+});
 ```
 
 Generated functions won't wrap errors — `fetch`/`axios`/etc. propagate exceptions as-is.
