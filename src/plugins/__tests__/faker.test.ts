@@ -3,6 +3,12 @@ import { faker, generateFaker } from '../faker';
 import { baseConfig, emptyIR, makeSchema, makeProp, makeIR } from './fixtures';
 
 describe('faker', () => {
+  const makeUser = (prop: ReturnType<typeof makeProp>) =>
+    makeIR(
+      [],
+      [makeSchema({ name: 'User', type: 'object', properties: [prop] })],
+    );
+
   describe('factory', () => {
     test('returns a plugin with the right metadata', () => {
       const plugin = faker();
@@ -62,12 +68,6 @@ describe('faker', () => {
   });
 
   describe('properties are mapped by name', () => {
-    const makeUser = (prop: ReturnType<typeof makeProp>) =>
-      makeIR(
-        [],
-        [makeSchema({ name: 'User', type: 'object', properties: [prop] })],
-      );
-
     test('email → faker.internet.email()', () => {
       const prop = {
         name: 'email',
@@ -152,6 +152,54 @@ describe('faker', () => {
       );
     });
 
+    test('a string id is not generated as a number', () => {
+      const prop = {
+        name: 'id',
+        required: true,
+        type: 'string' as const,
+        schema: { type: 'string' as const, format: 'uuid' },
+      };
+      const { code } = generateFaker(makeUser(prop), baseConfig);
+      expect(code).toContain('faker.string.uuid()');
+      expect(code).not.toContain('id: faker.number.int()');
+    });
+
+    test('a string id without a format still stays a string', () => {
+      const prop = {
+        name: 'ownerId',
+        required: true,
+        type: 'string' as const,
+        schema: { type: 'string' as const },
+      };
+      expect(generateFaker(makeUser(prop), baseConfig).code).toContain(
+        'faker.string.uuid()',
+      );
+    });
+
+    test('a name that merely contains "id" is not treated as an id', () => {
+      const prop = {
+        name: 'video',
+        required: true,
+        type: 'string' as const,
+        schema: { type: 'string' as const },
+      };
+      expect(generateFaker(makeUser(prop), baseConfig).code).toContain(
+        'video: faker.lorem.word()',
+      );
+    });
+
+    test('a numeric field named like a date is not given an ISO string', () => {
+      const prop = {
+        name: 'birthDate',
+        required: true,
+        type: 'number' as const,
+        schema: { type: 'number' as const },
+      };
+      expect(generateFaker(makeUser(prop), baseConfig).code).toContain(
+        'birthDate: faker.number.int()',
+      );
+    });
+
     test('url → faker.internet.url()', () => {
       const prop = {
         name: 'photo_url',
@@ -174,6 +222,45 @@ describe('faker', () => {
       expect(generateFaker(makeUser(prop), baseConfig).code).toContain(
         'faker.date.past().toISOString()',
       );
+    });
+  });
+
+  describe('schema format', () => {
+    const withFormat = (name: string, format: string) => ({
+      name,
+      required: true,
+      type: 'string' as const,
+      schema: { type: 'string' as const, format },
+    });
+
+    test('format wins over the field name', () => {
+      const { code } = generateFaker(
+        makeUser(withFormat('name', 'email')),
+        baseConfig,
+      );
+      expect(code).toContain('faker.internet.email()');
+      expect(code).not.toContain('faker.person.fullName()');
+    });
+
+    test('date-time → an ISO timestamp', () => {
+      expect(
+        generateFaker(
+          makeUser(withFormat('createdAt', 'date-time')),
+          baseConfig,
+        ).code,
+      ).toContain('faker.date.past().toISOString()');
+    });
+
+    test('date → a calendar date, not a timestamp', () => {
+      expect(
+        generateFaker(makeUser(withFormat('bornOn', 'date')), baseConfig).code,
+      ).toContain('faker.date.past().toISOString().slice(0, 10)');
+    });
+
+    test('uri → a URL', () => {
+      expect(
+        generateFaker(makeUser(withFormat('link', 'uri')), baseConfig).code,
+      ).toContain('faker.internet.url()');
     });
   });
 
