@@ -183,9 +183,14 @@ Generates TanStack Query v5 hooks.
 
 ```ts
 tanstackQuery({
+  framework: 'react',              // 'react' | 'vue' | 'svelte' | 'solid'
   queryKeysStyle: 'functions',     // 'functions' | 'object'
+  query: true,                     // useQuery for GET operations
+  mutation: true,                  // useMutation for non-GET operations
+  infinite: false,                 // useInfiniteQuery hooks
+  suspense: false,                 // useSuspenseQuery hooks
   hookGenerationStrategies: {
-    createUser: 'mutation',        // override per operationId
+    createUser: { mutation: true },  // override per operationId
   },
 })
 ```
@@ -206,6 +211,7 @@ Generates SWR hooks.
 
 ```ts
 swr({
+  framework: 'react',              // 'react' (swr) | 'vue' (swrv)
   queryKeysStyle: 'functions',     // 'functions' | 'object'
   hookGenerationStrategies: {},
 })
@@ -259,6 +265,60 @@ export const handlers = [
   http.post('/users', () => HttpResponse.json(generateUser())),
   http.delete('/users/:id', () => new HttpResponse(null, { status: 204 })),
 ]
+```
+
+### `playwright()`
+
+Generates a typed Playwright API client plus a `test.extend()` fixture. Generates the client, not the tests. Requires `@playwright/test >= 1.30.0`.
+
+```ts
+playwright({
+  testName: 'apigPlaywrightTest',   // name of the exported test
+  fixtureName: 'api',               // name of the fixture a test destructures
+  baseUrl: undefined,               // defaults to baseURL from playwright.config.ts
+  withFaker: false,                 // re-export faker factories as sample<Operation>()
+  authFixture: {                    // optional authenticated fixture
+    login: 'loginUser',             // operationId of the login endpoint
+    strategy: 'cookie',             // 'cookie' | 'bearer'
+    payload: '{ user: process.env.API_USER }',  // or { import, from }
+    tokenPath: 'token',             // bearer only
+    header: 'Authorization',        // bearer only
+    fixtureName: 'authedApi',
+  },
+})
+```
+
+Generated output example:
+
+```ts
+export const createApiClient = (ctx: APIRequestContext) => ({
+  getUsers: async (params?: { page?: number }): Promise<UserList> => {
+    const r = await ctx.get(`/users`, { params: toParams(params) })
+    if (!r.ok()) throw new ApigError(r.status(), await parseApiError(r))
+    return r.json() as Promise<UserList>
+  },
+})
+
+export type ApiClient = ReturnType<typeof createApiClient>
+
+export const apigPlaywrightTest = base.extend<{ api: ApiClient }>({
+  api: async ({ request }, use) => {
+    await use(createApiClient(request))
+  },
+})
+```
+
+The factory takes any `APIRequestContext`, so it works with the standalone `request` fixture and with `page.request` (which shares cookies with the browser). With `rawResponse: true` the methods return Playwright's `APIResponse` untouched. Under `groupBy`, exports are prefixed per group (`createPetsApiClient`, `petsApigPlaywrightTest`).
+
+### `mcp()`
+
+Generates an MCP (Model Context Protocol) server exposing the SDK operations as tools. Requires `sdk()` and `zod()`. Incompatible with `apiLogging: true` — stdout carries the JSON-RPC stream.
+
+```ts
+mcp({
+  name: 'apig',                    // server name reported to the MCP client
+  version: '1.0.0',
+})
 ```
 
 ## OpenAPI features supported
