@@ -9,3 +9,4 @@ export { swr, generateSwr } from './swr';
 export { msw, generateMsw } from './msw';
 export { rhf, generateRhf } from './rhf';
 export { mcp, generateMcp } from './mcp';
+export { playwright, generatePlaywright } from './playwright';

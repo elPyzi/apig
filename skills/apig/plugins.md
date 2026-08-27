@@ -238,3 +238,56 @@ export const handlers = [
   }),
 ];
 ```
+
+---
+
+## playwright()
+
+Generates a typed Playwright API client and a `test.extend()` fixture. Generates the **client, not the tests** — assertions stay with the user. Requires `@playwright/test >= 1.30.0`.
+
+```ts
+playwright({
+  testName: 'apigPlaywrightTest',  // exported test name
+  fixtureName: 'api',              // what a test destructures
+  baseUrl: undefined,              // defaults to baseURL from playwright.config.ts
+  withFaker: false,                // needs faker() — adds sample<Operation>()
+  authFixture: {
+    login: 'loginUser',            // operationId of the login endpoint
+    strategy: 'cookie',            // 'cookie' (default) | 'bearer'
+    payload: '{ user: process.env.API_USER }',  // or { import, from }
+  },
+})
+```
+
+Output:
+
+```ts
+export const createApiClient = (ctx: APIRequestContext) => ({
+  getUsers: async (params?: { page?: number }): Promise<UserList> => {
+    const r = await ctx.get(`/users`, { params: toParams(params) });
+    if (!r.ok()) throw new ApigError(r.status(), await parseApiError(r));
+    return r.json() as Promise<UserList>;
+  },
+});
+
+export type ApiClient = ReturnType<typeof createApiClient>;
+
+export const apigPlaywrightTest = base.extend<{ api: ApiClient }>({
+  api: async ({ request }, use) => {
+    await use(createApiClient(request));
+  },
+});
+```
+
+Usage:
+
+```ts
+import { apigPlaywrightTest as test } from './api/playwright'
+
+test('lists users', async ({ api }) => {
+  const users = await api.getUsers()
+  expect(users.length).toBeGreaterThan(0)
+})
+```
+
+The factory takes any `APIRequestContext` — pass `request` for standalone API tests, or `page.request` to reuse the browser's session. With `rawResponse: true` the methods return `APIResponse` untouched. Under `groupBy`, exports are prefixed per group (`createPetsApiClient`, `petsApigPlaywrightTest`).

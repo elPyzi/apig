@@ -41,11 +41,13 @@ npx apig generate
 | `zod()` | Zod schemas with email, uuid, min/max, discriminated unions |
 | `valibot()` | Valibot schemas |
 | `yup()` | Yup schemas |
-| `tanstackQuery()` | TanStack Query v5 hooks (`useQuery`, `useMutation`, `useInfiniteQuery`, `useSuspenseQuery`) |
-| `swr()` | SWR hooks (`useSWR`, `useSWRMutation`) |
+| `tanstackQuery()` | TanStack Query v5 hooks (`useQuery`, `useMutation`, `useInfiniteQuery`, `useSuspenseQuery`) — React, Vue, Svelte, Solid |
+| `swr()` | SWR hooks (`useSWR`, `useSWRMutation`) — React, Vue |
 | `rhf()` | React Hook Form resolvers (zod / valibot / yup) |
-| `faker()` | Faker.js factories with semantic field name heuristics |
+| `faker()` | Faker.js factories from schema formats and field-name heuristics |
 | `msw()` | Mock Service Worker handlers |
+| `playwright()` | Playwright API client and test fixture |
+| `mcp()` | MCP server exposing the SDK as tools |
 
 ## CLI
 
@@ -72,6 +74,7 @@ apig info               # show spec stats without generating
   - [rhf()](./docs/en/plugins/rhf.md)
   - [faker()](./docs/en/plugins/faker.md)
   - [msw()](./docs/en/plugins/msw.md)
+  - [playwright()](./docs/en/plugins/playwright.md)
 - [Creating a custom plugin](./docs/en/custom-plugin.md)
 - [ApigError client](./docs/en/client.md)
 - [Cache](./docs/en/cache.md)
@@ -80,7 +83,3 @@ apig info               # show spec stats without generating
 ## License
 
 MIT
-
----
-
-[Русский](./docs/ru/README.md) · [中文](./docs/zh/README.md) · [Deutsch](./docs/de/README.md) · [Français](./docs/fr/README.md) · [Español](./docs/es/README.md) · [日本語](./docs/ja/README.md) · [한국어](./docs/ko/README.md) · [Português](./docs/pt/README.md)

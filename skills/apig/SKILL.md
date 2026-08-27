@@ -39,11 +39,14 @@ npx apig generate
 | SWR hooks | `typescript()`, `sdk()`, `swr()` |
 | Form validation | `typescript()`, `zod()`, `rhf({ resolver: 'zod' })` |
 | MSW mocks for testing | `typescript()`, `faker()`, `msw()` |
+| Playwright API tests | `typescript()`, `playwright()` |
+| MCP server over the API | `typescript()`, `sdk()`, `zod()`, `mcp()` |
 | Everything | `typescript()`, `sdk()`, `zod()`, `tanstackQuery()`, `faker()`, `msw()` |
 
 ## Key API Details (don't get these wrong)
 
-- `sdk()`, `typescript()`, `faker()`, `msw()` take **no options**. HTTP client, enum style, and type style are `defineConfig`-level options, not plugin options.
+- `playwright()` generates the API **client and fixture, not the tests** — it never writes `test(...)` bodies or assertions.
+- `sdk()`, `typescript()`, `msw()` take **no options** (`faker()` takes only `locale`). HTTP client, enum style, and type style are `defineConfig`-level options, not plugin options.
 - `rhf()` generates **one resolver per schema** (`userResolver`, `createUserInputResolver`), not one resolver per form/operation.
 - `ApigError` is **generated into the user's own output directory** (as `config.ts`) — it is not exported from `@travjek/apig/client`. That subpath only exports `isApigError()`/`isApigStatus()` guard functions.
 - TanStack Query hook names: `useGetUsersQuery`, `useInfinityGetUsersQuery`, `useSuspenseGetUsersQuery`, `useCreateUserMutation`. Query key function: `getUsersQueryKey`.

@@ -39,11 +39,13 @@ npx apig generate
 | `zod()` | Zod schemas with email, uuid, min/max, discriminated unions |
 | `valibot()` | Valibot schemas |
 | `yup()` | Yup schemas |
-| `tanstackQuery()` | TanStack Query v5 hooks (`useQuery`, `useMutation`, `useInfiniteQuery`, `useSuspenseQuery`) |
-| `swr()` | SWR hooks (`useSWR`, `useSWRMutation`) |
+| `tanstackQuery()` | TanStack Query v5 hooks (`useQuery`, `useMutation`, `useInfiniteQuery`, `useSuspenseQuery`) — React, Vue, Svelte, Solid |
+| `swr()` | SWR hooks (`useSWR`, `useSWRMutation`) — React, Vue |
 | `rhf()` | React Hook Form resolvers (zod / valibot / yup) |
-| `faker()` | Faker.js factories with semantic field name heuristics |
+| `faker()` | Faker.js factories from schema formats and field-name heuristics |
 | `msw()` | Mock Service Worker handlers |
+| `playwright()` | Playwright API client and test fixture |
+| `mcp()` | MCP server exposing the SDK as tools |
 
 ## CLI
 
@@ -54,6 +56,10 @@ apig generate --dry-run # preview without writing
 apig versions           # list saved snapshots
 apig info               # show spec stats without generating
 ```
+
+## Documentation
+
+https://apig-docs.vercel.app
 
 ## License
 

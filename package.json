@@ -1,8 +1,8 @@
 {
   "name": "@travjek/apig",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "type": "module",
-  "description": "OpenAPI code generator for TypeScript with a plugin system — generates types, SDK, Zod/Valibot/Yup schemas, TanStack Query / SWR hooks, React Hook Form resolvers, Faker factories and MSW handlers",
+  "description": "OpenAPI code generator for TypeScript with a plugin system — generates types, SDK, Zod/Valibot/Yup schemas, TanStack Query / SWR hooks, React Hook Form resolvers, Faker factories, MSW handlers and Playwright API clients",
   "keywords": [
     "openapi",
     "openapi-generator",
@@ -25,6 +25,9 @@
     "rhf",
     "msw",
     "mock-service-worker",
+    "playwright",
+    "api-testing",
+    "e2e-testing",
     "faker",
     "swagger",
     "swagger-codegen",
@@ -106,7 +109,8 @@
     "msw": ">=2.0.0",
     "@hookform/resolvers": ">=3.0.0",
     "@faker-js/faker": ">=9.0.0",
-    "@modelcontextprotocol/sdk": ">=1.0.0"
+    "@modelcontextprotocol/sdk": ">=1.0.0",
+    "@playwright/test": ">=1.30.0"
   },
   "peerDependenciesMeta": {
     "@tanstack/react-query": {
@@ -134,6 +138,9 @@
       "optional": true
     },
     "@modelcontextprotocol/sdk": {
+      "optional": true
+    },
+    "@playwright/test": {
       "optional": true
     }
   }
