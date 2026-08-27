@@ -81,6 +81,35 @@ export {
 } from '@services/codegen/tanstack/generate-tanstack-hooks';
 export type { TanstackFrameworkConfig } from '@services/codegen/tanstack/generate-tanstack-hooks';
 export {
+  buildNames,
+  getMethodName,
+  getExportPrefix,
+  getPlaywrightArgs,
+  getFakerSamples,
+  hasQueryParams,
+  hasHeaderParams,
+  hasMultipartBody,
+  indent,
+  PLAYWRIGHT_FILE_TYPE,
+  TO_PARAMS_FN,
+  TO_HEADERS_FN,
+  TO_MULTIPART_FN,
+  PARSE_API_ERROR_FN,
+  toParamsCode,
+  toHeadersCode,
+  toMultipartCode,
+  parseApiErrorCode,
+  AUTH_PAYLOAD_CONST,
+  generatePlaywrightMethod,
+  generatePlaywrightFixture,
+} from '@services/codegen/playwright';
+export type {
+  PlaywrightNames,
+  FakerSample,
+  PlaywrightMethodOptions,
+  ResolvedAuth,
+} from '@services/codegen/playwright';
+export {
   generateSwrKeyFn,
   buildSwrKeyEntry,
   generateSwrQueryHook,

@@ -154,6 +154,98 @@ export interface FakerOptions {
 /** Options for the `msw()` plugin — generates Mock Service Worker handlers. */
 export interface MswOptions {}
 
+/**
+ * How the generated `authedApi` fixture carries authentication into later calls.
+ * - `"cookie"` — nothing to carry by hand: an `APIRequestContext` keeps its own
+ *   cookie jar, so a `Set-Cookie` from the login call is replayed automatically.
+ *   Works with httpOnly cookies, which a test can never read.
+ * - `"bearer"` — the token is read out of the login response and sent as a
+ *   header on every later call.
+ */
+export type PlaywrightAuthStrategy = 'cookie' | 'bearer';
+
+/**
+ * Payload posted to the login operation.
+ *
+ * Either a raw expression inlined into the generated file, or a named export
+ * the generated file imports. Credentials never live in apig's config — where
+ * they come from (env, a secret manager, a fixture file) stays yours.
+ * @example '{ user: process.env.API_USER, pass: process.env.API_PASS }'
+ * @example { import: 'authPayload', from: '../auth.config' }
+ */
+export type PlaywrightAuthPayload =
+  | string
+  | {
+      /** Named export to import. */ import: string;
+      /** Module to import it from. */ from: string;
+    };
+
+/** Authenticated-fixture options for the `playwright()` plugin. */
+export interface PlaywrightAuthFixtureOptions {
+  /**
+   * `operationId` of the login endpoint. The fixture is only emitted into files
+   * that actually contain this operation — with `groupBy`, that is the group it
+   * belongs to.
+   * @example login: "loginUser"
+   */
+  login: string;
+  /**
+   * How authentication is carried into later calls.
+   * @default "cookie"
+   */
+  strategy?: PlaywrightAuthStrategy;
+  /**
+   * Property of the login response holding the token. Only used by `"bearer"`.
+   * @default "token"
+   * @example tokenPath: "accessToken"
+   */
+  tokenPath?: string;
+  /** Payload posted to the login operation. */
+  payload: PlaywrightAuthPayload;
+  /**
+   * Header the bearer token is sent in. Only used by `"bearer"`.
+   * @default "Authorization"
+   */
+  header?: string;
+  /**
+   * Name of the generated authenticated fixture.
+   * @default "authedApi"
+   */
+  fixtureName?: string;
+}
+
+/** Options for the `playwright()` plugin — generates a typed Playwright API client. */
+export interface PlaywrightOptions {
+  /**
+   * Name of the exported `test` built with `test.extend()`.
+   * Under `groupBy`, each group prefixes it with its own name to keep the
+   * barrel file free of duplicate exports (`petsApigPlaywrightTest`).
+   * @default "apigPlaywrightTest"
+   */
+  testName?: string;
+  /**
+   * Name of the fixture holding the client — what a test destructures.
+   * @default "api"
+   * @example fixtureName: "sdk"  // test('…', async ({ sdk }) => …)
+   */
+  fixtureName?: string;
+  /**
+   * Base URL prefixed to every request path. Overrides the top-level `baseUrl`.
+   * Leave unset to rely on `baseURL` from `playwright.config.ts`.
+   * @example baseUrl: "https://staging.example.com"
+   */
+  baseUrl?: string;
+  /**
+   * Re-export the Faker factories for request bodies as `sample<Operation>()`.
+   * Requires the `faker()` plugin.
+   * @default false
+   * @example withFaker: true  // const body = sampleCreatePet()
+   */
+  withFaker?: boolean;
+  /** Emit an extra fixture that logs in before handing the client over. */
+  authFixture?: PlaywrightAuthFixtureOptions;
+}
+
 /** Options for the `mcp()` plugin — generates an MCP server over the SDK. */
 export interface McpOptions {
   /**

@@ -12,3 +12,5 @@
 | [rhf()](./rhf.md) | React Hook Form resolvers |
 | [faker()](./faker.md) | Faker.js factories |
 | [msw()](./msw.md) | Mock Service Worker handlers |
+| [playwright()](./playwright.md) | Playwright API client and test fixture |
+| `mcp()` | MCP server exposing the SDK as tools |

@@ -32,6 +32,10 @@ export type {
   FakerOptions,
   MswOptions,
   McpOptions,
+  PlaywrightOptions,
+  PlaywrightAuthFixtureOptions,
+  PlaywrightAuthStrategy,
+  PlaywrightAuthPayload,
   RhfOptions,
   RhfResolver,
   TanstackQueryOptions,
@@ -67,4 +71,5 @@ export {
   msw,
   rhf,
   mcp,
+  playwright,
 } from '@plugins';

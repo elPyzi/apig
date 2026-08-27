@@ -70,8 +70,28 @@ export {
   generateSwrQueryHook,
   generateSwrMutationHook,
   generateSwrKeysFile,
+  buildNames,
+  getMethodName,
+  getExportPrefix,
+  getPlaywrightArgs,
+  getFakerSamples,
+  hasQueryParams,
+  hasHeaderParams,
+  hasMultipartBody,
+  toParamsCode,
+  toHeadersCode,
+  toMultipartCode,
+  parseApiErrorCode,
+  AUTH_PAYLOAD_CONST,
+  generatePlaywrightMethod,
+  generatePlaywrightFixture,
 } from '@services/codegen';
 export type { TanstackFrameworkConfig } from '@services/codegen';
+export type {
+  PlaywrightNames,
+  PlaywrightMethodOptions,
+  ResolvedAuth,
+} from '@services/codegen';
 export type {
   ErrorConfig,
   FnArg,
