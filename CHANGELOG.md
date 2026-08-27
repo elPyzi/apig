@@ -2,6 +2,25 @@
 
 All notable changes to `@travjek/apig` will be documented in this file.
 
+## [0.11.0]
+
+### Added
+- `playwright()` plugin — generates a typed Playwright API client (`createApiClient(ctx)`) and a `test.extend()` fixture from OpenAPI operations. The factory takes any `APIRequestContext`, so one client covers both standalone `request` tests and `page.request` calls that share the browser's session. It generates the client, not the tests — assertions stay yours
+- `playwright()` options: `testName` and `fixtureName` for the generated exports, `baseUrl` to override the project's `baseURL`, and `withFaker` to re-export the `faker()` factories as `sample<Operation>()`
+- `playwright({ authFixture })` — an extra fixture that logs in first, with a `cookie` strategy (the request context replays `Set-Cookie` on its own, so httpOnly tokens work) and a `bearer` strategy (token read from the login response, attached to a context of its own). The login payload is passed straight through as an inline expression or an import, so apig never touches credentials
+- `@playwright/test` declared as an optional peer dependency
+
+### Fixed
+- `faker()` guessed a value's **type** from its field name, so the generated factories did not compile against the generated types. A field named `id` or `*Id` became `faker.number.int()` even when the spec declared it a `string` — on a spec with uuid ids, every factory holding one failed `tsc`. Name heuristics now apply only when they agree with the declared type, and a string id falls back to `faker.string.uuid()`
+- `faker()` ignored the schema's `format`. `uuid`, `email`, `uri`, `date` and `date-time` fields now generate matching values instead of `faker.lorem.word()` — a `createdAt` with `format: date-time` was previously a random word
+- `faker()` treated any field name *containing* `id` as an id, so `video` and `width` were generated as numbers. The match is now anchored to the end of the name (`id`, `ownerId`, `user_id`)
+
+### Changed
+- Documentation is now English-only — the eight machine-translated locales under `docs/` were dropped, since they drifted from the source with every release. Full docs live at https://apig-docs.vercel.app
+- `README.md`, `README.npm.md` and `llms.txt` now list `mcp()`, the `framework` option on `tanstackQuery()`/`swr()`, and the new plugin — all three had fallen behind the code
+
+---
+
 ## [0.10.1]
 
 ### Fixed
