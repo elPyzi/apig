@@ -4,7 +4,7 @@ export {
   resetBaseUrlWarning,
 } from '@services/codegen/common/get-base-url';
 export { getUrl } from '@services/codegen/common/get-url';
-export { generateFunction } from '@services/codegen/sdk/generate-function';
+export { generateFunction } from '@services/codegen/requests/generate-function';
 export { generateSchema } from '@services/codegen/typescript/generate-schema';
 export { getResponseType } from '@services/codegen/common/get-response-type';
 export { getArgs } from '@services/codegen/common/get-args';

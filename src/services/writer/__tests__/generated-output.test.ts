@@ -8,20 +8,20 @@ import {
   existsSync,
   rmSync,
 } from 'fs';
-import { tmpdir } from 'os';
-import { join, dirname, resolve } from 'path';
+import { join, dirname, resolve, relative } from 'path';
 
 import type { ApigConfig } from '@models';
 import { write } from '@services/writer';
 import {
   typescript,
-  sdk,
+  requests,
   zod,
   tanstackQuery,
   swr,
   rhf,
   faker,
   msw,
+  playwright,
 } from '@plugins';
 
 const SPEC = 'examples/petstore/openapi.json';
@@ -47,6 +47,7 @@ const ALLOWED_PACKAGES = [
   '@hookform/resolvers/yup',
   'valibot',
   'yup',
+  '@playwright/test',
 ];
 
 const IMPORT_RE = /(?:from|import)\s+['"]([^'"]+)['"]/g;
@@ -74,6 +75,17 @@ const collectImports = (outDir: string): Import[] =>
       }));
     });
 
+/**
+ * Imports that point at neither an allowed package nor a generated file next to
+ * them — the shape a leaked internal alias or a wrong groupBy prefix takes.
+ */
+const brokenImports = (outDir: string): Import[] =>
+  collectImports(outDir).filter(({ file, specifier }) =>
+    specifier.startsWith('.')
+      ? !existsSync(resolve(dirname(file), `${specifier}.ts`))
+      : !ALLOWED_PACKAGES.includes(specifier),
+  );
+
 /** Silences the generator's console output so test runs stay readable. */
 const quietly = async (fn: () => Promise<void>): Promise<void> => {
   const { log, error } = console;
@@ -96,21 +108,23 @@ const generate = async (
       input: SPEC,
       output: { path: outDir, clean: true },
       baseUrl: 'https://api.example.com',
-      plugins: [typescript(), sdk(), tanstackQuery()],
+      plugins: [typescript(), requests(), tanstackQuery()],
       ...overrides,
     }),
   );
 };
 
 /**
- * Type-checks the generated files that import nothing but each other, so the
- * suite does not need msw, zod or a query library installed to prove the
- * generator emits compiling TypeScript.
+ * Type-checks every generated file under the same strictness a consumer would.
+ *
+ * The peer libraries the output imports are dev dependencies here purely so
+ * this can cover the whole surface — string assertions cannot tell that
+ * `faker.number.int()` was assigned to a `string`, which is how a whole spec's
+ * factories once shipped without compiling.
  */
 const compileGenerated = (outDir: string): void => {
-  const files = ['config.ts', 'types.ts', 'sdk.ts', 'endpoints.ts']
-    .map((name) => join(outDir, name))
-    .filter(existsSync);
+  const files = listFiles(outDir).filter((file) => file.endsWith('.ts'));
+  if (files.length === 0) return;
 
   try {
     execFileSync(
@@ -140,7 +154,10 @@ const compileGenerated = (outDir: string): void => {
 let root: string;
 
 beforeAll(() => {
-  root = mkdtempSync(join(tmpdir(), 'apig-e2e-'));
+  // Inside the repo on purpose: the generated files import the peer libraries by
+  // bare specifier, and only a directory under the repo resolves them the way a
+  // consumer's project would.
+  root = mkdtempSync(join(process.cwd(), '.e2e-'));
 });
 
 afterAll(() => {
@@ -156,13 +173,13 @@ describe('generated output', () => {
       await generate(outDir, {
         plugins: [
           typescript(),
-          sdk(),
+          requests(),
           zod({ withTypes: false }),
           tanstackQuery({ infinite: true, suspense: true }),
-          swr(),
           rhf({ resolver: 'zod' }),
           faker(),
           msw(),
+          playwright(),
         ],
       });
     });
@@ -186,33 +203,104 @@ describe('generated output', () => {
       expect(aliased).toEqual([]);
     });
 
-    test('dependency-free files compile under strict TypeScript', () => {
+    test('every generated file compiles under strict TypeScript', () => {
       compileGenerated(outDir);
     });
   });
 
-  describe('groupBy: tags', () => {
-    test('nested files still resolve their imports', async () => {
-      const outDir = join(root, 'tags');
+  describe('swr, flat layout', () => {
+    let outDir: string;
+
+    beforeAll(async () => {
+      outDir = join(root, 'swr');
       await generate(outDir, {
-        groupBy: 'tags',
-        plugins: [
-          typescript(),
-          sdk(),
-          zod({ withTypes: false }),
-          faker(),
-          msw(),
-        ],
+        plugins: [typescript(), requests(), swr(), faker()],
+      });
+    });
+
+    test('every import is a real package or an existing generated file', () => {
+      expect(brokenImports(outDir)).toEqual([]);
+    });
+
+    test('every generated file compiles under strict TypeScript', () => {
+      compileGenerated(outDir);
+    });
+  });
+
+  // Root-scoped plugins once built their import paths as if they were nested,
+  // which broke every layout but the flat one — so each layout is generated and
+  // compiled rather than only checked for resolvable specifiers.
+  describe.each(['none', 'tags', 'endpoints', 'operations'] as const)(
+    'groupBy: %s',
+    (groupBy) => {
+      let outDir: string;
+
+      beforeAll(async () => {
+        outDir = join(root, `group-${groupBy}`);
+        await generate(outDir, {
+          groupBy,
+          plugins: [
+            typescript(),
+            requests(),
+            zod({ withTypes: false }),
+            tanstackQuery(),
+            faker(),
+            msw(),
+            playwright(),
+          ],
+        });
       });
 
-      const broken = collectImports(outDir).filter(({ file, specifier }) => {
-        if (!specifier.startsWith('.')) {
-          return !ALLOWED_PACKAGES.includes(specifier);
-        }
-        return !existsSync(resolve(dirname(file), `${specifier}.ts`));
+      test('every import resolves', () => {
+        expect(brokenImports(outDir)).toEqual([]);
       });
 
-      expect(broken).toEqual([]);
+      test('every generated file compiles under strict TypeScript', () => {
+        compileGenerated(outDir);
+      });
+    },
+  );
+
+  /**
+   * Every non-fetch client is reached through a module the user writes, so each
+   * one is compiled against a real instance of the library it names — the
+   * adapters build quite different call shapes and only `fetch` was ever
+   * type-checked.
+   */
+  describe.each([
+    [
+      'axios',
+      "import axios from 'axios';\nexport const api = axios.create();\n",
+    ],
+    ['ky', "import ky from 'ky';\nexport const api = ky.create({});\n"],
+    [
+      'ofetch',
+      "import { ofetch } from 'ofetch';\nexport const api = ofetch.create({});\n",
+    ],
+    [
+      'wretch',
+      // `.query()` is an addon in wretch v3, and the generated calls use it —
+      // a bare wretch() instance does not type-check against them.
+      "import wretch from 'wretch';\nimport QueryStringAddon from 'wretch/addons/queryString';\nexport const api = wretch().addon(QueryStringAddon);\n",
+    ],
+  ] as const)('httpClient: %s', (name, stub) => {
+    let outDir: string;
+
+    beforeAll(async () => {
+      outDir = join(root, `http-${name}`);
+      await generate(outDir, {
+        httpClient: {
+          name,
+          path: `${relative(process.cwd(), join(outDir, 'client'))}`,
+          export: 'api',
+        },
+        plugins: [typescript(), requests()],
+      });
+      writeFileSync(join(outDir, 'client.ts'), stub, 'utf-8');
+    });
+
+    test('the generated calls compile against the real client', () => {
+      compileGenerated(outDir);
     });
   });
 
@@ -220,34 +308,34 @@ describe('generated output', () => {
     test('withTypes: false hands types back to typescript()', async () => {
       const outDir = join(root, 'with-types-false');
       await generate(outDir, {
-        plugins: [typescript(), sdk(), zod({ withTypes: false })],
+        plugins: [typescript(), requests(), zod({ withTypes: false })],
       });
 
-      const sdkCode = readFileSync(join(outDir, 'sdk.ts'), 'utf-8');
-      expect(sdkCode).toContain("from './types'");
-      expect(sdkCode).not.toContain("} from './zod'");
+      const requestsCode = readFileSync(join(outDir, 'requests.ts'), 'utf-8');
+      expect(requestsCode).toContain("from './types'");
+      expect(requestsCode).not.toContain("} from './zod'");
     });
 
     test('withTypes: true keeps types in the validation file', async () => {
       const outDir = join(root, 'with-types-true');
       await generate(outDir, {
-        plugins: [typescript(), sdk(), zod({ withTypes: true })],
+        plugins: [typescript(), requests(), zod({ withTypes: true })],
       });
 
-      const sdkCode = readFileSync(join(outDir, 'sdk.ts'), 'utf-8');
-      expect(sdkCode).toContain("from './zod'");
+      const requestsCode = readFileSync(join(outDir, 'requests.ts'), 'utf-8');
+      expect(requestsCode).toContain("from './zod'");
     });
   });
 
   describe('output cleaning', () => {
     test('keeps hand-written files sitting in the output directory', async () => {
       const outDir = join(root, 'clean-keeps');
-      await generate(outDir, { plugins: [typescript(), sdk()] });
+      await generate(outDir, { plugins: [typescript(), requests()] });
 
       const handwritten = join(outDir, 'client.ts');
       writeFileSync(handwritten, 'export const apiClient = {};\n', 'utf-8');
 
-      await generate(outDir, { plugins: [typescript(), sdk()] });
+      await generate(outDir, { plugins: [typescript(), requests()] });
 
       expect(existsSync(handwritten)).toBe(true);
       expect(readFileSync(handwritten, 'utf-8')).toContain('apiClient');
@@ -256,44 +344,44 @@ describe('generated output', () => {
     test('drops generated files a later run no longer produces', async () => {
       const outDir = join(root, 'clean-drops');
       await generate(outDir, {
-        plugins: [typescript(), sdk(), faker(), msw()],
+        plugins: [typescript(), requests(), faker(), msw()],
       });
       expect(existsSync(join(outDir, 'msw.ts'))).toBe(true);
 
-      await generate(outDir, { plugins: [typescript(), sdk()] });
+      await generate(outDir, { plugins: [typescript(), requests()] });
 
       expect(existsSync(join(outDir, 'msw.ts'))).toBe(false);
-      expect(existsSync(join(outDir, 'sdk.ts'))).toBe(true);
+      expect(existsSync(join(outDir, 'requests.ts'))).toBe(true);
     });
   });
 
   describe('header params and OpenAPI 3.1', () => {
     let outDir: string;
-    let sdkCode: string;
+    let requestsCode: string;
 
     beforeAll(async () => {
       outDir = join(root, 'headers-31');
       await generate(outDir, {
         input: 'src/services/writer/__tests__/fixtures/headers-3.1.json',
-        plugins: [typescript(), sdk()],
+        plugins: [typescript(), requests()],
       });
-      sdkCode = readFileSync(join(outDir, 'sdk.ts'), 'utf-8');
+      requestsCode = readFileSync(join(outDir, 'requests.ts'), 'utf-8');
     });
 
     test('header params reach the function signature', () => {
-      expect(sdkCode).toContain(
+      expect(requestsCode).toContain(
         `headers: { 'X-Tenant-Id': string; 'X-Trace'?: string }`,
       );
     });
 
     test('header params reach the request', () => {
-      expect(sdkCode).toContain(
+      expect(requestsCode).toContain(
         `headers: { 'Content-Type': 'application/json', ...headers }`,
       );
     });
 
     test('an optional argument before a required one widens instead of taking ?', () => {
-      expect(sdkCode).toContain('params: { limit?: number } | undefined');
+      expect(requestsCode).toContain('params: { limit?: number } | undefined');
     });
 
     test('3.1 nullable unions and const reach the types', () => {
@@ -315,7 +403,7 @@ describe('generated output', () => {
       outDir = join(root, 'tuples');
       await generate(outDir, {
         input: 'src/services/writer/__tests__/fixtures/tuples-3.1.json',
-        plugins: [typescript(), sdk()],
+        plugins: [typescript(), requests()],
       });
     });
 
@@ -338,7 +426,7 @@ describe('generated output', () => {
 
   describe('query parameter styles', () => {
     let outDir: string;
-    let sdkCode: string;
+    let requestsCode: string;
     let toQuery: (
       params?: Record<string, unknown>,
       formats?: Record<string, string>,
@@ -348,27 +436,27 @@ describe('generated output', () => {
       outDir = join(root, 'query-styles');
       await generate(outDir, {
         input: 'src/services/writer/__tests__/fixtures/query-styles.json',
-        plugins: [typescript(), sdk()],
+        plugins: [typescript(), requests()],
       });
-      sdkCode = readFileSync(join(outDir, 'sdk.ts'), 'utf-8');
+      requestsCode = readFileSync(join(outDir, 'requests.ts'), 'utf-8');
       ({ toQuery } = await import(join(outDir, 'config.ts')));
     });
 
     test('array params are typed as arrays, not strings', () => {
-      expect(sdkCode).toContain('tags?: string[]');
-      expect(sdkCode).toContain('ids?: number[]');
+      expect(requestsCode).toContain('tags?: string[]');
+      expect(requestsCode).toContain('ids?: number[]');
     });
 
     test('scalar param types survive alongside them', () => {
-      expect(sdkCode).toContain('active?: boolean');
-      expect(sdkCode).toContain(`state?: 'on' | 'off'`);
+      expect(requestsCode).toContain('active?: boolean');
+      expect(requestsCode).toContain(`state?: 'on' | 'off'`);
     });
 
     test('only non-default styles are passed to toQuery', () => {
-      expect(sdkCode).toContain(
+      expect(requestsCode).toContain(
         `toQuery(params, { 'ids': 'comma', 'cols': 'pipe', 'words': 'space' })`,
       );
-      expect(sdkCode).not.toContain(`'tags':`);
+      expect(requestsCode).not.toContain(`'tags':`);
     });
 
     test('the default style repeats the key', () => {
@@ -416,11 +504,11 @@ describe('generated output', () => {
   describe('fetch query params', () => {
     test('serializes through the toQuery helper, not raw URLSearchParams', async () => {
       const outDir = join(root, 'query');
-      await generate(outDir, { plugins: [typescript(), sdk()] });
+      await generate(outDir, { plugins: [typescript(), requests()] });
 
-      const sdkCode = readFileSync(join(outDir, 'sdk.ts'), 'utf-8');
-      expect(sdkCode).toContain('${toQuery(params)}');
-      expect(sdkCode).not.toContain('new URLSearchParams(params)');
+      const requestsCode = readFileSync(join(outDir, 'requests.ts'), 'utf-8');
+      expect(requestsCode).toContain('${toQuery(params)}');
+      expect(requestsCode).not.toContain('new URLSearchParams(params)');
       expect(readFileSync(join(outDir, 'config.ts'), 'utf-8')).toContain(
         'export const toQuery',
       );

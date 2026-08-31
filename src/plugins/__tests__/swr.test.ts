@@ -133,7 +133,7 @@ describe('swr', () => {
       const result = generateSwr(
         makeIR([getOp]),
         baseConfig,
-        './sdk',
+        './requests',
         './swr-keys',
         'object',
       );
@@ -144,7 +144,7 @@ describe('swr', () => {
       const result = generateSwr(
         makeIR([getOp]),
         baseConfig,
-        './sdk',
+        './requests',
         './swr-keys',
         'object',
       );
@@ -192,13 +192,13 @@ describe('swr', () => {
     });
   });
 
-  describe('custom sdkImportPath', () => {
-    test('uses a custom sdk path', () => {
+  describe('custom requestsImportPath', () => {
+    test('uses a custom requests path', () => {
       const ir = makeIR([
         makeOperation({ id: 'getUsers', method: HTTP_METHODS.GET }),
       ]);
-      expect(generateSwr(ir, baseConfig, '@/api/sdk').code).toContain(
-        "from '@/api/sdk'",
+      expect(generateSwr(ir, baseConfig, '@/api/requests').code).toContain(
+        "from '@/api/requests'",
       );
     });
   });

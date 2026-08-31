@@ -3,13 +3,13 @@ import type { ApigConfig, PluginResult, FakerLocale } from './config';
 
 /**
  * Runtime context injected by the writer into operation-scoped plugins.
- * sdkImportPath changes per groupBy strategy:
- *   none      → './sdk'
- *   tags      → './<tag>.sdk'
- *   endpoints → './<operation>.sdk'
+ * requestsImportPath changes per groupBy strategy:
+ *   none      → './requests'
+ *   tags      → './<tag>.requests'
+ *   endpoints → './<operation>.requests'
  */
 export interface PluginContext {
-  sdkImportPath: string;
+  requestsImportPath: string;
   /** Import path to the shared query-keys file. Only set when queryKeysStyle="object". */
   queryKeysImportPath?: string;
   /** Import path to the shared config.ts file (ApigError, ApigResponse). */
@@ -26,16 +26,16 @@ export interface ExtraFile {
 }
 
 /**
- * Use: sdk(), typescript(), tanstackQuery(), zod(), …
+ * Use: requests(), typescript(), tanstackQuery(), zod(), …
  */
 export interface ApigPlugin {
   /** Unique plugin name — used for deduplication and validation checks. */
   name: string;
-  /** Base output filename without extension (e.g. "sdk" → "sdk.ts"). */
+  /** Base output filename without extension (e.g. "requests" → "requests.ts"). */
   fileName: string;
   /**
    * "root"       — generated once for the full IR (types, zod, faker, msw, …)
-   * "operations" — called per group in groupBy=tags/endpoints (sdk, tanstack, swr)
+   * "operations" — called per group in groupBy=tags/endpoints (requests, tanstack, swr)
    */
   scope: 'root' | 'operations';
   generate: (ir: IR, config: ApigConfig, ctx?: PluginContext) => PluginResult;
@@ -62,8 +62,8 @@ export interface ApigPlugin {
 /** Options for the `typescript()` plugin — generates TypeScript types from schemas. */
 export interface TypescriptOptions {}
 
-/** Options for the `sdk()` plugin — generates typed request functions. */
-export interface SdkOptions {}
+/** Options for the `requests()` plugin — generates typed request functions. */
+export interface RequestsOptions {}
 
 /** Options for the `zod()` plugin — generates Zod schemas. */
 export interface ZodOptions {
@@ -88,7 +88,7 @@ export interface ZodOptions {
   output?: boolean;
   /**
    * Parse API responses through the generated Zod schema at runtime.
-   * Adds a `.parse()` call inside each SDK function.
+   * Adds a `.parse()` call inside each request function.
    * @default false
    */
   validateResponse?: boolean;
@@ -226,7 +226,7 @@ export interface PlaywrightOptions {
   /**
    * Name of the fixture holding the client — what a test destructures.
    * @default "api"
-   * @example fixtureName: "sdk"  // test('…', async ({ sdk }) => …)
+   * @example fixtureName: "requests"  // test('…', async ({ requests }) => …)
    */
   fixtureName?: string;
   /**
@@ -246,7 +246,7 @@ export interface PlaywrightOptions {
   authFixture?: PlaywrightAuthFixtureOptions;
 }
 
-/** Options for the `mcp()` plugin — generates an MCP server over the SDK. */
+/** Options for the `mcp()` plugin — generates an MCP server over the request functions. */
 export interface McpOptions {
   /**
    * Server name reported to the MCP client.

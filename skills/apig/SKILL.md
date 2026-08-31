@@ -1,6 +1,6 @@
 # @travjek/apig
 
-Generate TypeScript types, SDK clients, Zod/Valibot/Yup schemas, TanStack Query/SWR hooks, React Hook Form resolvers, Faker factories, and MSW handlers from OpenAPI specs.
+Generate TypeScript types, requests clients, Zod/Valibot/Yup schemas, TanStack Query/SWR hooks, React Hook Form resolvers, Faker factories, and MSW handlers from OpenAPI specs.
 
 ## Quick Start
 
@@ -10,14 +10,14 @@ npm install -D @travjek/apig
 
 ```ts
 // apig.config.ts
-import { defineConfig, typescript, sdk, zod, tanstackQuery } from '@travjek/apig'
+import { defineConfig, typescript, requests, zod, tanstackQuery } from '@travjek/apig'
 
 export default defineConfig({
   input: './openapi.json', // local file or URL
   output: './src/api',
   plugins: [
     typescript(),
-    sdk(),
+    requests(),
     zod({ withTypes: true }),
     tanstackQuery(),
   ],
@@ -33,20 +33,20 @@ npx apig generate
 | Goal | Plugins to use |
 |------|----------------|
 | Just TypeScript types | `typescript()` |
-| Types + fetch functions | `typescript()`, `sdk()` |
+| Types + fetch functions | `typescript()`, `requests()` |
 | Types + Zod validation | `typescript()`, `zod()` |
-| React Query hooks | `typescript()`, `sdk()`, `tanstackQuery()` |
-| SWR hooks | `typescript()`, `sdk()`, `swr()` |
+| React Query hooks | `typescript()`, `requests()`, `tanstackQuery()` |
+| SWR hooks | `typescript()`, `requests()`, `swr()` |
 | Form validation | `typescript()`, `zod()`, `rhf({ resolver: 'zod' })` |
 | MSW mocks for testing | `typescript()`, `faker()`, `msw()` |
 | Playwright API tests | `typescript()`, `playwright()` |
-| MCP server over the API | `typescript()`, `sdk()`, `zod()`, `mcp()` |
-| Everything | `typescript()`, `sdk()`, `zod()`, `tanstackQuery()`, `faker()`, `msw()` |
+| MCP server over the API | `typescript()`, `requests()`, `zod()`, `mcp()` |
+| Everything | `typescript()`, `requests()`, `zod()`, `tanstackQuery()`, `faker()`, `msw()` |
 
 ## Key API Details (don't get these wrong)
 
 - `playwright()` generates the API **client and fixture, not the tests** — it never writes `test(...)` bodies or assertions.
-- `sdk()`, `typescript()`, `msw()` take **no options** (`faker()` takes only `locale`). HTTP client, enum style, and type style are `defineConfig`-level options, not plugin options.
+- `requests()`, `typescript()`, `msw()` take **no options** (`faker()` takes only `locale`). HTTP client, enum style, and type style are `defineConfig`-level options, not plugin options.
 - `rhf()` generates **one resolver per schema** (`userResolver`, `createUserInputResolver`), not one resolver per form/operation.
 - `ApigError` is **generated into the user's own output directory** (as `config.ts`) — it is not exported from `@travjek/apig/client`. That subpath only exports `isApigError()`/`isApigStatus()` guard functions.
 - TanStack Query hook names: `useGetUsersQuery`, `useInfinityGetUsersQuery`, `useSuspenseGetUsersQuery`, `useCreateUserMutation`. Query key function: `getUsersQueryKey`.
@@ -65,7 +65,7 @@ defineConfig({
   // Output
   output: './src/api',              // output directory (default: .apig/generated)
 
-  // HTTP client (used by sdk()) — a defineConfig option, sdk() itself has no options
+  // HTTP client (used by requests()) — a defineConfig option, requests() itself has no options
   httpClient: { name: 'fetch' },    // 'fetch' | 'axios' | 'ky' | 'ofetch' | 'wretch'
 
   // Enum/type style — also defineConfig options, not plugin options
@@ -75,7 +75,7 @@ defineConfig({
   // Plugins
   plugins: [
     typescript(),                    // no options
-    sdk(),                            // no options — see httpClient above
+    requests(),                            // no options — see httpClient above
     zod({
       withTypes: true,              // re-export TS types from schemas
       infer: true,                   // export type X = z.infer<typeof XSchema>
@@ -113,7 +113,7 @@ apig version checkout <id>  # regenerate from a saved snapshot
 apig version show <id>      # show snapshot details
 ```
 
-## SDK Client Options
+## requests Client Options
 
 | Client | Install |
 |--------|---------|
@@ -121,7 +121,7 @@ apig version show <id>      # show snapshot details
 | `axios` | `npm install axios` |
 | `ky` | `npm install ky` |
 | `ofetch` | `npm install ofetch` |
-| `wretch` | `npm install wretch` |
+| `wretch` | `npm install wretch` — register `wretch/addons/queryString` on your instance, the generated calls use `.query()` |
 
 ## Detailed Guides
 

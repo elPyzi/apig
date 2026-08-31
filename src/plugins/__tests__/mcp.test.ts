@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 import { mcp, generateMcp } from '../mcp';
-import { sdk } from '../sdk';
+import { requests } from '../requests';
 import { zod } from '../zod';
 import { typescript } from '../typescript';
 import {
@@ -14,7 +14,7 @@ import { HTTP_METHODS, type ApigConfig } from '@models';
 
 const withDeps = (overrides: Partial<ApigConfig> = {}): ApigConfig => ({
   ...baseConfig,
-  plugins: [typescript(), sdk(), zod()],
+  plugins: [typescript(), requests(), zod()],
   ...overrides,
 });
 
@@ -29,15 +29,15 @@ describe('mcp', () => {
   });
 
   describe('plugin dependencies', () => {
-    test('throws without the sdk plugin', () => {
+    test('throws without the requests plugin', () => {
       const config = { ...baseConfig, plugins: [zod()] };
       expect(() => generateMcp(emptyIR, config)).toThrow(
-        'mcp plugin requires sdk plugin',
+        'mcp plugin requires requests plugin',
       );
     });
 
     test('throws without the zod plugin', () => {
-      const config = { ...baseConfig, plugins: [sdk()] };
+      const config = { ...baseConfig, plugins: [requests()] };
       expect(() => generateMcp(emptyIR, config)).toThrow(
         'mcp plugin requires zod plugin',
       );
@@ -106,10 +106,10 @@ describe('mcp', () => {
       );
     });
 
-    test('the handler calls the matching SDK function', () => {
+    test('the handler calls the matching request function', () => {
       const code = generateMcp(ir, withDeps()).code;
       expect(code).toContain('const data = await getUsers()');
-      expect(code).toContain("from './sdk'");
+      expect(code).toContain("from './requests'");
     });
 
     test('API failures come back as tool errors, not crashes', () => {
@@ -133,7 +133,7 @@ describe('mcp', () => {
       expect(generateMcp(ir, withDeps()).code).toContain('inputSchema: { id:');
     });
 
-    test('query parameters are grouped under params, mirroring the SDK call', () => {
+    test('query parameters are grouped under params, mirroring the request function call', () => {
       const ir = makeIR([
         makeOperation({
           id: 'search',
@@ -193,7 +193,7 @@ describe('mcp', () => {
       );
       const config = {
         ...baseConfig,
-        plugins: [sdk(), zod({ schemaSuffix: 'Zod' })],
+        plugins: [requests(), zod({ schemaSuffix: 'Zod' })],
       };
       expect(generateMcp(ir, config).code).toContain('body: UserZod');
     });

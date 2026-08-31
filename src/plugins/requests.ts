@@ -23,18 +23,18 @@ import {
 } from '../libs';
 
 /**
- * Generates typed SDK request functions from OpenAPI operations.
+ * Generates typed requests request functions from OpenAPI operations.
  *
- * Produces a `sdk.ts` file with async functions for each endpoint.
+ * Produces a `requests.ts` file with async functions for each endpoint.
  * Supports `fetch`, `axios`, `ky`, and `ofetch` HTTP clients.
- * @example sdk()
+ * @example requests()
  */
-export const sdk = (): ApigPlugin => ({
-  name: 'sdk',
-  fileName: 'sdk',
+export const requests = (): ApigPlugin => ({
+  name: 'requests',
+  fileName: 'requests',
   scope: 'operations',
   generate: (ir, config, ctx) =>
-    generateSdk(
+    generateRequests(
       ir,
       config,
       ctx?.configImportPath ?? './config',
@@ -62,7 +62,7 @@ export const sdk = (): ApigPlugin => ({
   },
 });
 
-export const generateSdk = (
+export const generateRequests = (
   ir: IR,
   config: ApigConfig,
   configImportPath = './config',

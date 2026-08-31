@@ -1,5 +1,13 @@
 import type { ApigConfig, HttpClient } from '@models';
-import { sdk, tanstackQuery, typescript, zod, msw, faker, mcp } from '@plugins';
+import {
+  requests,
+  tanstackQuery,
+  typescript,
+  zod,
+  msw,
+  faker,
+  mcp,
+} from '@plugins';
 
 const VALID_INPUT = 'https://petstore3.swagger.io/api/v3/openapi.json';
 const INVALID_INPUT = {
@@ -11,9 +19,9 @@ const VALID_OUTPUT_OBJECT = { path: 'src/api/generated/none', clean: true };
 const INVALID_OUTPUT_TYPE = 12345;
 const OUTPUT_OBJECT_WITHOUT_PATH = { clean: true };
 
-const VALID_PLUGINS = [typescript(), sdk(), tanstackQuery()];
-const VALID_PLUGINS_WITH_ZOD = [typescript(), sdk(), zod()];
-const VALID_PLUGINS_WITH_MSW = [typescript(), sdk(), faker(), msw()];
+const VALID_PLUGINS = [typescript(), requests(), tanstackQuery()];
+const VALID_PLUGINS_WITH_ZOD = [typescript(), requests(), zod()];
+const VALID_PLUGINS_WITH_MSW = [typescript(), requests(), faker(), msw()];
 const INVALID_PLUGINS_TYPE = `
   When you were here before
   Couldn't look you in the eye
@@ -134,7 +142,7 @@ export const NEGATIVE_CONFIGS = {
     input: VALID_INPUT,
     output: VALID_OUTPUT_STRING,
     apiLogging: true,
-    plugins: [sdk(), zod(), mcp()],
+    plugins: [requests(), zod(), mcp()],
   },
   MCP_WITHOUT_DEPENDENCIES: {
     input: VALID_INPUT,

@@ -43,7 +43,7 @@ export const swr = (options: SwrOptions = {}): ApigPlugin => {
       generateSwr(
         ir,
         config,
-        ctx?.sdkImportPath ?? './sdk',
+        ctx?.requestsImportPath ?? './requests',
         ctx?.queryKeysImportPath ?? './swr-keys',
         style,
         hookGenerationStrategies,
@@ -67,7 +67,7 @@ export { generateSwrKeysFile };
 export const generateSwr = (
   ir: IR,
   config: ApigConfig,
-  sdkImportPath = './sdk',
+  requestsImportPath = './requests',
   swrKeysImportPath = './swr-keys',
   style: 'functions' | 'object' = 'functions',
   hookGenerationStrategies: Record<
@@ -92,8 +92,8 @@ export const generateSwr = (
     return s ? (s.mutation ?? false) : op.method !== HTTP_METHODS.GET;
   });
 
-  const sdkFunctions = ir.operations.map((op) => toCamelCase(op.id));
-  const sdkErrorTypes = errCfg.enabled
+  const requestsFunctions = ir.operations.map((op) => toCamelCase(op.id));
+  const requestsErrorTypes = errCfg.enabled
     ? ir.operations
         .filter((op) => op.errors?.length)
         .map((op) => `${toPascalCase(op.id)}Errors`)
@@ -124,14 +124,14 @@ export const generateSwr = (
     }
   }
 
-  if (sdkFunctions.length > 0) {
+  if (requestsFunctions.length > 0) {
     lines.push(
-      `import { ${sdkFunctions.join(', ')} } from '${sdkImportPath}';`,
+      `import { ${requestsFunctions.join(', ')} } from '${requestsImportPath}';`,
     );
   }
-  if (sdkErrorTypes.length > 0) {
+  if (requestsErrorTypes.length > 0) {
     lines.push(
-      `import type { ${sdkErrorTypes.join(', ')} } from '${sdkImportPath}';`,
+      `import type { ${requestsErrorTypes.join(', ')} } from '${requestsImportPath}';`,
     );
   }
 

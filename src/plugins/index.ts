@@ -1,5 +1,5 @@
 export { typescript, generateTypes } from './typescript';
-export { sdk, generateSdk } from './sdk';
+export { requests, generateRequests } from './requests';
 export { faker, generateFaker } from './faker';
 export { zod, generateZod } from './zod';
 export { valibot, generateValibot } from './valibot';

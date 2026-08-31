@@ -109,7 +109,7 @@ describe('tanstack-query', () => {
       const result = generateTanstack(
         makeIR([getOp]),
         baseConfig,
-        './sdk',
+        './requests',
         './query-keys',
         { ...DEFAULT_OPTS, query: false },
       );
@@ -124,7 +124,7 @@ describe('tanstack-query', () => {
       const result = generateTanstack(
         makeIR([postOp]),
         baseConfig,
-        './sdk',
+        './requests',
         './query-keys',
         { ...DEFAULT_OPTS, mutation: false },
       );
@@ -135,7 +135,7 @@ describe('tanstack-query', () => {
       const result = generateTanstack(
         makeIR([getOp]),
         baseConfig,
-        './sdk',
+        './requests',
         './query-keys',
         { ...DEFAULT_OPTS, infinite: true },
       );
@@ -146,7 +146,7 @@ describe('tanstack-query', () => {
       const result = generateTanstack(
         makeIR([getOp]),
         baseConfig,
-        './sdk',
+        './requests',
         './query-keys',
         { ...DEFAULT_OPTS, suspense: true },
       );
@@ -161,7 +161,7 @@ describe('tanstack-query', () => {
       const result = generateTanstack(
         makeIR([getOp]),
         baseConfig,
-        './sdk',
+        './requests',
         './query-keys',
         { ...DEFAULT_OPTS, queryKeysStyle: 'object' },
       );
@@ -172,7 +172,7 @@ describe('tanstack-query', () => {
       const result = generateTanstack(
         makeIR([getOp]),
         baseConfig,
-        './sdk',
+        './requests',
         './query-keys',
         { ...DEFAULT_OPTS, queryKeysStyle: 'object' },
       );
@@ -188,10 +188,10 @@ describe('tanstack-query', () => {
       expect(generateTanstack(makeIR([op]), baseConfig).code).toContain('User');
     });
 
-    test('imports the SDK function', () => {
+    test('imports the request function', () => {
       const op = makeOperation({ id: 'getUsers', method: HTTP_METHODS.GET });
       expect(generateTanstack(makeIR([op]), baseConfig).code).toContain(
-        "from './sdk'",
+        "from './requests'",
       );
     });
   });
@@ -254,7 +254,7 @@ describe('tanstack-query', () => {
       const result = generateTanstack(
         ir,
         baseConfig,
-        './sdk',
+        './requests',
         './query-keys',
         opts,
       );
@@ -273,7 +273,7 @@ describe('tanstack-query', () => {
       const result = generateTanstack(
         ir,
         baseConfig,
-        './sdk',
+        './requests',
         './query-keys',
         opts,
       );
@@ -293,7 +293,7 @@ describe('tanstack-query', () => {
       const result = generateTanstack(
         ir,
         baseConfig,
-        './sdk',
+        './requests',
         './query-keys',
         opts,
       );

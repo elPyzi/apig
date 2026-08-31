@@ -26,8 +26,8 @@ const isSupported = (operation: IROperation): boolean =>
 /**
  * Generates an MCP server exposing every operation as a tool.
  *
- * Produces an `mcp.ts` file that wraps the generated SDK functions, so an AI
- * assistant can call the API directly. Requires the `sdk()` and `zod()` plugins,
+ * Produces an `mcp.ts` file that wraps the generated request functions, so an AI
+ * assistant can call the API directly. Requires the `requests()` and `zod()` plugins,
  * plus `@modelcontextprotocol/sdk` and `zod` at runtime.
  * @example mcp({ name: "petstore", version: "1.0.0" })
  */
@@ -55,9 +55,11 @@ export const generateMcp = (
 ): PluginResult => {
   logger.plugin('mcp', 'Generating tools...');
 
-  const sdkPlugin = findPlugin(config, 'sdk');
-  if (!sdkPlugin) {
-    throw new Error('mcp plugin requires sdk plugin — add sdk() to plugins');
+  const requestsPlugin = findPlugin(config, 'requests');
+  if (!requestsPlugin) {
+    throw new Error(
+      'mcp plugin requires requests plugin — add requests() to plugins',
+    );
   }
 
   const zodPlugin = findPlugin(config, 'zod');
@@ -77,7 +79,7 @@ export const generateMcp = (
   }
 
   const fnNaming = CaseFns[config?.functionNaming ?? NAMING_CASES.CAMEL];
-  const sdkFns = operations.map((op) => fnNaming(op.id));
+  const requestsFns = operations.map((op) => fnNaming(op.id));
 
   const schemaRefs = new Set<string>();
   for (const op of operations) operationSchemaRefs(op, ir.schemas, schemaRefs);
@@ -98,9 +100,9 @@ export const generateMcp = (
     "import { z } from 'zod';",
   ];
 
-  if (sdkFns.length > 0) {
+  if (requestsFns.length > 0) {
     lines.push(
-      `import { ${sdkFns.join(', ')} } from '${getRootPluginImport(config, 'sdk', 'root')}';`,
+      `import { ${requestsFns.join(', ')} } from '${getRootPluginImport(config, 'requests', 'root')}';`,
     );
   }
 

@@ -93,7 +93,7 @@ export type GroupBy = (typeof GROUP_BY)[keyof typeof GROUP_BY];
  * Available code generation plugins.
  */
 export const PLUGINS = {
-  SDK: 'sdk',
+  requests: 'requests',
   TYPESCRIPT: 'typescript',
 
   TANSTACK_QUERY: 'tanstack-query',
@@ -238,7 +238,7 @@ export interface ApigConfig {
   output?: Output;
 
   /**
-   * HTTP client to use for generated SDK functions.
+   * HTTP client to use for generated request functions.
    * @default "fetch"
    * @example { name: "axios", path: "./lib/axios", export: "axiosInstance" }
    */
@@ -246,7 +246,7 @@ export interface ApigConfig {
 
   /**
    * Plugins to run during generation.
-   * @example [typescript(), sdk(), tanstackQuery()]
+   * @example [typescript(), requests(), tanstackQuery()]
    */
   plugins?: ApigPlugin[];
 
@@ -322,7 +322,7 @@ export interface ApigConfig {
   typeStyle?: TypeStyle;
 
   /**
-   * Naming convention for generated SDK function names.
+   * Naming convention for generated request function names.
    * @default "camelCase"
    */
   functionNaming?: NamingCase;
@@ -353,7 +353,7 @@ export interface ApigConfig {
   cache?: boolean;
 
   /**
-   * Add `console.log(functionName, response)` to each generated SDK function.
+   * Add `console.log(functionName, response)` to each generated request function.
    * @default false
    */
   apiLogging?: boolean;
@@ -365,7 +365,7 @@ export interface ApigConfig {
   cliLogging?: LoggingConfig;
 
   /**
-   * Enable error handling for all SDK functions.
+   * Enable error handling for all request functions.
    * - `true` (default) — generates built-in `ApigError` class
    * - `false` — disables error handling entirely
    * - `{ path, export }` — uses a custom error class from the given path

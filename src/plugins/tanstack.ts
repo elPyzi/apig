@@ -55,7 +55,7 @@ export const tanstackQuery = (
       generateTanstack(
         ir,
         config,
-        ctx?.sdkImportPath ?? './sdk',
+        ctx?.requestsImportPath ?? './requests',
         ctx?.queryKeysImportPath ?? './query-keys',
         opts,
         ctx?.configImportPath ?? './config',
@@ -77,7 +77,7 @@ export { generateQueryKeysFile };
 export const generateTanstack = (
   ir: IR,
   config: ApigConfig,
-  sdkImportPath = './sdk',
+  requestsImportPath = './requests',
   queryKeysImportPath = './query-keys',
   opts: Required<TanstackQueryOptions> = { ...DEFAULT_OPTS },
   configImportPath = './config',
@@ -87,22 +87,22 @@ export const generateTanstack = (
   const typesImport = getTypesImport(config, 'operations');
   const style = opts.queryKeysStyle;
 
-  const sdkFunctions: string[] = [];
+  const requestsFunctions: string[] = [];
   const usedTypes = new Set<string>();
-  const sdkErrorTypes: string[] = [];
+  const requestsErrorTypes: string[] = [];
 
   const errCfg = getErrorConfig(config);
   const errorHandling = errCfg.enabled;
   const rawResponse = config.rawResponse === true;
 
   for (const op of ir.operations) {
-    sdkFunctions.push(toCamelCase(op.id));
+    requestsFunctions.push(toCamelCase(op.id));
     if (op.response?.name) usedTypes.add(toPascalCase(op.response.name));
     if (op.response?.items?.name)
       usedTypes.add(toPascalCase(op.response.items.name));
     if (op.body?.schema.name) usedTypes.add(toPascalCase(op.body.schema.name));
     if (errorHandling && op.errors?.length) {
-      sdkErrorTypes.push(`${toPascalCase(op.id)}Errors`);
+      requestsErrorTypes.push(`${toPascalCase(op.id)}Errors`);
     }
   }
 
@@ -134,12 +134,12 @@ export const generateTanstack = (
     banner,
     '',
     buildTanstackImports(usedHooks, fw),
-    `import { ${sdkFunctions.join(', ')} } from '${sdkImportPath}';`,
+    `import { ${requestsFunctions.join(', ')} } from '${requestsImportPath}';`,
   ];
 
-  if (sdkErrorTypes.length > 0)
+  if (requestsErrorTypes.length > 0)
     lines.push(
-      `import type { ${sdkErrorTypes.join(', ')} } from '${sdkImportPath}';`,
+      `import type { ${requestsErrorTypes.join(', ')} } from '${requestsImportPath}';`,
     );
   if (style === 'object')
     lines.push(`import { queryKeys } from '${queryKeysImportPath}';`);
@@ -228,7 +228,15 @@ export const generateTanstack = (
     }
 
     if (genSuspense) {
-      lines.push(generateSuspenseQuery(op, ir.schemas, fw));
+      lines.push(
+        generateSuspenseQuery(
+          op,
+          ir.schemas,
+          errorHandling,
+          errCfg.className,
+          fw,
+        ),
+      );
       lines.push('');
       exports.push(`${fw.exportPrefix}Suspense${pascalName}Query`);
     }

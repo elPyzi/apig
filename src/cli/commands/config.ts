@@ -7,7 +7,7 @@ import { DOCS_BASE } from '@constants';
 import { PRESETS, PRESET_NAMES } from '../presets';
 
 const CONFIG_TEMPLATE = `// @travjek/apig — ${DOCS_BASE}
-import { defineConfig, typescript, sdk, tanstackQuery } from '@travjek/apig';
+import { defineConfig, typescript, requests, tanstackQuery } from '@travjek/apig';
 
 export default defineConfig({
   input: 'https://api.example.com/openapi.json',
@@ -21,7 +21,7 @@ export default defineConfig({
 
   plugins: [
     typescript(),
-    sdk(),
+    requests(),
     tanstackQuery(),
   ],
 

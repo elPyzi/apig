@@ -6,7 +6,7 @@ With `cache: true` in `defineConfig`, apig caches the **parsed IR** on disk, to 
 defineConfig({
   input: 'https://api.example.com/openapi.json',
   cache: true,
-  plugins: [typescript(), sdk()],
+  plugins: [typescript(), requests()],
 })
 ```
 

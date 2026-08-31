@@ -10,17 +10,21 @@ import { getErrorTypeName } from '@services/codegen/common/generate-error-types'
 import { buildQueryKeyExpr } from './query-keys';
 import type { TanstackFrameworkConfig } from './framework';
 
-const buildErrorGeneric = (
+/**
+ * The error type the hook and its `queryOptions` helper have to agree on.
+ *
+ * The helper is spread into the hook, so options typed `ApigError<GetPetErrors>`
+ * flowing into a hook generic over a bare `ApigError` is an overload error in
+ * the user's project — the two must be built from the same expression.
+ */
+const buildErrorType = (
   operation: IROperation,
   errorHandling: boolean,
   errorClass: string,
-): string => {
-  if (!errorHandling) return '';
-  const hasErrors = operation.errors?.length;
-  return hasErrors
-    ? `, ${errorClass}<${getErrorTypeName(operation)}>`
-    : `, ${errorClass}`;
-};
+): string =>
+  errorHandling && operation.errors?.length
+    ? `${errorClass}<${getErrorTypeName(operation)}>`
+    : errorClass;
 
 const DEFAULT_FW: TanstackFrameworkConfig = {
   pkg: '@tanstack/react-query',
@@ -42,13 +46,13 @@ export const generateQuery = (
   const pascalName = toPascalCase(operation.id);
   const baseType = getResponseType(operation.response, allSchemas);
   const responseType = rawResponse ? `ApigResponse<${baseType}>` : baseType;
-  const errorType = buildErrorGeneric(operation, errorHandling, errorClass);
   const args = getArgs(operation);
   const argsList = buildArgsList(args);
   const callArgs = buildCallArgs(args);
   const queryKey = buildQueryKeyExpr(operation, args, queryKeysStyle);
-  const errorGeneric = errorType || `, ${errorClass}`;
-  const optionsType = `Omit<${fw.typeFn}QueryOptions<${responseType}, ${errorClass}>, 'queryKey' | 'queryFn'>`;
+  const errorType = buildErrorType(operation, errorHandling, errorClass);
+  const errorGeneric = `, ${errorType}`;
+  const optionsType = `Omit<${fw.typeFn}QueryOptions<${responseType}, ${errorType}>, 'queryKey' | 'queryFn'>`;
   const hookArgs = argsList
     ? `${argsList}, options?: ${optionsType}`
     : `options?: ${optionsType}`;
@@ -61,7 +65,7 @@ export const generateQuery = (
     `  });`,
     '',
     `export const ${fw.exportPrefix}${pascalName}Query = (${hookArgs}) =>`,
-    `  ${fw.hookFn}Query<${responseType}, ${errorClass}>({ ...${name}QueryOptions(${callArgs}), ...options });`,
+    `  ${fw.hookFn}Query<${responseType}, ${errorType}>({ ...${name}QueryOptions(${callArgs}), ...options });`,
   ].join('\n');
 };
 
@@ -100,6 +104,8 @@ export const generateInfiniteQuery = (
 export const generateSuspenseQuery = (
   operation: IROperation,
   allSchemas: IRSchema[],
+  errorHandling = false,
+  errorClass = 'ApigError',
   fw: TanstackFrameworkConfig = DEFAULT_FW,
 ): string => {
   const name = toCamelCase(operation.id);
@@ -108,13 +114,14 @@ export const generateSuspenseQuery = (
   const args = getArgs(operation);
   const argsList = buildArgsList(args);
   const callArgs = buildCallArgs(args);
-  const optionsType = `Omit<${fw.typeFn}SuspenseQueryOptions<${responseType}, ApigError>, 'queryKey' | 'queryFn'>`;
+  const errorType = buildErrorType(operation, errorHandling, errorClass);
+  const optionsType = `Omit<${fw.typeFn}SuspenseQueryOptions<${responseType}, ${errorType}>, 'queryKey' | 'queryFn'>`;
   const hookArgs = argsList
     ? `${argsList}, options?: ${optionsType}`
     : `options?: ${optionsType}`;
 
   return [
     `export const ${fw.exportPrefix}Suspense${pascalName}Query = (${hookArgs}) =>`,
-    `  ${fw.hookFn}SuspenseQuery<${responseType}, ApigError>({ ...${name}QueryOptions(${callArgs}), ...options });`,
+    `  ${fw.hookFn}SuspenseQuery<${responseType}, ${errorType}>({ ...${name}QueryOptions(${callArgs}), ...options });`,
   ].join('\n');
 };

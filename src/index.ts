@@ -25,7 +25,7 @@ export type {
 
 export type {
   TypescriptOptions,
-  SdkOptions,
+  RequestsOptions,
   ZodOptions,
   ValibotOptions,
   YupOptions,
@@ -61,7 +61,7 @@ export {
 
 export {
   typescript,
-  sdk,
+  requests,
   faker,
   zod,
   valibot,

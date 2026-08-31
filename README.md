@@ -14,14 +14,14 @@ npm install -D @travjek/apig
 
 ```ts
 // apig.config.ts
-import { defineConfig, typescript, sdk, zod, tanstackQuery } from '@travjek/apig'
+import { defineConfig, typescript, requests, zod, tanstackQuery } from '@travjek/apig'
 
 export default defineConfig({
   input: './openapi.json',
   output: './src/api',
   plugins: [
     typescript(),
-    sdk(),
+    requests(),
     zod({ withTypes: true }),
     tanstackQuery(),
   ],
@@ -37,7 +37,7 @@ npx apig generate
 | Plugin | Description |
 |--------|-------------|
 | `typescript()` | TypeScript types from OpenAPI schemas |
-| `sdk()` | Typed request functions (`fetch`, `axios`, `ky`, `ofetch`, `wretch`) |
+| `requests()` | Typed request functions (`fetch`, `axios`, `ky`, `ofetch`, `wretch`) |
 | `zod()` | Zod schemas with email, uuid, min/max, discriminated unions |
 | `valibot()` | Valibot schemas |
 | `yup()` | Yup schemas |
@@ -47,7 +47,7 @@ npx apig generate
 | `faker()` | Faker.js factories from schema formats and field-name heuristics |
 | `msw()` | Mock Service Worker handlers |
 | `playwright()` | Playwright API client and test fixture |
-| `mcp()` | MCP server exposing the SDK as tools |
+| `mcp()` | MCP server exposing the request functions as tools |
 
 ## CLI
 
@@ -61,24 +61,10 @@ apig info               # show spec stats without generating
 
 ## Documentation
 
-- [Configuration](./docs/en/config.md)
-- [CLI](./docs/en/cli.md)
-- [Plugins](./docs/en/plugins/index.md)
-  - [typescript()](./docs/en/plugins/typescript.md)
-  - [sdk()](./docs/en/plugins/sdk.md)
-  - [zod()](./docs/en/plugins/zod.md)
-  - [valibot()](./docs/en/plugins/valibot.md)
-  - [yup()](./docs/en/plugins/yup.md)
-  - [tanstackQuery()](./docs/en/plugins/tanstack-query.md)
-  - [swr()](./docs/en/plugins/swr.md)
-  - [rhf()](./docs/en/plugins/rhf.md)
-  - [faker()](./docs/en/plugins/faker.md)
-  - [msw()](./docs/en/plugins/msw.md)
-  - [playwright()](./docs/en/plugins/playwright.md)
-- [Creating a custom plugin](./docs/en/custom-plugin.md)
-- [ApigError client](./docs/en/client.md)
-- [Cache](./docs/en/cache.md)
-- [endpointsMap](./docs/en/endpoints-map.md)
+Full reference for every plugin, CLI command and config option:
+**https://apig-docs.vercel.app**
+
+The `docs/` directory here is a mirror synced from that site.
 
 ## License
 

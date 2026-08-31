@@ -63,13 +63,13 @@ export const writeOpPlugins = (
   queryKeysImportPath: string,
   writeFn: WriteFn,
 ): void => {
-  const sdkPlugin = plugins.find((p) => p.name === 'sdk');
-  const sdkFileName = sdkPlugin?.fileName ?? 'sdk';
+  const requestsPlugin = plugins.find((p) => p.name === 'requests');
+  const requestsFileName = requestsPlugin?.fileName ?? 'requests';
 
   for (const plugin of plugins) {
     if (plugin.scope !== 'operations') continue;
 
-    const sdkImportPath = `./${fileBaseName}.${sdkFileName}`;
+    const requestsImportPath = `./${fileBaseName}.${requestsFileName}`;
     const configImportPath =
       queryKeysImportPath?.replace('query-keys', 'config') ?? './config';
     const eh = config.errorHandling;
@@ -81,7 +81,7 @@ export const writeOpPlugins = (
       ? resolveCustomErrorPath(config.httpClient.path, dir)
       : undefined;
     const result = plugin.generate(ir, config, {
-      sdkImportPath,
+      requestsImportPath,
       queryKeysImportPath,
       configImportPath,
       customErrorImportPath,
@@ -130,7 +130,7 @@ export const writeAll = (
       ? resolveCustomErrorPath(config.httpClient.path, outputPath)
       : undefined;
     const result = plugin.generate(ir, config, {
-      sdkImportPath: './sdk',
+      requestsImportPath: './requests',
       queryKeysImportPath: './query-keys',
       configImportPath: './config',
       customErrorImportPath,

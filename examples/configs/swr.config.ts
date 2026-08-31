@@ -1,11 +1,11 @@
-import { defineConfig, typescript, sdk, swr } from '@travjek/apig'
+import { defineConfig, typescript, requests, swr } from '@travjek/apig'
 
 export default defineConfig({
   input: './openapi.json',
   output: './src/api',
   plugins: [
     typescript(),
-    sdk(),
+    requests(),
     swr(),
   ],
 })

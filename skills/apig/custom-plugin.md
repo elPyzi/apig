@@ -7,7 +7,7 @@ You can extend apig with your own plugin implementing the `ApigPlugin` interface
 ```ts
 interface ApigPlugin {
   name: string;          // unique plugin name
-  fileName: string;       // base output filename, no extension ("sdk" → "sdk.ts")
+  fileName: string;       // base output filename, no extension ("requests" → "requests.ts")
   scope: 'root' | 'operations'; // "root" = once for full IR, "operations" = per group under groupBy
   generate: (ir: IR, config: ApigConfig, ctx?: PluginContext) => PluginResult;
   generateRootFiles?: (ir: IR, config: ApigConfig) => ExtraFile[]; // optional shared files
@@ -92,11 +92,11 @@ This is exactly what the built-in `msw()` plugin does — it throws if `faker()`
 
 ## `scope: 'operations'` and `PluginContext`
 
-Plugins with `scope: 'operations'` (like `sdk`, `tanstackQuery`, `swr`) are called once per group when `groupBy` is `'tags'` or `'endpoints'`. `generate` receives a `ctx` with import paths to use instead of hardcoding:
+Plugins with `scope: 'operations'` (like `requests`, `tanstackQuery`, `swr`) are called once per group when `groupBy` is `'tags'` or `'endpoints'`. `generate` receives a `ctx` with import paths to use instead of hardcoding:
 
 ```ts
 generate: (ir, config, ctx) => {
-  const sdkImport = ctx?.sdkImportPath ?? './sdk' // changes depending on groupBy
+  const requestsImport = ctx?.requestsImportPath ?? './requests' // changes depending on groupBy
 }
 ```
 

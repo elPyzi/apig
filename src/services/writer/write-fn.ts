@@ -13,7 +13,7 @@ import { join } from 'path';
 import type { ApigConfig, ApigPlugin, GenerationStats } from '@models';
 import { logger } from '@libs/logger';
 
-import { typescript, sdk, faker, zod, tanstackQuery, msw } from '@plugins';
+import { typescript, requests, faker, zod, tanstackQuery, msw } from '@plugins';
 
 export type WriteFn = (
   filename: string,
@@ -23,7 +23,7 @@ export type WriteFn = (
 
 const DEFAULT_PLUGINS: ApigPlugin[] = [
   typescript(),
-  sdk(),
+  requests(),
   faker(),
   zod(),
   tanstackQuery(),

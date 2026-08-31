@@ -2,6 +2,45 @@
 
 All notable changes to `@travjek/apig` will be documented in this file.
 
+## [0.12.0]
+
+### Breaking
+- **`sdk()` is now `requests()`.** "SDK" described the shape of the output rather than what the plugin does, and it read as the umbrella for everything apig generates — the hooks, the schemas and the mocks are just as much an SDK as the request functions are. The plugin now says what it emits.
+
+  There is no compatibility alias: `sdk` is no longer exported, so a stale config fails at the import rather than silently generating into a file nobody reads.
+
+  **Migration**
+
+  ```ts
+  // apig.config.ts
+  - import { defineConfig, typescript, sdk } from '@travjek/apig'
+  + import { defineConfig, typescript, requests } from '@travjek/apig'
+
+    export default defineConfig({
+      plugins: [
+        typescript(),
+  -     sdk(),
+  +     requests(),
+      ],
+    })
+  ```
+
+  What changes in the output:
+  - The generated file is `requests.ts`, not `sdk.ts` — delete the stale `sdk.ts` if your output directory is not cleaned on generation. Under `groupBy` it is `<group>.requests.ts`.
+  - Anything importing from `'./sdk'` in your own code moves to `'./requests'`. Generated cross-plugin imports (`tanstack`, `swr`, `mcp`, `playwright`) are updated automatically.
+  - The exported function names inside the file are unchanged — only the file they live in is renamed.
+
+  For custom plugins: `PluginContext.sdkImportPath` is now `requestsImportPath`, and the `SdkOptions` type is `RequestsOptions`.
+
+### Fixed
+- `tanstackQuery()` typed a query hook's error as a bare `ApigError` while its own `queryOptions` helper used `ApigError<XErrors>`. The helper is spread into the hook, so any operation with declared error responses produced a hook that did not compile. `useSuspense*Query` had the same mismatch and additionally ignored a custom `errorHandling` class, always emitting `ApigError`
+- `swr()` generated mutation hooks whose `SWRMutationConfiguration` generics did not match the `useSWRMutation` call — an operation with no request body pins SWR's `Arg` to `never`, and the options argument stopped being assignable. The fetcher's unused `_key` parameter was also unannotated, an implicit `any` in any strict project
+- The `wretch` adapter passed `params` straight into `.query()`, which takes `string | object`, so an operation with only optional query parameters did not compile
+- `tanstackQuery()` and `swr()` together generate the same `use<Operation>Mutation` names, and the generated `index.ts` re-exported both — a barrel that never compiled. This is now a config error pointing at the collision
+- `apig start` did not offer `playwright()` — the plugin shipped in 0.11.0 but was missing from the interactive wizard's plugin list, so the only way to add it was by hand
+
+---
+
 ## [0.11.0]
 
 ### Added
@@ -16,6 +55,8 @@ All notable changes to `@travjek/apig` will be documented in this file.
 - `faker()` treated any field name *containing* `id` as an id, so `video` and `width` were generated as numbers. The match is now anchored to the end of the name (`id`, `ownerId`, `user_id`)
 
 ### Changed
+- The end-to-end suite now type-checks **every** generated file, not just the four that import nothing. The peer libraries are dev dependencies for this reason alone — they are not new runtime dependencies and consumers install nothing extra. Coverage was extended to all four `groupBy` layouts and to every `httpClient`, each compiled against a real instance of the client it names. Every fix listed above was found by this change, not by hand
+- `wretch` users must register the `queryString` addon on their client instance — the generated calls use `.query()`, which the addon provides. Documented in the `httpClient` config reference
 - Documentation is now English-only — the eight machine-translated locales under `docs/` were dropped, since they drifted from the source with every release. Full docs live at https://apig-docs.vercel.app
 - `README.md`, `README.npm.md` and `llms.txt` now list `mcp()`, the `framework` option on `tanstackQuery()`/`swr()`, and the new plugin — all three had fallen behind the code
 

@@ -338,10 +338,10 @@ describe('playwright', () => {
 
     test('renames the fixture a test destructures', () => {
       const { code } = generatePlaywright(emptyIR, baseConfig, {
-        fixtureName: 'sdk',
+        fixtureName: 'requests',
       });
-      expect(code).toContain('base.extend<{ sdk: ApiClient }>');
-      expect(code).toContain('sdk: async ({ request }, use) => {');
+      expect(code).toContain('base.extend<{ requests: ApiClient }>');
+      expect(code).toContain('requests: async ({ request }, use) => {');
     });
   });
 
