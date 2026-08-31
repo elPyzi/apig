@@ -2,6 +2,41 @@
 
 All notable changes to `@travjek/apig` will be documented in this file.
 
+## [0.12.0]
+
+### Breaking
+- **`sdk()` is now `requests()`.** "SDK" described the shape of the output rather than what the plugin does, and it read as the umbrella for everything apig generates — the hooks, the schemas and the mocks are just as much an SDK as the request functions are. The plugin now says what it emits.
+
+  There is no compatibility alias: `sdk` is no longer exported, so a stale config fails at the import rather than silently generating into a file nobody reads.
+
+  **Migration**
+
+  ```ts
+  // apig.config.ts
+  - import { defineConfig, typescript, sdk } from '@travjek/apig'
+  + import { defineConfig, typescript, requests } from '@travjek/apig'
+
+    export default defineConfig({
+      plugins: [
+        typescript(),
+  -     sdk(),
+  +     requests(),
+      ],
+    })
+  ```
+
+  What changes in the output:
+  - The generated file is `requests.ts`, not `sdk.ts` — delete the stale `sdk.ts` if your output directory is not cleaned on generation. Under `groupBy` it is `<group>.requests.ts`.
+  - Anything importing from `'./sdk'` in your own code moves to `'./requests'`. Generated cross-plugin imports (`tanstack`, `swr`, `mcp`, `playwright`) are updated automatically.
+  - The exported function names inside the file are unchanged — only the file they live in is renamed.
+
+  For custom plugins: `PluginContext.sdkImportPath` is now `requestsImportPath`, and the `SdkOptions` type is `RequestsOptions`.
+
+### Fixed
+- `apig start` did not offer `playwright()` — the plugin shipped in 0.11.0 but was missing from the interactive wizard's plugin list, so the only way to add it was by hand
+
+---
+
 ## [0.11.0]
 
 ### Added

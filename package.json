@@ -1,8 +1,8 @@
 {
   "name": "@travjek/apig",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "type": "module",
-  "description": "OpenAPI code generator for TypeScript with a plugin system — generates types, SDK, Zod/Valibot/Yup schemas, TanStack Query / SWR hooks, React Hook Form resolvers, Faker factories, MSW handlers and Playwright API clients",
+  "description": "OpenAPI code generator for TypeScript with a plugin system — generates types, typed request functions, Zod/Valibot/Yup schemas, TanStack Query / SWR hooks, React Hook Form resolvers, Faker factories, MSW handlers and Playwright API clients",
   "keywords": [
     "openapi",
     "openapi-generator",
