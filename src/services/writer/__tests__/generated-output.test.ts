@@ -8,8 +8,7 @@ import {
   existsSync,
   rmSync,
 } from 'fs';
-import { tmpdir } from 'os';
-import { join, dirname, resolve } from 'path';
+import { join, dirname, resolve, relative } from 'path';
 
 import type { ApigConfig } from '@models';
 import { write } from '@services/writer';
@@ -22,6 +21,7 @@ import {
   rhf,
   faker,
   msw,
+  playwright,
 } from '@plugins';
 
 const SPEC = 'examples/petstore/openapi.json';
@@ -47,6 +47,7 @@ const ALLOWED_PACKAGES = [
   '@hookform/resolvers/yup',
   'valibot',
   'yup',
+  '@playwright/test',
 ];
 
 const IMPORT_RE = /(?:from|import)\s+['"]([^'"]+)['"]/g;
@@ -73,6 +74,17 @@ const collectImports = (outDir: string): Import[] =>
         specifier: m[1]!,
       }));
     });
+
+/**
+ * Imports that point at neither an allowed package nor a generated file next to
+ * them — the shape a leaked internal alias or a wrong groupBy prefix takes.
+ */
+const brokenImports = (outDir: string): Import[] =>
+  collectImports(outDir).filter(({ file, specifier }) =>
+    specifier.startsWith('.')
+      ? !existsSync(resolve(dirname(file), `${specifier}.ts`))
+      : !ALLOWED_PACKAGES.includes(specifier),
+  );
 
 /** Silences the generator's console output so test runs stay readable. */
 const quietly = async (fn: () => Promise<void>): Promise<void> => {
@@ -103,14 +115,16 @@ const generate = async (
 };
 
 /**
- * Type-checks the generated files that import nothing but each other, so the
- * suite does not need msw, zod or a query library installed to prove the
- * generator emits compiling TypeScript.
+ * Type-checks every generated file under the same strictness a consumer would.
+ *
+ * The peer libraries the output imports are dev dependencies here purely so
+ * this can cover the whole surface — string assertions cannot tell that
+ * `faker.number.int()` was assigned to a `string`, which is how a whole spec's
+ * factories once shipped without compiling.
  */
 const compileGenerated = (outDir: string): void => {
-  const files = ['config.ts', 'types.ts', 'requests.ts', 'endpoints.ts']
-    .map((name) => join(outDir, name))
-    .filter(existsSync);
+  const files = listFiles(outDir).filter((file) => file.endsWith('.ts'));
+  if (files.length === 0) return;
 
   try {
     execFileSync(
@@ -140,7 +154,10 @@ const compileGenerated = (outDir: string): void => {
 let root: string;
 
 beforeAll(() => {
-  root = mkdtempSync(join(tmpdir(), 'apig-e2e-'));
+  // Inside the repo on purpose: the generated files import the peer libraries by
+  // bare specifier, and only a directory under the repo resolves them the way a
+  // consumer's project would.
+  root = mkdtempSync(join(process.cwd(), '.e2e-'));
 });
 
 afterAll(() => {
@@ -159,10 +176,10 @@ describe('generated output', () => {
           requests(),
           zod({ withTypes: false }),
           tanstackQuery({ infinite: true, suspense: true }),
-          swr(),
           rhf({ resolver: 'zod' }),
           faker(),
           msw(),
+          playwright(),
         ],
       });
     });
@@ -186,33 +203,104 @@ describe('generated output', () => {
       expect(aliased).toEqual([]);
     });
 
-    test('dependency-free files compile under strict TypeScript', () => {
+    test('every generated file compiles under strict TypeScript', () => {
       compileGenerated(outDir);
     });
   });
 
-  describe('groupBy: tags', () => {
-    test('nested files still resolve their imports', async () => {
-      const outDir = join(root, 'tags');
+  describe('swr, flat layout', () => {
+    let outDir: string;
+
+    beforeAll(async () => {
+      outDir = join(root, 'swr');
       await generate(outDir, {
-        groupBy: 'tags',
-        plugins: [
-          typescript(),
-          requests(),
-          zod({ withTypes: false }),
-          faker(),
-          msw(),
-        ],
+        plugins: [typescript(), requests(), swr(), faker()],
+      });
+    });
+
+    test('every import is a real package or an existing generated file', () => {
+      expect(brokenImports(outDir)).toEqual([]);
+    });
+
+    test('every generated file compiles under strict TypeScript', () => {
+      compileGenerated(outDir);
+    });
+  });
+
+  // Root-scoped plugins once built their import paths as if they were nested,
+  // which broke every layout but the flat one — so each layout is generated and
+  // compiled rather than only checked for resolvable specifiers.
+  describe.each(['none', 'tags', 'endpoints', 'operations'] as const)(
+    'groupBy: %s',
+    (groupBy) => {
+      let outDir: string;
+
+      beforeAll(async () => {
+        outDir = join(root, `group-${groupBy}`);
+        await generate(outDir, {
+          groupBy,
+          plugins: [
+            typescript(),
+            requests(),
+            zod({ withTypes: false }),
+            tanstackQuery(),
+            faker(),
+            msw(),
+            playwright(),
+          ],
+        });
       });
 
-      const broken = collectImports(outDir).filter(({ file, specifier }) => {
-        if (!specifier.startsWith('.')) {
-          return !ALLOWED_PACKAGES.includes(specifier);
-        }
-        return !existsSync(resolve(dirname(file), `${specifier}.ts`));
+      test('every import resolves', () => {
+        expect(brokenImports(outDir)).toEqual([]);
       });
 
-      expect(broken).toEqual([]);
+      test('every generated file compiles under strict TypeScript', () => {
+        compileGenerated(outDir);
+      });
+    },
+  );
+
+  /**
+   * Every non-fetch client is reached through a module the user writes, so each
+   * one is compiled against a real instance of the library it names — the
+   * adapters build quite different call shapes and only `fetch` was ever
+   * type-checked.
+   */
+  describe.each([
+    [
+      'axios',
+      "import axios from 'axios';\nexport const api = axios.create();\n",
+    ],
+    ['ky', "import ky from 'ky';\nexport const api = ky.create({});\n"],
+    [
+      'ofetch',
+      "import { ofetch } from 'ofetch';\nexport const api = ofetch.create({});\n",
+    ],
+    [
+      'wretch',
+      // `.query()` is an addon in wretch v3, and the generated calls use it —
+      // a bare wretch() instance does not type-check against them.
+      "import wretch from 'wretch';\nimport QueryStringAddon from 'wretch/addons/queryString';\nexport const api = wretch().addon(QueryStringAddon);\n",
+    ],
+  ] as const)('httpClient: %s', (name, stub) => {
+    let outDir: string;
+
+    beforeAll(async () => {
+      outDir = join(root, `http-${name}`);
+      await generate(outDir, {
+        httpClient: {
+          name,
+          path: `${relative(process.cwd(), join(outDir, 'client'))}`,
+          export: 'api',
+        },
+        plugins: [typescript(), requests()],
+      });
+      writeFileSync(join(outDir, 'client.ts'), stub, 'utf-8');
+    });
+
+    test('the generated calls compile against the real client', () => {
+      compileGenerated(outDir);
     });
   });
 

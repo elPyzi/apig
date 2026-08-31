@@ -33,6 +33,10 @@ All notable changes to `@travjek/apig` will be documented in this file.
   For custom plugins: `PluginContext.sdkImportPath` is now `requestsImportPath`, and the `SdkOptions` type is `RequestsOptions`.
 
 ### Fixed
+- `tanstackQuery()` typed a query hook's error as a bare `ApigError` while its own `queryOptions` helper used `ApigError<XErrors>`. The helper is spread into the hook, so any operation with declared error responses produced a hook that did not compile. `useSuspense*Query` had the same mismatch and additionally ignored a custom `errorHandling` class, always emitting `ApigError`
+- `swr()` generated mutation hooks whose `SWRMutationConfiguration` generics did not match the `useSWRMutation` call — an operation with no request body pins SWR's `Arg` to `never`, and the options argument stopped being assignable. The fetcher's unused `_key` parameter was also unannotated, an implicit `any` in any strict project
+- The `wretch` adapter passed `params` straight into `.query()`, which takes `string | object`, so an operation with only optional query parameters did not compile
+- `tanstackQuery()` and `swr()` together generate the same `use<Operation>Mutation` names, and the generated `index.ts` re-exported both — a barrel that never compiled. This is now a config error pointing at the collision
 - `apig start` did not offer `playwright()` — the plugin shipped in 0.11.0 but was missing from the interactive wizard's plugin list, so the only way to add it was by hand
 
 ---
@@ -51,6 +55,8 @@ All notable changes to `@travjek/apig` will be documented in this file.
 - `faker()` treated any field name *containing* `id` as an id, so `video` and `width` were generated as numbers. The match is now anchored to the end of the name (`id`, `ownerId`, `user_id`)
 
 ### Changed
+- The end-to-end suite now type-checks **every** generated file, not just the four that import nothing. The peer libraries are dev dependencies for this reason alone — they are not new runtime dependencies and consumers install nothing extra. Coverage was extended to all four `groupBy` layouts and to every `httpClient`, each compiled against a real instance of the client it names. Every fix listed above was found by this change, not by hand
+- `wretch` users must register the `queryString` addon on their client instance — the generated calls use `.query()`, which the addon provides. Documented in the `httpClient` config reference
 - Documentation is now English-only — the eight machine-translated locales under `docs/` were dropped, since they drifted from the source with every release. Full docs live at https://apig-docs.vercel.app
 - `README.md`, `README.npm.md` and `llms.txt` now list `mcp()`, the `framework` option on `tanstackQuery()`/`swr()`, and the new plugin — all three had fallen behind the code
 

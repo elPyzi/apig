@@ -228,7 +228,15 @@ export const generateTanstack = (
     }
 
     if (genSuspense) {
-      lines.push(generateSuspenseQuery(op, ir.schemas, fw));
+      lines.push(
+        generateSuspenseQuery(
+          op,
+          ir.schemas,
+          errorHandling,
+          errCfg.className,
+          fw,
+        ),
+      );
       lines.push('');
       exports.push(`${fw.exportPrefix}Suspense${pascalName}Query`);
     }

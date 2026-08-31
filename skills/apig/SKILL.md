@@ -121,7 +121,7 @@ apig version show <id>      # show snapshot details
 | `axios` | `npm install axios` |
 | `ky` | `npm install ky` |
 | `ofetch` | `npm install ofetch` |
-| `wretch` | `npm install wretch` |
+| `wretch` | `npm install wretch` — register `wretch/addons/queryString` on your instance, the generated calls use `.query()` |
 
 ## Detailed Guides
 

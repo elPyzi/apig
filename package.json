@@ -2,7 +2,7 @@
   "name": "@travjek/apig",
   "version": "0.12.0",
   "type": "module",
-  "description": "OpenAPI code generator for TypeScript with a plugin system — generates types, typed request functions, Zod/Valibot/Yup schemas, TanStack Query / SWR hooks, React Hook Form resolvers, Faker factories, MSW handlers and Playwright API clients",
+  "description": "OpenAPI code generator for TypeScript with a plugin system \u2014 generates types, typed request functions, Zod/Valibot/Yup schemas, TanStack Query / SWR hooks, React Hook Form resolvers, Faker factories, MSW handlers and Playwright API clients",
   "keywords": [
     "openapi",
     "openapi-generator",
@@ -91,13 +91,26 @@
   "devDependencies": {
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.2.0",
+    "@faker-js/faker": "^10.6.0",
+    "@hookform/resolvers": "^5.9.1",
     "@modelcontextprotocol/sdk": "^1.30.0",
+    "@playwright/test": "^1.62.1",
+    "@tanstack/react-query": "^5.102.8",
     "@types/bun": "latest",
+    "axios": "^1.20.0",
     "husky": "^9.1.7",
+    "ky": "^2.1.0",
+    "msw": "^2.15.0",
+    "ofetch": "^1.5.1",
     "oxlint": "^1.78.0",
     "prettier": "^3.9.6",
+    "swr": "^2.5.1",
     "tsc-alias": "1.8.17",
-    "typescript": "5.8.3"
+    "typescript": "5.8.3",
+    "valibot": "^1.4.2",
+    "wretch": "^3.0.9",
+    "yup": "^1.7.1",
+    "zod": "^4.5.4"
   },
   "peerDependencies": {
     "typescript": ">=5.0.0",

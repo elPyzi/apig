@@ -35,33 +35,29 @@ export const generateSwrMutationHook = (
       : `'${fnName}'`;
   const bodyArg = allArgs.find((a) => a.name === 'body');
 
-  if (bodyArg) {
-    const argType = bodyArg.type;
-    const requestsCallArgs = allArgs
-      .map((a) => (a.name === 'body' ? 'arg' : a.name))
-      .join(', ');
-    const mutationOptsList = hookArgsList
-      ? `${hookArgsList}, options?: SWRMutationConfiguration<${responseType}, ${errorType}>`
-      : `options?: SWRMutationConfiguration<${responseType}, ${errorType}>`;
-    return [
-      `export const ${hookName} = (${mutationOptsList}) => {`,
-      `  return useSWRMutation<${responseType}, ${errorType}, any, ${argType}>(`,
-      `    ${keyExpr},`,
-      `    (_key, { arg }: { arg: ${argType} }) => ${fnName}(${requestsCallArgs}),`,
-      `    options,`,
-      `  );`,
-      `};`,
-    ].join('\n');
-  }
-
+  // An operation with no request body pins SWR's `Arg` generic to `never`, and
+  // the options type has to be spelled with the same generics as the hook call —
+  // its own defaults resolve to something else and stop being assignable.
+  const argType = bodyArg ? bodyArg.type : 'never';
+  const generics = `${responseType}, ${errorType}, any, ${argType}`;
+  const configType = `SWRMutationConfiguration<${generics}, ${responseType}>`;
   const mutationOptsList = hookArgsList
-    ? `${hookArgsList}, options?: SWRMutationConfiguration<${responseType}, ${errorType}>`
-    : `options?: SWRMutationConfiguration<${responseType}, ${errorType}>`;
+    ? `${hookArgsList}, options?: ${configType}`
+    : `options?: ${configType}`;
+
+  // `_key` is unused but positional, and an unannotated parameter is an implicit
+  // `any` in a strict project.
+  const fetcher = bodyArg
+    ? `(_key: unknown, { arg }: { arg: ${argType} }) => ${fnName}(${allArgs
+        .map((a) => (a.name === 'body' ? 'arg' : a.name))
+        .join(', ')})`
+    : `() => ${fnName}(${hookCallArgs})`;
+
   return [
     `export const ${hookName} = (${mutationOptsList}) => {`,
-    `  return useSWRMutation<${responseType}, ${errorType}, any>(`,
+    `  return useSWRMutation<${generics}>(`,
     `    ${keyExpr},`,
-    `    () => ${fnName}(${hookCallArgs}),`,
+    `    ${fetcher},`,
     `    options,`,
     `  );`,
     `};`,

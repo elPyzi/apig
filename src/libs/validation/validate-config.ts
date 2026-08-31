@@ -218,6 +218,19 @@ export const validateConfig = (input: unknown): void => {
       );
     }
 
+    // Both libraries name a mutation hook after the operation, so the two files
+    // export the same `useCreateUserMutation` and the barrel re-exporting both
+    // does not compile. The hook files themselves are fine on their own.
+    if (
+      names.includes('tanstack-query') &&
+      names.includes('swr') &&
+      config.index !== false
+    ) {
+      errors.push(
+        `plugins "tanstack-query" and "swr" generate the same mutation hook names, which collide in the generated index.ts — keep one of them, or set index: false`,
+      );
+    }
+
     // An MCP server speaks JSON-RPC over stdout, so anything else written there
     // corrupts the stream — and apiLogging puts a console.log in every request function.
     if (names.includes('mcp') && config.apiLogging === true) {

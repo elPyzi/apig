@@ -114,7 +114,9 @@ const wretchAdapter: Adapter = (
   { url, type, client, hasQuery, hasBody, hasHeaders },
 ) => {
   const chain = [`${client}.url(${url})`];
-  if (hasQuery) chain.push('.query(params)');
+  // wretch's `.query()` takes `string | object`, so an operation whose query
+  // parameters are all optional would otherwise pass it `undefined`.
+  if (hasQuery) chain.push('.query(params ?? {})');
   if (hasHeaders) chain.push('.headers(headers)');
   // wretch requires an explicit body call on write methods, even an empty one.
   if (BODY_METHODS.has(method)) chain.push(`.json(${hasBody ? 'body' : '{}'})`);
