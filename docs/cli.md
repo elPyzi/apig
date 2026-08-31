@@ -12,11 +12,11 @@ apig generate
 
 **Flags:**
 
-| Flag | Description |
-|------|-------------|
+| Flag                  | Description                                            |
+| --------------------- | ------------------------------------------------------ |
 | `-c, --config <path>` | Path to the config file (defaults to `apig.config.ts`) |
-| `-d, --dry-run` | Preview without writing files |
-| `-w, --watch` | Watch the spec and config for changes |
+| `-d, --dry-run`       | Preview without writing files                          |
+| `-w, --watch`         | Watch the spec and config for changes                  |
 
 ```bash
 apig generate --dry-run
@@ -50,10 +50,10 @@ If `apig.config.ts` already exists, the command exits with an error.
 
 **Flags:**
 
-| Flag | Description |
-|------|-------------|
-| `-p, --preset <name>` | Use one of the built-in presets |
-| `--list-presets` | Show the list of available presets and exit |
+| Flag                  | Description                                 |
+| --------------------- | ------------------------------------------- |
+| `-p, --preset <name>` | Use one of the built-in presets             |
+| `--list-presets`      | Show the list of available presets and exit |
 
 ```bash
 apig config --list-presets
@@ -62,14 +62,14 @@ apig config --preset react
 
 **Available presets:**
 
-| Preset | Description |
-|--------|-------------|
-| `minimal` | TypeScript types + typed request functions |
-| `react` | TypeScript + requests + TanStack Query + Zod (standard React stack) |
-| `react-swr` | TypeScript + requests + SWR + Zod |
-| `testing` | React stack + Faker factories + MSW handlers for mocking |
-| `forms` | TypeScript + requests + Zod + React Hook Form resolvers |
-| `full` | All plugins at once |
+| Preset      | Description                                                    |
+| ----------- | -------------------------------------------------------------- |
+| `minimal`   | TypeScript types + SDK fetch functions                         |
+| `react`     | TypeScript + SDK + TanStack Query + Zod (standard React stack) |
+| `react-swr` | TypeScript + SDK + SWR + Zod                                   |
+| `testing`   | React stack + Faker factories + MSW handlers for mocking       |
+| `forms`     | TypeScript + SDK + Zod + React Hook Form resolvers             |
+| `full`      | All plugins at once                                            |
 
 ---
 
@@ -83,8 +83,8 @@ apig info
 
 **Flags:**
 
-| Flag | Description |
-|------|-------------|
+| Flag                  | Description                                            |
+| --------------------- | ------------------------------------------------------ |
 | `-c, --config <path>` | Path to the config file (defaults to `apig.config.ts`) |
 
 ---
@@ -99,9 +99,9 @@ apig versions
 
 **Flags:**
 
-| Flag | Description |
-|------|-------------|
-| `-c, --config <path>` | Path to the config file |
+| Flag                   | Description                                       |
+| ---------------------- | ------------------------------------------------- |
+| `-c, --config <path>`  | Path to the config file                           |
 | `-s, --storage <path>` | Snapshot storage directory (overrides the config) |
 
 Columns: alias, snapshot ID, creation date.

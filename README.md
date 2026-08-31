@@ -61,24 +61,10 @@ apig info               # show spec stats without generating
 
 ## Documentation
 
-- [Configuration](./docs/en/config.md)
-- [CLI](./docs/en/cli.md)
-- [Plugins](./docs/en/plugins/index.md)
-  - [typescript()](./docs/en/plugins/typescript.md)
-  - [requests()](./docs/en/plugins/requests.md)
-  - [zod()](./docs/en/plugins/zod.md)
-  - [valibot()](./docs/en/plugins/valibot.md)
-  - [yup()](./docs/en/plugins/yup.md)
-  - [tanstackQuery()](./docs/en/plugins/tanstack-query.md)
-  - [swr()](./docs/en/plugins/swr.md)
-  - [rhf()](./docs/en/plugins/rhf.md)
-  - [faker()](./docs/en/plugins/faker.md)
-  - [msw()](./docs/en/plugins/msw.md)
-  - [playwright()](./docs/en/plugins/playwright.md)
-- [Creating a custom plugin](./docs/en/custom-plugin.md)
-- [ApigError client](./docs/en/client.md)
-- [Cache](./docs/en/cache.md)
-- [endpointsMap](./docs/en/endpoints-map.md)
+Full reference for every plugin, CLI command and config option:
+**https://apig-docs.vercel.app**
+
+The `docs/` directory here is a mirror synced from that site.
 
 ## License
 
