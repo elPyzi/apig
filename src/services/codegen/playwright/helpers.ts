@@ -71,7 +71,7 @@ const ${TO_MULTIPART_FN} = (
 `;
 
 /**
- * Playwright's `APIResponse` is not a fetch `Response`, so the SDK's
+ * Playwright's `APIResponse` is not a fetch `Response`, so the requests plugin's
  * `parseErrorBody` cannot type-check against it — same logic, local copy.
  * Reading as text first keeps the status when the body is not JSON.
  */

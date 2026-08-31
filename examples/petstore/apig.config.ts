@@ -1,7 +1,7 @@
 import {
   defineConfig,
   typescript,
-  sdk,
+  requests,
   zod,
   tanstackQuery,
   swr,
@@ -15,7 +15,7 @@ export default defineConfig({
   output: './generated',
   plugins: [
     typescript(),
-    sdk(),
+    requests(),
     zod({ withTypes: true }),
     tanstackQuery({ infinite: true, suspense: true }),
     swr(),

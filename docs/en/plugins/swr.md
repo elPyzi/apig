@@ -1,16 +1,16 @@
 # swr()
 
-Generates [SWR](https://swr.vercel.app) hooks from OpenAPI operations. Requires `sdk()` in the plugins array.
+Generates [SWR](https://swr.vercel.app) hooks from OpenAPI operations. Requires `requests()` in the plugins array.
 
 ## Usage
 
 ```ts
-import { defineConfig, typescript, sdk, swr } from '@travjek/apig'
+import { defineConfig, typescript, requests, swr } from '@travjek/apig'
 
 export default defineConfig({
   input: './openapi.json',
   output: './src/api',
-  plugins: [typescript(), sdk(), swr()],
+  plugins: [typescript(), requests(), swr()],
 })
 ```
 
@@ -81,4 +81,4 @@ export const useCreateUserMutation = (
 };
 ```
 
-If a mutation has no request body (`body`), the mutation key stays the same — the SDK function call simply omits the `arg` argument.
+If a mutation has no request body (`body`), the mutation key stays the same — the request function call simply omits the `arg` argument.

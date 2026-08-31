@@ -1,16 +1,16 @@
 # tanstackQuery()
 
-Generates [TanStack Query v5](https://tanstack.com/query/latest) hooks from OpenAPI operations. Requires `sdk()` in the plugins array.
+Generates [TanStack Query v5](https://tanstack.com/query/latest) hooks from OpenAPI operations. Requires `requests()` in the plugins array.
 
 ## Usage
 
 ```ts
-import { defineConfig, typescript, sdk, tanstackQuery } from '@travjek/apig'
+import { defineConfig, typescript, requests, tanstackQuery } from '@travjek/apig'
 
 export default defineConfig({
   input: './openapi.json',
   output: './src/api',
-  plugins: [typescript(), sdk(), tanstackQuery()],
+  plugins: [typescript(), requests(), tanstackQuery()],
 })
 ```
 

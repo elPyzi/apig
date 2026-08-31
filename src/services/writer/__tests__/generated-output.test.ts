@@ -15,7 +15,7 @@ import type { ApigConfig } from '@models';
 import { write } from '@services/writer';
 import {
   typescript,
-  sdk,
+  requests,
   zod,
   tanstackQuery,
   swr,
@@ -96,7 +96,7 @@ const generate = async (
       input: SPEC,
       output: { path: outDir, clean: true },
       baseUrl: 'https://api.example.com',
-      plugins: [typescript(), sdk(), tanstackQuery()],
+      plugins: [typescript(), requests(), tanstackQuery()],
       ...overrides,
     }),
   );
@@ -108,7 +108,7 @@ const generate = async (
  * generator emits compiling TypeScript.
  */
 const compileGenerated = (outDir: string): void => {
-  const files = ['config.ts', 'types.ts', 'sdk.ts', 'endpoints.ts']
+  const files = ['config.ts', 'types.ts', 'requests.ts', 'endpoints.ts']
     .map((name) => join(outDir, name))
     .filter(existsSync);
 
@@ -156,7 +156,7 @@ describe('generated output', () => {
       await generate(outDir, {
         plugins: [
           typescript(),
-          sdk(),
+          requests(),
           zod({ withTypes: false }),
           tanstackQuery({ infinite: true, suspense: true }),
           swr(),
@@ -198,7 +198,7 @@ describe('generated output', () => {
         groupBy: 'tags',
         plugins: [
           typescript(),
-          sdk(),
+          requests(),
           zod({ withTypes: false }),
           faker(),
           msw(),
@@ -220,34 +220,34 @@ describe('generated output', () => {
     test('withTypes: false hands types back to typescript()', async () => {
       const outDir = join(root, 'with-types-false');
       await generate(outDir, {
-        plugins: [typescript(), sdk(), zod({ withTypes: false })],
+        plugins: [typescript(), requests(), zod({ withTypes: false })],
       });
 
-      const sdkCode = readFileSync(join(outDir, 'sdk.ts'), 'utf-8');
-      expect(sdkCode).toContain("from './types'");
-      expect(sdkCode).not.toContain("} from './zod'");
+      const requestsCode = readFileSync(join(outDir, 'requests.ts'), 'utf-8');
+      expect(requestsCode).toContain("from './types'");
+      expect(requestsCode).not.toContain("} from './zod'");
     });
 
     test('withTypes: true keeps types in the validation file', async () => {
       const outDir = join(root, 'with-types-true');
       await generate(outDir, {
-        plugins: [typescript(), sdk(), zod({ withTypes: true })],
+        plugins: [typescript(), requests(), zod({ withTypes: true })],
       });
 
-      const sdkCode = readFileSync(join(outDir, 'sdk.ts'), 'utf-8');
-      expect(sdkCode).toContain("from './zod'");
+      const requestsCode = readFileSync(join(outDir, 'requests.ts'), 'utf-8');
+      expect(requestsCode).toContain("from './zod'");
     });
   });
 
   describe('output cleaning', () => {
     test('keeps hand-written files sitting in the output directory', async () => {
       const outDir = join(root, 'clean-keeps');
-      await generate(outDir, { plugins: [typescript(), sdk()] });
+      await generate(outDir, { plugins: [typescript(), requests()] });
 
       const handwritten = join(outDir, 'client.ts');
       writeFileSync(handwritten, 'export const apiClient = {};\n', 'utf-8');
 
-      await generate(outDir, { plugins: [typescript(), sdk()] });
+      await generate(outDir, { plugins: [typescript(), requests()] });
 
       expect(existsSync(handwritten)).toBe(true);
       expect(readFileSync(handwritten, 'utf-8')).toContain('apiClient');
@@ -256,44 +256,44 @@ describe('generated output', () => {
     test('drops generated files a later run no longer produces', async () => {
       const outDir = join(root, 'clean-drops');
       await generate(outDir, {
-        plugins: [typescript(), sdk(), faker(), msw()],
+        plugins: [typescript(), requests(), faker(), msw()],
       });
       expect(existsSync(join(outDir, 'msw.ts'))).toBe(true);
 
-      await generate(outDir, { plugins: [typescript(), sdk()] });
+      await generate(outDir, { plugins: [typescript(), requests()] });
 
       expect(existsSync(join(outDir, 'msw.ts'))).toBe(false);
-      expect(existsSync(join(outDir, 'sdk.ts'))).toBe(true);
+      expect(existsSync(join(outDir, 'requests.ts'))).toBe(true);
     });
   });
 
   describe('header params and OpenAPI 3.1', () => {
     let outDir: string;
-    let sdkCode: string;
+    let requestsCode: string;
 
     beforeAll(async () => {
       outDir = join(root, 'headers-31');
       await generate(outDir, {
         input: 'src/services/writer/__tests__/fixtures/headers-3.1.json',
-        plugins: [typescript(), sdk()],
+        plugins: [typescript(), requests()],
       });
-      sdkCode = readFileSync(join(outDir, 'sdk.ts'), 'utf-8');
+      requestsCode = readFileSync(join(outDir, 'requests.ts'), 'utf-8');
     });
 
     test('header params reach the function signature', () => {
-      expect(sdkCode).toContain(
+      expect(requestsCode).toContain(
         `headers: { 'X-Tenant-Id': string; 'X-Trace'?: string }`,
       );
     });
 
     test('header params reach the request', () => {
-      expect(sdkCode).toContain(
+      expect(requestsCode).toContain(
         `headers: { 'Content-Type': 'application/json', ...headers }`,
       );
     });
 
     test('an optional argument before a required one widens instead of taking ?', () => {
-      expect(sdkCode).toContain('params: { limit?: number } | undefined');
+      expect(requestsCode).toContain('params: { limit?: number } | undefined');
     });
 
     test('3.1 nullable unions and const reach the types', () => {
@@ -315,7 +315,7 @@ describe('generated output', () => {
       outDir = join(root, 'tuples');
       await generate(outDir, {
         input: 'src/services/writer/__tests__/fixtures/tuples-3.1.json',
-        plugins: [typescript(), sdk()],
+        plugins: [typescript(), requests()],
       });
     });
 
@@ -338,7 +338,7 @@ describe('generated output', () => {
 
   describe('query parameter styles', () => {
     let outDir: string;
-    let sdkCode: string;
+    let requestsCode: string;
     let toQuery: (
       params?: Record<string, unknown>,
       formats?: Record<string, string>,
@@ -348,27 +348,27 @@ describe('generated output', () => {
       outDir = join(root, 'query-styles');
       await generate(outDir, {
         input: 'src/services/writer/__tests__/fixtures/query-styles.json',
-        plugins: [typescript(), sdk()],
+        plugins: [typescript(), requests()],
       });
-      sdkCode = readFileSync(join(outDir, 'sdk.ts'), 'utf-8');
+      requestsCode = readFileSync(join(outDir, 'requests.ts'), 'utf-8');
       ({ toQuery } = await import(join(outDir, 'config.ts')));
     });
 
     test('array params are typed as arrays, not strings', () => {
-      expect(sdkCode).toContain('tags?: string[]');
-      expect(sdkCode).toContain('ids?: number[]');
+      expect(requestsCode).toContain('tags?: string[]');
+      expect(requestsCode).toContain('ids?: number[]');
     });
 
     test('scalar param types survive alongside them', () => {
-      expect(sdkCode).toContain('active?: boolean');
-      expect(sdkCode).toContain(`state?: 'on' | 'off'`);
+      expect(requestsCode).toContain('active?: boolean');
+      expect(requestsCode).toContain(`state?: 'on' | 'off'`);
     });
 
     test('only non-default styles are passed to toQuery', () => {
-      expect(sdkCode).toContain(
+      expect(requestsCode).toContain(
         `toQuery(params, { 'ids': 'comma', 'cols': 'pipe', 'words': 'space' })`,
       );
-      expect(sdkCode).not.toContain(`'tags':`);
+      expect(requestsCode).not.toContain(`'tags':`);
     });
 
     test('the default style repeats the key', () => {
@@ -416,11 +416,11 @@ describe('generated output', () => {
   describe('fetch query params', () => {
     test('serializes through the toQuery helper, not raw URLSearchParams', async () => {
       const outDir = join(root, 'query');
-      await generate(outDir, { plugins: [typescript(), sdk()] });
+      await generate(outDir, { plugins: [typescript(), requests()] });
 
-      const sdkCode = readFileSync(join(outDir, 'sdk.ts'), 'utf-8');
-      expect(sdkCode).toContain('${toQuery(params)}');
-      expect(sdkCode).not.toContain('new URLSearchParams(params)');
+      const requestsCode = readFileSync(join(outDir, 'requests.ts'), 'utf-8');
+      expect(requestsCode).toContain('${toQuery(params)}');
+      expect(requestsCode).not.toContain('new URLSearchParams(params)');
       expect(readFileSync(join(outDir, 'config.ts'), 'utf-8')).toContain(
         'export const toQuery',
       );

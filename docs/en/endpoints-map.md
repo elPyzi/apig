@@ -9,7 +9,7 @@ defineConfig({
   input: './openapi.json',
   output: './src/api',
   endpointsMap: true,
-  plugins: [typescript(), sdk()],
+  plugins: [typescript(), requests()],
 })
 ```
 

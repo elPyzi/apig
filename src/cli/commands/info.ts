@@ -36,8 +36,8 @@ export const registerInfoCommand = (program: Command): void => {
             typeof config.output === 'string'
               ? config.output
               : (config.output?.path ?? '—');
-          const plugins = (config.plugins ?? ['typescript', 'sdk']).map((p) =>
-            typeof p === 'string' ? p : (p.name ?? 'custom'),
+          const plugins = (config.plugins ?? ['typescript', 'requests']).map(
+            (p) => (typeof p === 'string' ? p : (p.name ?? 'custom')),
           );
 
           const byMethod: Record<string, number> = {};

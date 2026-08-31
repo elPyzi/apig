@@ -31,10 +31,10 @@ const objectOf = (
 };
 
 /**
- * Builds the raw shape the MCP SDK expects for `inputSchema` —
+ * Builds the raw shape the MCP requests expects for `inputSchema` —
  * `Record<string, ZodType>`, not a `z.object(...)`.
  *
- * The shape mirrors the generated SDK function's parameter list one to one, so
+ * The shape mirrors the generated request function's parameter list one to one, so
  * the tool handler can forward its arguments positionally without remapping.
  */
 export const buildInputSchema = (

@@ -3,7 +3,7 @@
 | Plugin | Description |
 |--------|-------------|
 | [typescript()](./typescript.md) | TypeScript types from OpenAPI schemas |
-| [sdk()](./sdk.md) | Typed request functions |
+| [requests()](./requests.md) | Typed request functions |
 | [zod()](./zod.md) | Zod schemas |
 | [valibot()](./valibot.md) | Valibot schemas |
 | [yup()](./yup.md) | Yup schemas |
@@ -13,4 +13,4 @@
 | [faker()](./faker.md) | Faker.js factories |
 | [msw()](./msw.md) | Mock Service Worker handlers |
 | [playwright()](./playwright.md) | Playwright API client and test fixture |
-| `mcp()` | MCP server exposing the SDK as tools |
+| `mcp()` | MCP server exposing the request functions as tools |

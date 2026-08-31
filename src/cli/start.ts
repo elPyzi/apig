@@ -25,7 +25,7 @@ interface StartAnswers {
 
 const PLUGIN_FACTORIES: Record<string, string> = {
   typescript: 'typescript',
-  sdk: 'sdk',
+  requests: 'requests',
   'tanstack-query': 'tanstackQuery',
   swr: 'swr',
   zod: 'zod',
@@ -33,12 +33,13 @@ const PLUGIN_FACTORIES: Record<string, string> = {
   yup: 'yup',
   faker: 'faker',
   msw: 'msw',
+  playwright: 'playwright',
   mcp: 'mcp',
 };
 
 const PLUGIN_LABELS: Record<string, string> = {
   typescript: 'TypeScript types',
-  sdk: 'SDK (fetch functions)',
+  requests: 'Typed request functions',
   'tanstack-query': 'TanStack Query hooks',
   swr: 'SWR hooks',
   zod: 'Zod schemas',
@@ -46,6 +47,7 @@ const PLUGIN_LABELS: Record<string, string> = {
   yup: 'Yup schemas',
   faker: 'Faker factories (mock data)',
   msw: 'MSW handlers (API mocking)',
+  playwright: 'Playwright API client (API testing)',
   mcp: 'MCP server (expose the API to AI assistants)',
 };
 
@@ -129,7 +131,7 @@ export const runStart = async (): Promise<void> => {
     choices: Object.entries(PLUGIN_LABELS).map(([value, label]) => ({
       name: label,
       value,
-      checked: value === 'typescript' || value === 'sdk',
+      checked: value === 'typescript' || value === 'requests',
     })),
     validate: (v) => v.length > 0 || 'Select at least one plugin',
   });

@@ -36,26 +36,26 @@ const build = (imports: string[], plugins: string[], extra = ''): string =>
 
 export const PRESETS: Record<string, Preset> = {
   /**
-   * minimal — TypeScript types + SDK fetch functions only.
+   * minimal — TypeScript types + typed request functions only.
    * Zero dependencies beyond TypeScript.
    */
   minimal: {
     name: 'minimal',
-    description: 'TypeScript types + SDK fetch functions',
-    template: build(['typescript', 'sdk'], ['typescript()', 'sdk()']),
+    description: 'TypeScript types + typed request functions',
+    template: build(['typescript', 'requests'], ['typescript()', 'requests()']),
   },
 
   /**
-   * react — Standard React stack: types, SDK, TanStack Query, Zod schemas.
+   * react — Standard React stack: types, requests, TanStack Query, Zod schemas.
    * Requires: @tanstack/react-query, zod
    */
   react: {
     name: 'react',
     description:
-      'TypeScript + SDK + TanStack Query + Zod (standard React stack)',
+      'TypeScript + requests + TanStack Query + Zod (standard React stack)',
     template: build(
-      ['typescript', 'sdk', 'tanstackQuery', 'zod'],
-      ['typescript()', 'sdk()', 'tanstackQuery()', 'zod()'],
+      ['typescript', 'requests', 'tanstackQuery', 'zod'],
+      ['typescript()', 'requests()', 'tanstackQuery()', 'zod()'],
       `  enumStyle: 'const',
   typeStyle: 'type',`,
     ),
@@ -67,17 +67,17 @@ export const PRESETS: Record<string, Preset> = {
    */
   'react-swr': {
     name: 'react-swr',
-    description: 'TypeScript + SDK + SWR + Zod',
+    description: 'TypeScript + requests + SWR + Zod',
     template: build(
-      ['typescript', 'sdk', 'swr', 'zod'],
-      ['typescript()', 'sdk()', 'swr()', 'zod()'],
+      ['typescript', 'requests', 'swr', 'zod'],
+      ['typescript()', 'requests()', 'swr()', 'zod()'],
       `  enumStyle: 'const',
   typeStyle: 'type',`,
     ),
   },
 
   /**
-   * testing — Full stack with mocking support: types, SDK, TanStack Query,
+   * testing — Full stack with mocking support: types, requests, TanStack Query,
    * Zod, Faker factories and MSW handlers.
    * Requires: @tanstack/react-query, zod, @faker-js/faker, msw
    */
@@ -85,42 +85,49 @@ export const PRESETS: Record<string, Preset> = {
     name: 'testing',
     description: 'React stack + Faker factories + MSW handlers for mocking',
     template: build(
-      ['typescript', 'sdk', 'tanstackQuery', 'zod', 'faker', 'msw'],
-      ['typescript()', 'sdk()', 'tanstackQuery()', 'zod()', 'faker()', 'msw()'],
+      ['typescript', 'requests', 'tanstackQuery', 'zod', 'faker', 'msw'],
+      [
+        'typescript()',
+        'requests()',
+        'tanstackQuery()',
+        'zod()',
+        'faker()',
+        'msw()',
+      ],
       `  enumStyle: 'const',
   typeStyle: 'type',`,
     ),
   },
 
   /**
-   * forms — Types, SDK and React Hook Form resolvers with Zod validation.
+   * forms — Types, requests and React Hook Form resolvers with Zod validation.
    * No data-fetching hooks — suited for form-heavy apps.
    * Requires: zod, react-hook-form, @hookform/resolvers
    */
   forms: {
     name: 'forms',
-    description: 'TypeScript + SDK + Zod + React Hook Form resolvers',
+    description: 'TypeScript + requests + Zod + React Hook Form resolvers',
     template: build(
-      ['typescript', 'sdk', 'zod', 'rhf'],
-      ['typescript()', 'sdk()', 'zod()', "rhf({ resolver: 'zod' })"],
+      ['typescript', 'requests', 'zod', 'rhf'],
+      ['typescript()', 'requests()', 'zod()', "rhf({ resolver: 'zod' })"],
       `  enumStyle: 'const',
   typeStyle: 'type',`,
     ),
   },
 
   /**
-   * full — Everything enabled: types, SDK, TanStack Query, Zod, Faker,
+   * full — Everything enabled: types, requests, TanStack Query, Zod, Faker,
    * MSW, React Hook Form resolvers and an endpoints map.
    */
   full: {
     name: 'full',
     description:
-      'All plugins — types, SDK, TanStack Query, Zod, Faker, MSW, RHF',
+      'All plugins — types, requests, TanStack Query, Zod, Faker, MSW, RHF',
     template: build(
-      ['typescript', 'sdk', 'tanstackQuery', 'zod', 'faker', 'msw', 'rhf'],
+      ['typescript', 'requests', 'tanstackQuery', 'zod', 'faker', 'msw', 'rhf'],
       [
         'typescript()',
-        'sdk()',
+        'requests()',
         'tanstackQuery()',
         'zod()',
         'faker()',

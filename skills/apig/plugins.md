@@ -24,18 +24,18 @@ export type User = {
 
 ---
 
-## sdk()
+## requests()
 
 Generates typed request functions. Takes **no options** — HTTP client and behavior (`rawResponse`, `apiLogging`, `errorHandling`) are configured in `defineConfig`.
 
 ```ts
-sdk()
+requests()
 ```
 
 ```ts
 defineConfig({
   httpClient: { name: 'axios', path: './lib/axios', export: 'axiosInstance' },
-  plugins: [sdk()],
+  plugins: [requests()],
 })
 ```
 
@@ -114,7 +114,7 @@ yup({
 
 ## tanstackQuery()
 
-Generates TanStack Query v5 hooks. Requires `sdk()`.
+Generates TanStack Query v5 hooks. Requires `requests()`.
 
 ```ts
 tanstackQuery({
@@ -145,7 +145,7 @@ Query key function: `getUsersQueryKey(...)` (style `'functions'`) or `queryKeys.
 
 ## swr()
 
-Generates SWR hooks. Requires `sdk()`.
+Generates SWR hooks. Requires `requests()`.
 
 ```ts
 swr({

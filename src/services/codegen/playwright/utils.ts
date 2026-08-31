@@ -18,7 +18,7 @@ const BROWSER_FILE_TYPE = 'File | Blob';
 /**
  * Arguments of a generated client method.
  *
- * Identical to the SDK's, except for binary multipart fields: the SDK targets a
+ * Identical to the requests plugin's, except for binary multipart fields: that plugin targets a
  * browser and takes `File | Blob`, while Playwright runs in Node and wants the
  * `{ name, mimeType, buffer }` form its `multipart` option accepts.
  */
@@ -74,7 +74,7 @@ export const buildNames = (
   };
 };
 
-/** Method name for an operation — the same transform the SDK applies. */
+/** Method name for an operation — the same transform the requests plugin applies. */
 export const getMethodName = (
   operation: IROperation,
   config: ApigConfig,

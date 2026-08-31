@@ -1,11 +1,11 @@
-import { defineConfig, typescript, sdk, zod, tanstackQuery } from '@travjek/apig'
+import { defineConfig, typescript, requests, zod, tanstackQuery } from '@travjek/apig'
 
 export default defineConfig({
   input: './openapi.json',
   output: './src/api',
   plugins: [
     typescript(),
-    sdk(),
+    requests(),
     zod({ withTypes: true }),
     tanstackQuery({ infinite: true, suspense: true }),
   ],

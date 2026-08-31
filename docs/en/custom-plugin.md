@@ -1,6 +1,6 @@
 # Creating a custom plugin
 
-Plugins are the core extension point of apig. Every built-in generator (`typescript`, `sdk`, `zod`, etc.) is itself a plugin implementing the `ApigPlugin` interface.
+Plugins are the core extension point of apig. Every built-in generator (`typescript`, `requests`, `zod`, etc.) is itself a plugin implementing the `ApigPlugin` interface.
 
 ## The `ApigPlugin` interface
 
@@ -10,11 +10,11 @@ import type { ApigPlugin } from '@travjek/apig'
 export interface ApigPlugin {
   /** Unique plugin name — used for deduplication and checks. */
   name: string;
-  /** Base output file name without extension ("sdk" → "sdk.ts"). */
+  /** Base output file name without extension ("requests" → "requests.ts"). */
   fileName: string;
   /**
    * "root"       — called once for the whole IR (types, zod, faker, msw, ...)
-   * "operations" — called once per group when groupBy=tags/endpoints (sdk, tanstack, swr)
+   * "operations" — called once per group when groupBy=tags/endpoints (requests, tanstack, swr)
    */
   scope: 'root' | 'operations';
   generate: (ir: IR, config: ApigConfig, ctx?: PluginContext) => PluginResult;
@@ -107,11 +107,11 @@ This is exactly what the built-in `msw()` plugin does — it throws if `faker()`
 
 ## `scope: 'operations'` and `PluginContext`
 
-Plugins with `scope: 'operations'` (like `sdk`, `tanstackQuery`, `swr`) are called again for each group when `groupBy: 'tags'` or `'endpoints'`. `generate` receives a `ctx` with import paths that should be used instead of hardcoding them:
+Plugins with `scope: 'operations'` (like `requests`, `tanstackQuery`, `swr`) are called again for each group when `groupBy: 'tags'` or `'endpoints'`. `generate` receives a `ctx` with import paths that should be used instead of hardcoding them:
 
 ```ts
 generate: (ir, config, ctx) => {
-  const sdkImport = ctx?.sdkImportPath ?? './sdk' // varies depending on groupBy
+  const requestsImport = ctx?.requestsImportPath ?? './requests' // varies depending on groupBy
   // ...
 }
 ```

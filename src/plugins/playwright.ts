@@ -57,7 +57,7 @@ export const playwright = (options: PlaywrightOptions = {}): ApigPlugin => ({
   fileName: 'playwright',
   scope: 'operations',
   generate: (ir, config, ctx) => generatePlaywright(ir, config, options, ctx),
-  // Mirrors the SDK's root file exactly, so the two agree byte for byte when
+  // Mirrors the requests plugin's root file exactly, so the two agree byte for byte when
   // both plugins are enabled and the writer lets the later one overwrite it.
   generateRootFiles: (ir, config) => {
     const errCfg = getErrorConfig(config);

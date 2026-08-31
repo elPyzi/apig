@@ -195,7 +195,7 @@ export const validateConfig = (input: unknown): void => {
     // Plugins whose output imports from another plugin's output
     const PLUGIN_DEPENDENCIES: Record<string, string[]> = {
       msw: ['faker'],
-      mcp: ['sdk', 'zod'],
+      mcp: ['requests', 'zod'],
     };
 
     // Duplicate plugin names
@@ -219,7 +219,7 @@ export const validateConfig = (input: unknown): void => {
     }
 
     // An MCP server speaks JSON-RPC over stdout, so anything else written there
-    // corrupts the stream — and apiLogging puts a console.log in every SDK call.
+    // corrupts the stream — and apiLogging puts a console.log in every request function.
     if (names.includes('mcp') && config.apiLogging === true) {
       errors.push(
         `apiLogging cannot be used with the mcp() plugin — its console.log output corrupts the MCP stdio transport`,

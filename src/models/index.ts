@@ -53,7 +53,7 @@ export type {
   PluginContext,
   ExtraFile,
   TypescriptOptions,
-  SdkOptions,
+  RequestsOptions,
   ZodOptions,
   ValibotOptions,
   YupOptions,

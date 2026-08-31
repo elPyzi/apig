@@ -64,11 +64,11 @@ apig config --preset react
 
 | Preset | Description |
 |--------|-------------|
-| `minimal` | TypeScript types + SDK fetch functions |
-| `react` | TypeScript + SDK + TanStack Query + Zod (standard React stack) |
-| `react-swr` | TypeScript + SDK + SWR + Zod |
+| `minimal` | TypeScript types + typed request functions |
+| `react` | TypeScript + requests + TanStack Query + Zod (standard React stack) |
+| `react-swr` | TypeScript + requests + SWR + Zod |
 | `testing` | React stack + Faker factories + MSW handlers for mocking |
-| `forms` | TypeScript + SDK + Zod + React Hook Form resolvers |
+| `forms` | TypeScript + requests + Zod + React Hook Form resolvers |
 | `full` | All plugins at once |
 
 ---

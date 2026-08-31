@@ -37,7 +37,7 @@ export const generateSwrMutationHook = (
 
   if (bodyArg) {
     const argType = bodyArg.type;
-    const sdkCallArgs = allArgs
+    const requestsCallArgs = allArgs
       .map((a) => (a.name === 'body' ? 'arg' : a.name))
       .join(', ');
     const mutationOptsList = hookArgsList
@@ -47,7 +47,7 @@ export const generateSwrMutationHook = (
       `export const ${hookName} = (${mutationOptsList}) => {`,
       `  return useSWRMutation<${responseType}, ${errorType}, any, ${argType}>(`,
       `    ${keyExpr},`,
-      `    (_key, { arg }: { arg: ${argType} }) => ${fnName}(${sdkCallArgs}),`,
+      `    (_key, { arg }: { arg: ${argType} }) => ${fnName}(${requestsCallArgs}),`,
       `    options,`,
       `  );`,
       `};`,

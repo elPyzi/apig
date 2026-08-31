@@ -114,7 +114,7 @@ export const test = apigPlaywrightTest.extend<{ seededPet: Pet }>({
 | `authFixture` | `object` | — | Emit an extra fixture that logs in first — see below |
 
 ```ts
-playwright({ testName: 'apiTest', fixtureName: 'sdk', withFaker: true })
+playwright({ testName: 'apiTest', fixtureName: 'requests', withFaker: true })
 ```
 
 ### baseUrl
@@ -186,7 +186,7 @@ The fixture is only emitted into the file that actually holds the login operatio
 
 ## groupBy
 
-The plugin is operation-scoped, so [`groupBy`](../config.md) splits its output like the SDK's. Exports are prefixed per group so the generated barrel file stays free of duplicate names:
+The plugin is operation-scoped, so [`groupBy`](../config.md) splits its output like the requests plugin's. Exports are prefixed per group so the generated barrel file stays free of duplicate names:
 
 ```
 groupBy: 'tags'

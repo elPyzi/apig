@@ -34,7 +34,7 @@ export const generateMcpTool = (
     operation.id,
   );
   const inputSchema = buildInputSchema(operation, allSchemas, schemaSuffix);
-  // the input shape mirrors the SDK signature, so the arguments forward as-is
+  // the input shape mirrors the request function's signature, so the arguments forward as-is
   const args = getArgs(operation);
   const destructured = args.map((a) => a.name).join(', ');
   const callArgs = args.map((a) => a.name).join(', ');

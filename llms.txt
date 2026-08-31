@@ -20,7 +20,7 @@ export default defineConfig({
   output: './src/api',          // output directory (default: .apig/generated)
   plugins: [
     typescript(),
-    sdk(),
+    requests(),
     zod({ withTypes: true }),
     tanstackQuery(),
   ],
@@ -80,12 +80,12 @@ typescript({
 })
 ```
 
-### `sdk()`
+### `requests()`
 
 Generates typed request functions.
 
 ```ts
-sdk({
+requests({
   httpClient: { name: 'fetch' },   // 'fetch' | 'axios' | 'ky' | 'ofetch' | 'wretch'
   errorHandling: 'ApigError',      // built-in or custom error class
   rawResponse: false,              // return { body, status, headers } instead of data
@@ -312,7 +312,7 @@ The factory takes any `APIRequestContext`, so it works with the standalone `requ
 
 ### `mcp()`
 
-Generates an MCP (Model Context Protocol) server exposing the SDK operations as tools. Requires `sdk()` and `zod()`. Incompatible with `apiLogging: true` — stdout carries the JSON-RPC stream.
+Generates an MCP (Model Context Protocol) server exposing the request functions as tools. Requires `requests()` and `zod()`. Incompatible with `apiLogging: true` — stdout carries the JSON-RPC stream.
 
 ```ts
 mcp({

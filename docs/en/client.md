@@ -2,7 +2,7 @@
 
 ## The `ApigError` class
 
-When `errorHandling` is enabled (the default, `true`), apig generates an `ApigError` class directly into your output directory — into a `config.ts` file. This is **not** an export from the `@travjek/apig` package — it's generated code that lives alongside your SDK.
+When `errorHandling` is enabled (the default, `true`), apig generates an `ApigError` class directly into your output directory — into a `config.ts` file. This is **not** an export from the `@travjek/apig` package — it's generated code that lives alongside your requests.
 
 ```ts
 // generated ./src/api/config.ts
@@ -18,13 +18,13 @@ export class ApigError<T = unknown> extends Error {
 }
 ```
 
-Generated SDK functions throw this class on non-2xx responses.
+Generated request functions throw this class on non-2xx responses.
 
 ### Catching errors
 
 ```ts
 import { ApigError } from './api/config'
-import { getUser } from './api/sdk'
+import { getUser } from './api/requests'
 
 try {
   const user = await getUser('123')
@@ -47,7 +47,7 @@ import type { ApigErrorLike } from '@travjek/apig/client'
 
 ### `isApigError(error)`
 
-Checks that an error was thrown by a generated SDK (by `error.name === 'ApigError'`), without importing the concrete class:
+Checks that an error was thrown by a generated requests (by `error.name === 'ApigError'`), without importing the concrete class:
 
 ```ts
 import { isApigError } from '@travjek/apig/client'
@@ -82,7 +82,7 @@ You can replace the `ApigError` class with your own via `defineConfig`:
 ```ts
 defineConfig({
   errorHandling: { path: './lib/MyCustomError', export: 'MyCustomError' },
-  plugins: [sdk()],
+  plugins: [requests()],
 })
 ```
 
@@ -93,7 +93,7 @@ Generated functions will throw `MyCustomError` instead of `ApigError`. The class
 ```ts
 defineConfig({
   errorHandling: false,
-  plugins: [sdk()],
+  plugins: [requests()],
 })
 ```
 

@@ -164,7 +164,7 @@ describe('validateConfig', () => {
       ).toThrow();
     });
 
-    test('mcp() without sdk() and zod()', () => {
+    test('mcp() without requests() and zod()', () => {
       expect(() =>
         validateConfig(NEGATIVE_CONFIGS.MCP_WITHOUT_DEPENDENCIES),
       ).toThrow();

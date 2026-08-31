@@ -1,24 +1,24 @@
-# sdk()
+# requests()
 
 Generates typed request functions for every operation in the spec.
 
-`sdk()` has no options. HTTP client and behavior are configured at the `defineConfig` level.
+`requests()` has no options. HTTP client and behavior are configured at the `defineConfig` level.
 
 ## Usage
 
 ```ts
-import { defineConfig, typescript, sdk } from '@travjek/apig'
+import { defineConfig, typescript, requests } from '@travjek/apig'
 
 export default defineConfig({
   input: './openapi.json',
   output: './src/api',
-  plugins: [typescript(), sdk()],
+  plugins: [typescript(), requests()],
 })
 ```
 
-## Config options that affect sdk()
+## Config options that affect requests()
 
-These options are set in `defineConfig`, not in `sdk()`:
+These options are set in `defineConfig`, not in `requests()`:
 
 ```ts
 defineConfig({
@@ -26,7 +26,7 @@ defineConfig({
   rawResponse: false,             // return { body, status, headers } instead of body
   apiLogging: false,              // add console.log to each generated function
   errorHandling: true,            // throw ApigError on non-2xx responses
-  plugins: [sdk()],
+  plugins: [requests()],
 })
 ```
 
@@ -41,7 +41,7 @@ The HTTP client used in generated functions. For `axios`, `ky`, `ofetch` — pro
 // axios example
 defineConfig({
   httpClient: { name: 'axios', path: './lib/axios', export: 'axiosInstance' },
-  plugins: [sdk()],
+  plugins: [requests()],
 })
 ```
 
