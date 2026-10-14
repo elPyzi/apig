@@ -76,7 +76,7 @@ export const registerConfigCommand = (program: Command): void => {
 
       const label = options.preset ? ` (preset: ${options.preset})` : '';
       logger.success(`Created apig.config.ts${label}`);
-      logger.info('Edit the file and run: apig generate');
-      logger.info('Or run: apig start  — for interactive setup');
+      logger.plain('Edit the file and run: apig generate');
+      logger.plain('Or run: apig start  — for interactive setup');
     });
 };

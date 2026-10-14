@@ -107,6 +107,18 @@ export const buildSchema = (
 
   if (schema.$ref) {
     const refName = schema.$ref.split('/').pop()!;
+    // A name reaches here only when this `$ref` is the whole body of a declared
+    // schema — an alias, either written bare or wrapped in a single-member
+    // `allOf`. Adopting the target's name would declare a second schema under
+    // it and drop the alias, leaving anything that referenced the alias
+    // pointing at a name that is never emitted.
+    if (name && name !== refName) {
+      return {
+        type: 'allOf',
+        name,
+        schemas: [{ type: 'unknown', name: refName }],
+      };
+    }
     return { type: 'unknown', name: refName };
   }
 

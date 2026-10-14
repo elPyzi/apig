@@ -2,13 +2,14 @@ import { execSync } from 'child_process';
 import { resolve } from 'path';
 
 import type { ApigConfig, GenerationStats, IR, PluginResult } from '@models';
-import { GROUP_BY, FORMATTERS, LOG_LEVELS } from '@models';
+import { GROUP_BY, FORMATTERS, DEFAULTS } from '@models';
 import { load } from '@services/parser';
 import { saveSnapshot, VersionStorage, formatDate } from '@services/versioning';
 import { validateConfig } from '@libs/validation';
 import { logger } from '@libs/logger';
 import { filterOperations } from '@libs/operations/filter';
 import { renameOperations } from '@libs/operations/rename';
+import { dedupeOperationIds } from '@libs/operations/dedupe';
 import { formatFiles } from '@libs/operations/format';
 import { generateEndpoints } from '@libs/operations/endpoints';
 
@@ -129,7 +130,7 @@ const generateFromIR = (
 const startRun = (config: ApigConfig): void => {
   validateConfig(config);
   resetBaseUrlWarning();
-  logger.setLevel(config.cliLogging?.level ?? LOG_LEVELS.MINIMAL);
+  logger.setLevel(config.cliLogging?.level ?? DEFAULTS.CONFIG.cliLogging.level);
 };
 
 const createStats = (operations = 0, schemas = 0): GenerationStats => ({
@@ -214,9 +215,8 @@ export const write = async (
 
   const ir = {
     ...rawIr,
-    operations: renameOperations(
-      filterOperations(rawIr.operations, config),
-      config,
+    operations: dedupeOperationIds(
+      renameOperations(filterOperations(rawIr.operations, config), config),
     ),
   };
 

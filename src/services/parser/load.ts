@@ -4,9 +4,13 @@ import type { ApigConfig } from '@models';
 import type { OpenAPIV3 } from 'openapi-types';
 import { logger } from '@libs/logger';
 import { loadSpec } from './swagger';
-import { loadSpecFromText } from './swagger/load-spec';
 import { buildIR } from './ir';
-import { fetchWithCache, saveCache } from '@services/cache';
+import {
+  fetchWithCache,
+  saveCache,
+  getCacheSettings,
+  enforceMaxEntries,
+} from '@services/cache';
 
 export interface LoadResult {
   ir: IR;
@@ -19,25 +23,37 @@ export const load = async (config: ApigConfig): Promise<LoadResult> => {
   const input =
     typeof config.input === 'function' ? await config.input() : config.input;
 
-  if (config.cache) {
-    const result = await fetchWithCache(input);
+  const cache = getCacheSettings(config);
+
+  if (cache.enabled) {
+    const result = await fetchWithCache(input, cache.ttlMs);
 
     if (result.hit) {
       logger.success('IR restored from cache');
       logger.br();
-      return { ir: result.ir, spec: {} as OpenAPIV3.Document };
+      return { ir: result.ir, spec: result.spec };
     }
 
-    // Cache miss — parse from fetched text
-    const { spec, schemaNames } = await loadSpecFromText(result.text, config);
+    // Parsed exactly the way an uncached run parses, so turning the cache on
+    // cannot change the outcome. Handing the parser the fetched text instead
+    // loses the base location, and a relative `$ref` to a neighbouring file then
+    // resolves to nothing — enabling the cache failed the whole run.
+    const { spec, schemaNames } = await loadSpec(config);
     logger.stage('Specification loaded');
     logger.stage('Building IR...');
     const ir = buildIR(spec, schemaNames);
     logger.stage('IR built');
 
     const specHash = createHash('sha256').update(result.text).digest('hex');
-    saveCache(input, ir, result.etag, specHash);
-    logger.detail('IR cached');
+    const saved = saveCache(input, ir, result.etag, specHash, spec);
+    if (saved.ok) {
+      // enforced after writing, since that is the only moment the count grows
+      enforceMaxEntries(cache.maxEntries);
+      logger.detail('IR cached');
+    } else {
+      // the run carries on uncached rather than failing over an optimization
+      logger.warn(`Could not write the cache — ${saved.reason}`);
+    }
 
     return { ir, spec };
   }

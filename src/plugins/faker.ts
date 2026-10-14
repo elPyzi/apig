@@ -25,7 +25,7 @@ export const generateFaker = (ir: IR, config: ApigConfig): PluginResult => {
   const typesImport = getTypesImport(config, 'root');
 
   const usedTypes = ir.schemas
-    .filter((s) => s.name && (s.type === 'object' || s.isEnum))
+    .filter((s) => s.name)
     .map((s) => `  ${toPascalCase(s.name!)}`)
     .join(',\n');
 

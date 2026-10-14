@@ -4,10 +4,11 @@ export {
   resetBaseUrlWarning,
 } from '@services/codegen/common/get-base-url';
 export { getUrl } from '@services/codegen/common/get-url';
+export { getFunctionName } from '@services/codegen/common/get-function-name';
 export { generateFunction } from '@services/codegen/requests/generate-function';
 export { generateSchema } from '@services/codegen/typescript/generate-schema';
 export { getResponseType } from '@services/codegen/common/get-response-type';
-export { getArgs } from '@services/codegen/common/get-args';
+export { getArgs, getParamTypeNames } from '@services/codegen/common/get-args';
 export type { FnArg } from '@services/codegen/common/get-args';
 export {
   buildArgsList,
@@ -46,6 +47,12 @@ export {
   getRootPluginImport,
 } from '@services/codegen/common/get-plugin-import';
 export { generateZodSchema } from '@services/codegen/zod/generate-zod-schema';
+export {
+  isSchemaReference,
+  schemaRefsOf,
+  topoSortSchemas,
+  findRecursiveSchemas,
+} from '@services/codegen/common/schema-graph';
 export type { ZodOpts } from '@services/codegen/zod/generate-zod-schema';
 export { generateValibotSchema } from '@services/codegen/valibot/generate-valibot-schema';
 export type { ValibotOpts } from '@services/codegen/valibot/generate-valibot-schema';

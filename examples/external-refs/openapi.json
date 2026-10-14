@@ -1,0 +1,55 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "External refs",
+    "version": "1.0.0",
+    "description": "A spec split across files, the way a shared model package is usually published: the entrypoint declares the operations and every schema lives next to it. `Tag` is declared in both the entrypoint and the shared file, and is referenced from the root and from a sibling under two different spellings of the same path."
+  },
+  "paths": {
+    "/pets": {
+      "get": {
+        "operationId": "listPets",
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "./models/pets.json#/components/schemas/Pet"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tags": {
+      "get": {
+        "operationId": "listTags",
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./models/shared.json#/components/schemas/Tag"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Tag": {
+        "type": "object",
+        "properties": { "localOnly": { "type": "boolean" } }
+      }
+    }
+  }
+}

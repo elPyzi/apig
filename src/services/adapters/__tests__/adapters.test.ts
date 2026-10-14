@@ -84,7 +84,7 @@ describe('adapters', () => {
       expect(
         ky('post', ctx({ hasBody: true, hasQuery: true, hasHeaders: true })),
       ).toBe(
-        'api.post(`/pets/${id}`, { json: body, searchParams: params, headers }).json<Pet>()',
+        'api.post(`/pets/${id}`, { json: body, searchParams: toQuery(params), headers }).json<Pet>()',
       );
     });
 
@@ -115,7 +115,7 @@ describe('adapters', () => {
           ctx({ hasBody: true, hasQuery: true, hasHeaders: true }),
         ),
       ).toBe(
-        'api.url(`/pets/${id}`).query(params ?? {}).headers(headers).json(body).post().json<Pet>()',
+        'api.url(`/pets/${id}`).query(params ?? {}).headers(headers).json(body ?? {}).post().json<Pet>()',
       );
     });
 

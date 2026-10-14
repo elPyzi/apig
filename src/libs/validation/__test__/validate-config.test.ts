@@ -3,6 +3,64 @@ import { validateConfig } from '../validate-config';
 import { NEGATIVE_CONFIGS, POSITIVE_CONFIGS } from './fixtures';
 
 describe('validateConfig', () => {
+  describe('cache', () => {
+    const base = { input: 'spec.yaml', output: './out' };
+
+    test('accepts both forms', () => {
+      expect(() => validateConfig({ ...base, cache: true })).not.toThrow();
+      expect(() => validateConfig({ ...base, cache: false })).not.toThrow();
+      expect(() => validateConfig({ ...base, cache: {} })).not.toThrow();
+    });
+
+    test('accepts every ttl unit', () => {
+      for (const ttl of ['30s', '15m', '12h', '7d']) {
+        expect(() => validateConfig({ ...base, cache: { ttl } })).not.toThrow();
+      }
+    });
+
+    test('accepts a positive maxEntries', () => {
+      expect(() =>
+        validateConfig({ ...base, cache: { maxEntries: 20 } }),
+      ).not.toThrow();
+    });
+
+    test('rejects a maxEntries that cannot bound anything', () => {
+      for (const maxEntries of [0, -1, 1.5, '20', null]) {
+        expect(() =>
+          validateConfig({ ...base, cache: { maxEntries } }),
+        ).toThrow();
+      }
+    });
+
+    test('rejects a ttl it cannot read, rather than silently never expiring', () => {
+      for (const ttl of ['7w', '7 days', 'soon', '0d', 7]) {
+        expect(() => validateConfig({ ...base, cache: { ttl } })).toThrow();
+      }
+    });
+  });
+
+  describe('functionNaming', () => {
+    const base = { input: 'spec.yaml', output: './out' };
+
+    test('accepts the two conventions that yield an identifier', () => {
+      for (const functionNaming of ['camelCase', 'snake_case']) {
+        expect(() => validateConfig({ ...base, functionNaming })).not.toThrow();
+      }
+    });
+
+    test('rejects kebab-case, which is not an identifier at all', () => {
+      expect(() =>
+        validateConfig({ ...base, functionNaming: 'kebab-case' }),
+      ).toThrow();
+    });
+
+    test('rejects PascalCase, which collides with the generated type names', () => {
+      expect(() =>
+        validateConfig({ ...base, functionNaming: 'PascalCase' }),
+      ).toThrow();
+    });
+  });
+
   describe('happy test', () => {
     test('minimal config with a string output', () => {
       expect(() =>

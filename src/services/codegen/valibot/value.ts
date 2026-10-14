@@ -1,26 +1,30 @@
 import type { IRSchema, IRProperty } from '@models';
-import { toPascalCase } from '@libs/string';
+import { toPascalCase, quoteKey } from '@libs/string';
+import { isSchemaReference } from '@services/codegen/common/schema-graph';
 import { valibotString, valibotNumber, withNullable } from './primitives';
 
 export const generateValibotValue = (
   schema: IRSchema,
   allSchemas: IRSchema[],
   suffix: string,
+  recursive: ReadonlySet<string> = new Set(),
 ): string => {
-  if (schema.name && allSchemas.some((s) => s.name === schema.name)) {
-    return `${toPascalCase(schema.name)}${suffix}`;
+  if (isSchemaReference(schema, allSchemas)) {
+    const refName = `${toPascalCase(schema.name!)}${suffix}`;
+    // no declaration order satisfies a cycle, so anything inside one is lazy
+    return recursive.has(schema.name!) ? `v.lazy(() => ${refName})` : refName;
   }
 
   if (schema.type === 'allOf' && schema.schemas) {
     const parts = schema.schemas.map((s) =>
-      generateValibotValue(s, allSchemas, suffix),
+      generateValibotValue(s, allSchemas, suffix, recursive),
     );
     return withNullable(`v.intersect([${parts.join(', ')}])`, schema);
   }
 
   if ((schema.type === 'oneOf' || schema.type === 'anyOf') && schema.schemas) {
     const variants = schema.schemas.map((s) =>
-      generateValibotValue(s, allSchemas, suffix),
+      generateValibotValue(s, allSchemas, suffix, recursive),
     );
     const expr = schema.discriminator
       ? `v.variant('${schema.discriminator}', [${variants.join(', ')}])`
@@ -35,18 +39,18 @@ export const generateValibotValue = (
 
   if (schema.type === 'tuple' && schema.prefixItems) {
     const members = schema.prefixItems
-      .map((s) => generateValibotValue(s, allSchemas, suffix))
+      .map((s) => generateValibotValue(s, allSchemas, suffix, recursive))
       .join(', ');
     // `items` alongside `prefixItems` types the variadic remainder
     const expr = schema.items
-      ? `v.tupleWithRest([${members}], ${generateValibotValue(schema.items, allSchemas, suffix)})`
+      ? `v.tupleWithRest([${members}], ${generateValibotValue(schema.items, allSchemas, suffix, recursive)})`
       : `v.tuple([${members}])`;
     return withNullable(expr, schema);
   }
 
   if (schema.type === 'array' && schema.items) {
     const pipes: string[] = [
-      `v.array(${generateValibotValue(schema.items, allSchemas, suffix)})`,
+      `v.array(${generateValibotValue(schema.items, allSchemas, suffix, recursive)})`,
     ];
     if (schema.minItems !== undefined)
       pipes.push(`v.minLength(${schema.minItems})`);
@@ -60,7 +64,7 @@ export const generateValibotValue = (
     const fields = schema.properties
       .map(
         (prop) =>
-          `${prop.name}: ${generateValibotProperty(prop, allSchemas, suffix)}`,
+          `${quoteKey(prop.name)}: ${generateValibotProperty(prop, allSchemas, suffix, recursive)}`,
       )
       .join(', ');
     return withNullable(`v.object({ ${fields} })`, schema);
@@ -84,9 +88,10 @@ export const generateValibotProperty = (
   prop: IRProperty,
   allSchemas: IRSchema[],
   suffix: string,
+  recursive: ReadonlySet<string> = new Set(),
 ): string => {
   const base = prop.schema
-    ? generateValibotValue(prop.schema, allSchemas, suffix)
+    ? generateValibotValue(prop.schema, allSchemas, suffix, recursive)
     : 'v.unknown()';
   return prop.required ? base : `v.optional(${base})`;
 };

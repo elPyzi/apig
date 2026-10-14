@@ -10,16 +10,19 @@ export {
 export { logger } from '@libs/logger';
 export { filterOperations } from '@libs/operations/filter';
 export { renameOperations } from '@libs/operations/rename';
+export { dedupeOperationIds } from '@libs/operations/dedupe';
 export { formatFiles } from '@libs/operations/format';
 export { generateEndpoints } from '@libs/operations/endpoints';
 export { validateConfig } from '@libs/validation';
 export {
   getClientImport,
   getBaseUrl,
+  getFunctionName,
   generateFunction,
   generateSchema,
   getResponseType,
   getArgs,
+  getParamTypeNames,
   buildArgsList,
   buildCallArgs,
   apigErrorCode,
@@ -43,6 +46,9 @@ export {
   getRootPrefix,
   getRootPluginImport,
   generateZodSchema,
+  isSchemaReference,
+  topoSortSchemas,
+  findRecursiveSchemas,
   generateValibotSchema,
   generateYupSchema,
   generateFakerFactory,

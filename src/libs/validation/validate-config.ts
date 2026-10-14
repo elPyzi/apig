@@ -2,6 +2,7 @@ import {
   GROUP_BY,
   HTTP_CLIENTS,
   NAMING_CASES,
+  FUNCTION_NAMING_CASES,
   ENUM_STYLES,
   LOG_LEVELS,
   FORMATTERS,
@@ -9,10 +10,12 @@ import {
 } from '@models';
 import type { ApigConfig } from '@models';
 import { CONFIG_DOCS_URL, GUIDE_DOCS } from '@constants';
+import { isValidDuration, DURATION_UNITS } from '@libs/duration';
 
 const GROUP_BY_VALUES = Object.values(GROUP_BY);
 const HTTP_CLIENT_VALUES = Object.values(HTTP_CLIENTS);
 const NAMING_VALUES = Object.values(NAMING_CASES);
+const FUNCTION_NAMING_VALUES: readonly string[] = FUNCTION_NAMING_CASES;
 const ENUM_STYLE_VALUES = Object.values(ENUM_STYLES);
 const LOG_LEVEL_VALUES = Object.values(LOG_LEVELS);
 const FORMATTER_VALUES = Object.values(FORMATTERS);
@@ -314,9 +317,12 @@ export const validateConfig = (input: unknown): void => {
   }
 
   // functionNaming
-  if (config.functionNaming && !NAMING_VALUES.includes(config.functionNaming)) {
+  if (
+    config.functionNaming &&
+    !FUNCTION_NAMING_VALUES.includes(config.functionNaming)
+  ) {
     errors.push(
-      `functionNaming must be one of: ${NAMING_VALUES.map((v) => `"${v}"`).join(' | ')}`,
+      `functionNaming must be one of: ${FUNCTION_NAMING_VALUES.map((v) => `"${v}"`).join(' | ')} — "kebab-case" is not an identifier, and "PascalCase" collides with the generated type names`,
     );
   }
 
@@ -444,8 +450,31 @@ export const validateConfig = (input: unknown): void => {
   }
 
   // cache
-  if (config.cache !== undefined && typeof config.cache !== 'boolean') {
-    errors.push(`cache must be a boolean`);
+  if (config.cache !== undefined) {
+    if (typeof config.cache !== 'boolean' && typeof config.cache !== 'object') {
+      errors.push(`cache must be a boolean or an object`);
+    }
+
+    if (typeof config.cache === 'object' && config.cache.ttl !== undefined) {
+      if (
+        typeof config.cache.ttl !== 'string' ||
+        !isValidDuration(config.cache.ttl)
+      ) {
+        errors.push(
+          `cache.ttl must be an amount and a unit — ${DURATION_UNITS.map((u) => `"7${u}"`).join(' | ')}`,
+        );
+      }
+    }
+
+    if (
+      typeof config.cache === 'object' &&
+      config.cache.maxEntries !== undefined
+    ) {
+      const max = config.cache.maxEntries;
+      if (typeof max !== 'number' || !Number.isInteger(max) || max < 1) {
+        errors.push(`cache.maxEntries must be a positive integer`);
+      }
+    }
   }
 
   // boolean flags

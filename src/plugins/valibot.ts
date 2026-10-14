@@ -7,7 +7,13 @@ import {
   banner,
   DEFAULTS,
 } from '@models';
-import { toPascalCase, generateValibotSchema } from '../libs';
+import {
+  toPascalCase,
+  generateValibotSchema,
+  getTypesImport,
+  topoSortSchemas,
+  findRecursiveSchemas,
+} from '../libs';
 import type { ValibotOpts } from '../libs';
 
 const DEFAULT_OPTS = DEFAULTS.PLUGINS.VALIBOT;
@@ -40,10 +46,28 @@ export const generateValibot = (
   config: ApigConfig,
   opts: ValibotOpts = { ...DEFAULT_OPTS },
 ): PluginResult => {
-  const lines: string[] = [banner, '', "import * as v from 'valibot';", ''];
+  const recursive = findRecursiveSchemas(ir.schemas);
+  const lines: string[] = [banner, '', "import * as v from 'valibot';"];
 
-  for (const schema of ir.schemas) {
-    const generated = generateValibotSchema(schema, ir.schemas, config, opts);
+  // With the types owned by `typescript()`, a recursive schema still needs the
+  // name it annotates itself with.
+  if (!opts.withTypes && recursive.size > 0) {
+    const names = [...recursive].map((n) => toPascalCase(n)).sort();
+    lines.push(
+      `import type { ${names.join(', ')} } from '${getTypesImport(config, 'root')}';`,
+    );
+  }
+
+  lines.push('');
+
+  for (const schema of topoSortSchemas(ir.schemas)) {
+    const generated = generateValibotSchema(
+      schema,
+      ir.schemas,
+      config,
+      opts,
+      recursive,
+    );
     if (generated) {
       lines.push(generated);
       lines.push('');

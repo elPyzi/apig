@@ -1,0 +1,395 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Edge cases",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/perm/{permId}": {
+      "delete": {
+        "operationId": "delete",
+        "summary": "operationId that is a JS reserved word",
+        "parameters": [
+          {
+            "name": "permId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "gone"
+          }
+        }
+      }
+    },
+    "/perm/{permId}/lock": {
+      "post": {
+        "operationId": "new",
+        "summary": "another reserved word",
+        "parameters": [
+          {
+            "name": "permId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "ok"
+          }
+        }
+      }
+    },
+    "/search": {
+      "get": {
+        "operationId": "search",
+        "summary": "query and header params that are not valid identifiers",
+        "parameters": [
+          {
+            "name": "employee-search-form-selection",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "2fa",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "plain",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Wrapper"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/errors": {
+      "get": {
+        "operationId": "getErrors",
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/envelope": {
+      "get": {
+        "operationId": "getEnvelope",
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listing": {
+      "get": {
+        "operationId": "getListing",
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Listing"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tree/{node-id}/{2nd}": {
+      "get": {
+        "operationId": "getTreeNode",
+        "parameters": [
+          {
+            "name": "node-id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "2nd",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs": {
+      "get": {
+        "operationId": "listJobs",
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dup/a": {
+      "get": {
+        "operationId": "listJobsX",
+        "tags": [
+          "dup"
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dup/b": {
+      "get": {
+        "operationId": "list_jobs_x",
+        "tags": [
+          "dup"
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dup/c": {
+      "get": {
+        "operationId": "list-jobs-x",
+        "tags": [
+          "dup"
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "errorInfo": {
+            "$ref": "#/components/schemas/ErrorInfo"
+          },
+          "bare": {
+            "$ref": "#/components/schemas/Bare"
+          }
+        }
+      },
+      "ErrorInfo": {
+        "type": "object"
+      },
+      "Wrapper": {
+        "type": "object",
+        "properties": {
+          "roles": {
+            "$ref": "#/components/schemas/Roles"
+          },
+          "roleIds": {
+            "$ref": "#/components/schemas/RoleIds"
+          }
+        }
+      },
+      "Roles": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "RoleIds": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "Bare": {},
+      "Envelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Payload"
+          }
+        ]
+      },
+      "Listing": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "$ref": "#/components/schemas/RowList"
+          }
+        }
+      },
+      "Payload": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          }
+        }
+      },
+      "RowList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Payload"
+        }
+      },
+      "status": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "QUEUED",
+            "DONE"
+          ]
+        }
+      },
+      "Job": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "PUBLIC",
+              "UNPUBLIC"
+            ]
+          },
+          "code": {
+            "type": "integer"
+          },
+          "filter": {
+            "$ref": "#/components/schemas/status"
+          }
+        }
+      },
+      "Node": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "parent": {
+            "$ref": "#/components/schemas/Node"
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Node"
+            }
+          }
+        }
+      },
+      "Left": {
+        "type": "object",
+        "properties": {
+          "right": {
+            "$ref": "#/components/schemas/Right"
+          }
+        }
+      },
+      "Right": {
+        "type": "object",
+        "properties": {
+          "left": {
+            "$ref": "#/components/schemas/Left"
+          }
+        }
+      }
+    }
+  }
+}

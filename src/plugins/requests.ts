@@ -6,9 +6,10 @@ import {
   banner,
 } from '@models';
 import {
-  toCamelCase,
   toPascalCase,
   getTypesImport,
+  getParamTypeNames,
+  getFunctionName,
   getClientImport,
   getBaseUrl,
   generateFunction,
@@ -79,6 +80,7 @@ export const generateRequests = (
   const usedTypes = new Set<string>();
   const errCfg = getErrorConfig(config);
   for (const op of ir.operations) {
+    for (const name of getParamTypeNames(op, ir.schemas)) usedTypes.add(name);
     if (op.response?.name) usedTypes.add(toPascalCase(op.response.name));
     if (op.response?.items?.name)
       usedTypes.add(toPascalCase(op.response.items.name));
@@ -144,7 +146,7 @@ export const generateRequests = (
 
   return {
     code: lines.join('\n'),
-    exports: ir.operations.map((op) => toCamelCase(op.id)),
+    exports: ir.operations.map((op) => getFunctionName(op, config)),
     typeExports: [],
   };
 };

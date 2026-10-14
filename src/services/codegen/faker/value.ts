@@ -1,5 +1,6 @@
 import type { IRSchema, IRProperty } from '@models';
 import { toPascalCase } from '@libs/string';
+import { isSchemaReference } from '@services/codegen/common/schema-graph';
 
 export const typeMap: Record<string, string> = {
   string: 'faker.lorem.word()',
@@ -37,8 +38,21 @@ export const generateValue = (
 
   if (!schema) return typeMap[prop.type] ?? 'faker.lorem.word()';
 
-  if (schema.name && schemas.some((s) => s.name === schema.name)) {
-    return `generate${toPascalCase(schema.name)}()`;
+  if (isSchemaReference(schema, schemas)) {
+    return `generate${toPascalCase(schema.name!)}()`;
+  }
+
+  // A `$ref` often arrives wrapped in a single-member composition, and without
+  // this the whole thing fell through to a lorem word typed as the referenced
+  // object.
+  if (
+    (schema.type === 'allOf' ||
+      schema.type === 'oneOf' ||
+      schema.type === 'anyOf') &&
+    schema.schemas?.length
+  ) {
+    const first = schema.schemas[0]!;
+    return generateValue({ ...prop, type: first.type, schema: first }, schemas);
   }
 
   if (schema.isEnum && schema.enum) {
@@ -67,7 +81,7 @@ export const generateValue = (
 
   if (schema.type === 'array' && schema.items) {
     const itemSchema = schema.items;
-    if (itemSchema.name && schemas.some((s) => s.name === itemSchema.name)) {
+    if (isSchemaReference(itemSchema, schemas)) {
       return `faker.helpers.multiple(() => generate${toPascalCase(itemSchema.name!)}(), { count: 3 })`;
     }
     if (itemSchema.type === 'object' && itemSchema.properties) {
@@ -76,7 +90,17 @@ export const generateValue = (
         .join(', ');
       return `faker.helpers.multiple(() => ({ ${inlineFields} }), { count: 3 })`;
     }
-    const itemValue = typeMap[itemSchema.type] ?? 'faker.lorem.word()';
+    // back through the value generator rather than a bare type lookup: an array
+    // of enums was typed as `string[]` against a literal union
+    const itemValue = generateValue(
+      {
+        name: prop.name,
+        required: true,
+        type: itemSchema.type,
+        schema: itemSchema,
+      },
+      schemas,
+    );
     return `faker.helpers.multiple(() => ${itemValue}, { count: 3 })`;
   }
 

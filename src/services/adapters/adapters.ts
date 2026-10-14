@@ -85,12 +85,18 @@ const axiosAdapter: Adapter = (
 
 const kyAdapter: Adapter = (
   method,
-  { url, type, client, hasQuery, hasBody, hasHeaders },
+  { url, type, client, hasQuery, hasBody, hasHeaders, queryFormats },
 ) => {
   const parse = `.json<${type}>()`;
   const opts: string[] = [];
   if (BODY_METHODS.has(method) && hasBody) opts.push('json: body');
-  if (hasQuery) opts.push('searchParams: params');
+  // ky's `searchParams` is a flat record of scalars, so a nested object or an
+  // array parameter does not fit — the same `toQuery` the fetch path uses turns
+  // it into a string, which ky also accepts.
+  if (hasQuery) {
+    const args = queryFormats ? `params, ${queryFormats}` : 'params';
+    opts.push(`searchParams: toQuery(${args})`);
+  }
   if (hasHeaders) opts.push('headers');
 
   const args = opts.length > 0 ? `${url}, { ${opts.join(', ')} }` : url;
@@ -119,7 +125,10 @@ const wretchAdapter: Adapter = (
   if (hasQuery) chain.push('.query(params ?? {})');
   if (hasHeaders) chain.push('.headers(headers)');
   // wretch requires an explicit body call on write methods, even an empty one.
-  if (BODY_METHODS.has(method)) chain.push(`.json(${hasBody ? 'body' : '{}'})`);
+  // `.json()` takes an object, and an optional body arrives as `undefined` —
+  // the same gap `.query()` had.
+  if (BODY_METHODS.has(method))
+    chain.push(`.json(${hasBody ? 'body ?? {}' : '{}'})`);
   chain.push(`.${method}()`);
 
   return `${chain.join('')}.json<${type}>()`;

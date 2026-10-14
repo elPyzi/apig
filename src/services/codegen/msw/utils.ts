@@ -1,5 +1,5 @@
 import type { IROperation, ApigConfig } from '@models';
-import { toPascalCase } from '@libs/string';
+import { toPascalCase, toParamName } from '@libs/string';
 
 export const primitiveMap: Record<string, string> = {
   string: 'faker.lorem.word()',
@@ -11,7 +11,11 @@ export const hasFakerPlugin = (config: ApigConfig): boolean =>
   (config.plugins ?? []).some((p) => p.name === 'faker');
 
 export const toMswPath = (path: string, baseUrl?: string): string => {
-  const mswPath = path.replace(/\{(\w+)\}/g, ':$1');
+  // same `\w` gap as the URL builder had: a dashed placeholder stayed literal
+  const mswPath = path.replace(
+    /\{([^}]+)\}/g,
+    (_, n: string) => `:${toParamName(n)}`,
+  );
   return baseUrl ? `${baseUrl}${mswPath}` : mswPath;
 };
 

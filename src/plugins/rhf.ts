@@ -9,7 +9,12 @@ import {
   banner,
   DEFAULTS,
 } from '@models';
-import { toPascalCase, toCamelCase, getRootPluginImport } from '../libs';
+import {
+  toPascalCase,
+  toCamelCase,
+  getRootPluginImport,
+  findRecursiveSchemas,
+} from '../libs';
 
 const RESOLVER_META: Record<RhfResolver, { pkg: string; fn: string }> = {
   zod: { pkg: '@hookform/resolvers/zod', fn: 'zodResolver' },
@@ -28,8 +33,14 @@ export const generateRhf = (
     opts.schemasImportPath ??
     getRootPluginImport(config, opts.resolver, 'root');
 
-  const schemas = ir.schemas.filter((s): s is IRSchema & { name: string } =>
-    Boolean(s.name),
+  // A resolver only makes sense for a form, so only object schemas get one.
+  // Recursive ones are excluded too: they are annotated with the base schema
+  // type so their laziness type-checks, and the resolvers reject that in favour
+  // of a concrete object schema.
+  const recursive = findRecursiveSchemas(ir.schemas);
+  const schemas = ir.schemas.filter(
+    (s): s is IRSchema & { name: string } =>
+      Boolean(s.name) && s.type === 'object' && !recursive.has(s.name!),
   );
 
   const schemaNames = schemas.map((s) => `${toPascalCase(s.name)}${suffix}`);

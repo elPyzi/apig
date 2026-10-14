@@ -13,6 +13,7 @@ import {
   toPascalCase,
   hasFakerPlugin,
   getTypesImport,
+  getParamTypeNames,
   getErrorConfig,
   getRootPluginImport,
   needsQueryHelper,
@@ -149,6 +150,7 @@ export const generatePlaywright = (
 
   const usedTypes = new Set<string>();
   for (const op of ir.operations) {
+    for (const name of getParamTypeNames(op, ir.schemas)) usedTypes.add(name);
     if (!rawResponse) {
       if (op.response?.name) usedTypes.add(toPascalCase(op.response.name));
       if (op.response?.items?.name)

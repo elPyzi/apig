@@ -5,16 +5,15 @@ import {
   type ApigPlugin,
   type PluginResult,
   type McpOptions,
-  NAMING_CASES,
   DEFAULTS,
   banner,
 } from '@models';
 import {
-  CaseFns,
   logger,
   getRootPluginImport,
   findPlugin,
   generateMcpTool,
+  getFunctionName,
   operationSchemaRefs,
   toPascalCase,
 } from '../libs';
@@ -78,8 +77,7 @@ export const generateMcp = (
     );
   }
 
-  const fnNaming = CaseFns[config?.functionNaming ?? NAMING_CASES.CAMEL];
-  const requestsFns = operations.map((op) => fnNaming(op.id));
+  const requestsFns = operations.map((op) => getFunctionName(op, config));
 
   const schemaRefs = new Set<string>();
   for (const op of operations) operationSchemaRefs(op, ir.schemas, schemaRefs);
