@@ -42,6 +42,8 @@ apig generate --watch      # watch mode
 apig generate -c ./path/to/config.ts
 
 apig versions              # list saved snapshots
+apig cache status          # show what is cached
+apig cache clear           # drop the cache so the next run parses again
 apig version checkout <id|alias>  # regenerate from snapshot
 apig info                  # show resolved config and spec summary
 apig config                # show current config
@@ -63,7 +65,7 @@ apig config                # show current config
 | `endpointsMap` | `boolean` | Generate `endpoints.ts` with typed path constants |
 | `index` | `boolean` | Control `index.ts` re-export generation |
 | `formatter` | `'prettier' \| 'biome' \| 'oxfmt' \| 'none'` | Format generated files |
-| `cache` | `boolean` | Cache spec with ETag to avoid re-downloading |
+| `cache` | `boolean \| { ttl, maxEntries }` | Cache the parsed IR on disk. `ttl` is an amount and a unit (`30s`, `15m`, `12h`, `7d`); `maxEntries` bounds how many are kept. Both omitted means entries never expire and are never evicted |
 | `versioning` | `VersioningConfig` | Snapshot-based versioning of generated IR |
 | `hooks` | `{ afterAllFilesWrite?: string }` | Shell command after generation |
 
