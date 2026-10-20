@@ -160,8 +160,5 @@
     "@playwright/test": {
       "optional": true
     }
-  },
-  "overrides": {
-    "zod": "4.5.4"
   }
 }
