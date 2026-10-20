@@ -1,0 +1,17 @@
+{
+  "components": {
+    "schemas": {
+      "Tag": {
+        "type": "object",
+        "properties": { "label": { "type": "string" } }
+      },
+      "Node": {
+        "type": "object",
+        "properties": {
+          "child": { "$ref": "#/components/schemas/Node" },
+          "tag": { "$ref": "#/components/schemas/Tag" }
+        }
+      }
+    }
+  }
+}

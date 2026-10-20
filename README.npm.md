@@ -54,6 +54,8 @@ apig generate           # generate code
 apig generate --watch   # watch mode
 apig generate --dry-run # preview without writing
 apig versions           # list saved snapshots
+apig cache status       # show what is cached
+apig cache clear        # drop the cache so the next run parses again
 apig info               # show spec stats without generating
 ```
 

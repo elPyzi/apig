@@ -24,7 +24,16 @@ import {
   playwright,
 } from '@plugins';
 
+/**
+ * Spawning tsc over a whole generated tree takes longer than bun's default 5s
+ * per-test budget, and hitting that budget kills the child with no diagnostics
+ * — which reads as an unexplained compile failure rather than a timeout.
+ */
+const COMPILE_TIMEOUT_MS = 120_000;
+
 const SPEC = 'examples/petstore/openapi.json';
+const EDGE_SPEC = 'examples/edge-cases/openapi.json';
+const SPLIT_SPEC = 'examples/external-refs/openapi.json';
 
 /**
  * Packages the generated code is allowed to import. Anything else that is not a
@@ -146,8 +155,15 @@ const compileGenerated = (outDir: string): void => {
       { encoding: 'utf-8', stdio: 'pipe' },
     );
   } catch (e) {
-    const { stdout } = e as { stdout: string };
-    throw new Error(`generated code does not compile:\n${stdout}`);
+    const { stdout, stderr, message } = e as {
+      stdout?: string;
+      stderr?: string;
+      message?: string;
+    };
+    // stdout carries tsc's diagnostics; an empty one means tsc itself failed to
+    // run, and only the error says why
+    const detail = stdout?.trim() || stderr?.trim() || message || 'unknown';
+    throw new Error(`generated code does not compile:\n${detail}`);
   }
 };
 
@@ -203,9 +219,13 @@ describe('generated output', () => {
       expect(aliased).toEqual([]);
     });
 
-    test('every generated file compiles under strict TypeScript', () => {
-      compileGenerated(outDir);
-    });
+    test(
+      'every generated file compiles under strict TypeScript',
+      () => {
+        compileGenerated(outDir);
+      },
+      COMPILE_TIMEOUT_MS,
+    );
   });
 
   describe('swr, flat layout', () => {
@@ -222,9 +242,13 @@ describe('generated output', () => {
       expect(brokenImports(outDir)).toEqual([]);
     });
 
-    test('every generated file compiles under strict TypeScript', () => {
-      compileGenerated(outDir);
-    });
+    test(
+      'every generated file compiles under strict TypeScript',
+      () => {
+        compileGenerated(outDir);
+      },
+      COMPILE_TIMEOUT_MS,
+    );
   });
 
   // Root-scoped plugins once built their import paths as if they were nested,
@@ -255,9 +279,13 @@ describe('generated output', () => {
         expect(brokenImports(outDir)).toEqual([]);
       });
 
-      test('every generated file compiles under strict TypeScript', () => {
-        compileGenerated(outDir);
-      });
+      test(
+        'every generated file compiles under strict TypeScript',
+        () => {
+          compileGenerated(outDir);
+        },
+        COMPILE_TIMEOUT_MS,
+      );
     },
   );
 
@@ -299,9 +327,122 @@ describe('generated output', () => {
       writeFileSync(join(outDir, 'client.ts'), stub, 'utf-8');
     });
 
-    test('the generated calls compile against the real client', () => {
-      compileGenerated(outDir);
+    test(
+      'the generated calls compile against the real client',
+      () => {
+        compileGenerated(outDir);
+      },
+      COMPILE_TIMEOUT_MS,
+    );
+  });
+
+  /**
+   * A spec built out of the shapes that are legal in OpenAPI and illegal in
+   * TypeScript, collected from a real API whose generated output would not
+   * compile: an `operationId` that is a reserved word, parameter names that are
+   * not identifiers, a schema with no body, and schemas that reference each
+   * other out of declaration order.
+   */
+  describe('hostile spec', () => {
+    let outDir: string;
+
+    beforeAll(async () => {
+      outDir = join(root, 'edge-cases');
+      await generate(outDir, {
+        input: EDGE_SPEC,
+        plugins: [typescript(), requests(), zod({ withTypes: false }), swr()],
+      });
     });
+
+    test('a reserved word operationId is escaped, not declared bare', () => {
+      const code = readFileSync(join(outDir, 'requests.ts'), 'utf-8');
+      expect(code).toContain('export const _delete =');
+      expect(code).not.toContain('export const delete =');
+    });
+
+    test('parameter names that are not identifiers are quoted', () => {
+      const code = readFileSync(join(outDir, 'requests.ts'), 'utf-8');
+      expect(code).toContain("'employee-search-form-selection': string");
+      expect(code).toContain("'2fa'?: string");
+    });
+
+    test('a schema with no body still gets a declaration', () => {
+      const code = readFileSync(join(outDir, 'zod.ts'), 'utf-8');
+      expect(code).toContain('export const BareSchema =');
+    });
+
+    test('an aliased schema keeps its own name', () => {
+      const code = readFileSync(join(outDir, 'zod.ts'), 'utf-8');
+      expect(code).toContain('export const EnvelopeSchema = PayloadSchema;');
+    });
+
+    test('every schema is declared before it is used', () => {
+      const code = readFileSync(join(outDir, 'zod.ts'), 'utf-8');
+      const declaredAt = new Map<string, number>();
+      code.split('\n').forEach((line, i) => {
+        const m = /^export const (\w+Schema) =/.exec(line);
+        if (m) declaredAt.set(m[1]!, i);
+      });
+
+      const used: string[] = [];
+      code.split('\n').forEach((line, i) => {
+        if (line.startsWith('export const')) return;
+        for (const [name, at] of declaredAt) {
+          if (line.includes(name) && at > i) used.push(`${name} at line ${i}`);
+        }
+      });
+
+      expect(used).toEqual([]);
+    });
+
+    test('a property is not mistaken for a same-named schema', () => {
+      const code = readFileSync(join(outDir, 'zod.ts'), 'utf-8');
+      // `status` is both a declared component and an ordinary property key here
+      expect(code).toContain("status: z.enum(['PUBLIC', 'UNPUBLIC'])");
+      expect(code).toContain('code: z.number()');
+      expect(code).toContain('filter: StatusSchema');
+    });
+
+    test('a path parameter is renamed to something declarable', () => {
+      const code = readFileSync(join(outDir, 'requests.ts'), 'utf-8');
+      expect(code).toContain('nodeId: string');
+      expect(code).toContain('_2nd: number');
+      expect(code).not.toContain('{node-id}');
+    });
+
+    test('a recursive schema is annotated so its type resolves', () => {
+      const code = readFileSync(join(outDir, 'zod.ts'), 'utf-8');
+      expect(code).toContain('export const NodeSchema: z.ZodType<Node> =');
+      expect(code).toContain('parent: z.lazy(() => NodeSchema)');
+    });
+
+    test('mutually recursive schemas are lazy on both sides', () => {
+      const code = readFileSync(join(outDir, 'zod.ts'), 'utf-8');
+      expect(code).toContain('right: z.lazy(() => RightSchema)');
+      expect(code).toContain('left: z.lazy(() => LeftSchema)');
+    });
+
+    test('operationIds that normalize to one name are made unique', () => {
+      const code = readFileSync(join(outDir, 'requests.ts'), 'utf-8');
+      // listJobsX, list_jobs_x and list-jobs-x are one identifier otherwise
+      expect(code).toContain('export const listJobsX =');
+      expect(code).toContain('export const listJobsX2 =');
+      expect(code).toContain('export const listJobsX3 =');
+    });
+
+    test('a response body is awaited, not returned as a promise', () => {
+      const code = readFileSync(join(outDir, 'requests.ts'), 'utf-8');
+      expect(code).toContain('return (await r.json())');
+      expect(code).not.toContain('as Promise<');
+    });
+
+    test(
+      'every generated file compiles under strict TypeScript',
+      () => {
+        compileGenerated(outDir);
+      },
+      COMPILE_TIMEOUT_MS,
+    );
   });
 
   describe('type ownership', () => {
@@ -391,9 +532,13 @@ describe('generated output', () => {
       expect(types).toContain(`Widget: 'widget'`);
     });
 
-    test('the whole thing compiles under strict TypeScript', () => {
-      compileGenerated(outDir);
-    });
+    test(
+      'the whole thing compiles under strict TypeScript',
+      () => {
+        compileGenerated(outDir);
+      },
+      COMPILE_TIMEOUT_MS,
+    );
   });
 
   describe('3.1 tuples', () => {
@@ -419,9 +564,13 @@ describe('generated output', () => {
       );
     });
 
-    test('the whole thing compiles under strict TypeScript', () => {
-      compileGenerated(outDir);
-    });
+    test(
+      'the whole thing compiles under strict TypeScript',
+      () => {
+        compileGenerated(outDir);
+      },
+      COMPILE_TIMEOUT_MS,
+    );
   });
 
   describe('query parameter styles', () => {
@@ -496,9 +645,64 @@ describe('generated output', () => {
       expect(toQuery({ tags: ['x', null, 'y'] })).toBe('?tags=x&tags=y');
     });
 
-    test('the whole thing compiles under strict TypeScript', () => {
-      compileGenerated(outDir);
+    test(
+      'the whole thing compiles under strict TypeScript',
+      () => {
+        compileGenerated(outDir);
+      },
+      COMPILE_TIMEOUT_MS,
+    );
+  });
+
+  /**
+   * A spec split across files. The parser hands the entrypoint back untouched,
+   * so a `$ref` into a neighbouring file used to name a schema that was never
+   * declared — the generated code imported a type that did not exist.
+   */
+  describe('spec split across files', () => {
+    let outDir: string;
+
+    beforeAll(async () => {
+      outDir = join(root, 'external-refs');
+      await generate(outDir, {
+        input: SPLIT_SPEC,
+        plugins: [typescript(), requests(), zod({ withTypes: false })],
+      });
     });
+
+    test('a schema from another file is declared, not just referenced', () => {
+      const types = readFileSync(join(outDir, 'types.ts'), 'utf-8');
+      expect(types).toContain('export type Pet = {');
+      expect(types).toContain('export type Node = {');
+    });
+
+    test('a name the entrypoint already uses is not overwritten', () => {
+      const types = readFileSync(join(outDir, 'types.ts'), 'utf-8');
+      // the root declares its own `Tag`; the shared file's is a different shape
+      expect(types).toContain('localOnly?: boolean');
+      expect(types).toContain('label?: string');
+    });
+
+    test('one file reached by two spellings is hoisted once', () => {
+      const types = readFileSync(join(outDir, 'types.ts'), 'utf-8');
+      // `./models/shared.json` from the root and `./shared.json` from its
+      // sibling are the same file, so its `Tag` gets one declaration
+      const declarations = types.match(/^export type Tag\d* = \{/gm) ?? [];
+      expect(declarations).toHaveLength(2);
+    });
+
+    test('a schema that reaches itself across files stays recursive', () => {
+      const code = readFileSync(join(outDir, 'zod.ts'), 'utf-8');
+      expect(code).toContain('z.lazy(() => NodeSchema)');
+    });
+
+    test(
+      'the whole thing compiles under strict TypeScript',
+      () => {
+        compileGenerated(outDir);
+      },
+      COMPILE_TIMEOUT_MS,
+    );
   });
 
   describe('fetch query params', () => {

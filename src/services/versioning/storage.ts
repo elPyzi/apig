@@ -70,8 +70,7 @@ export class VersionStorage {
     this.ensureRoot();
 
     const date = new Date(params.metadata.createdAt);
-    const dateStr = formatDate(date);
-    const folderName = `${params.snapshotId} - ${dateStr}`;
+    const folderName = `${params.snapshotId} - ${formatFolderDate(date)}`;
     const dir = join(this.root, folderName);
 
     mkdirSync(dir, { recursive: true });
@@ -232,6 +231,16 @@ export class VersionStorage {
     return match.name;
   }
 }
+
+/**
+ * The same instant, safe as a directory name.
+ *
+ * `formatDate` separates hours from minutes with a colon, which Windows forbids
+ * in a path — a snapshot directory could not be created there at all. Only the
+ * prefix before " - " is parsed back, so the date form is free to differ.
+ */
+export const formatFolderDate = (date: Date): string =>
+  formatDate(date).replace(':', '-');
 
 export const formatDate = (date: Date): string => {
   const dd = String(date.getDate()).padStart(2, '0');

@@ -6,6 +6,7 @@ import { toMessage } from '@libs/error';
 import { registerInfoCommand } from './commands/info';
 import { registerConfigCommand } from './commands/config';
 import { registerVersionsCommands } from './commands/versions';
+import { registerCacheCommands } from './commands/cache';
 import { runStart } from './start';
 import { logger } from '@libs/logger';
 import { getVersion } from '@constants';
@@ -22,6 +23,7 @@ registerGenerateCommand(program);
 registerInfoCommand(program);
 registerConfigCommand(program);
 registerVersionsCommands(program);
+registerCacheCommands(program);
 
 program
   .command('start')

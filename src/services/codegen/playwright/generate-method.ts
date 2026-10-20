@@ -78,7 +78,7 @@ export const generatePlaywrightMethod = (
   const method = toHttpMethodLower(operation.method);
   const url = getUrl(operation.path, baseUrl);
   const responseType = getResponseType(operation.response, allSchemas);
-  const args = getPlaywrightArgs(operation);
+  const args = getPlaywrightArgs(operation, allSchemas);
   const argsList = buildArgsList(args);
   const call = `ctx.${method}(${url}${buildRequestOptions(operation)})`;
 

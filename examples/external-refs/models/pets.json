@@ -1,0 +1,15 @@
+{
+  "components": {
+    "schemas": {
+      "Pet": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "integer" },
+          "tag": { "$ref": "./shared.json#/components/schemas/Tag" },
+          "tree": { "$ref": "./shared.json#/components/schemas/Node" }
+        }
+      }
+    }
+  }
+}

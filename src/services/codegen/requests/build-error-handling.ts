@@ -14,7 +14,9 @@ export const buildErrorHandlingBody = (
     return [
       `  const r = await ${bare};`,
       `  if (!r.ok) throw new ${errorClass}(r.status, await parseErrorBody(r));`,
-      `  return r.json() as Promise<${responseType}>;`,
+      // awaited rather than returned as a promise: the raw-response path
+      // already does, and an IDE flags every generated function otherwise
+      `  return (await r.json()) as ${responseType};`,
     ].join('\n');
   }
   if (client === HTTP_CLIENTS.AXIOS) {

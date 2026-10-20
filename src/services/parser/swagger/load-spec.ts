@@ -5,51 +5,13 @@ import { upgrade } from '@scalar/openapi-upgrader';
 import type { OpenAPIV3 } from 'openapi-types';
 import { logger } from '@libs/logger';
 import type { ApigConfig, LoadSpecResult } from '@models';
+import { bundleExternalRefs } from './bundle-external';
 
 const isSwagger2 = (spec: Record<string, unknown>): boolean =>
   typeof spec.swagger === 'string' && spec.swagger.startsWith('2.');
 
 const convertToV3 = (spec: Record<string, unknown>): Record<string, unknown> =>
   upgrade(spec, '3.0') as Record<string, unknown>;
-
-export const loadSpecFromText = async (
-  text: string,
-  _config: ApigConfig,
-): Promise<LoadSpecResult> => {
-  const loaded = await load(text, { plugins: [fetchUrls(), readFiles()] });
-
-  if (loaded.errors?.length) {
-    throw new Error(
-      `Failed to load specification: ${loaded.errors.map((e) => e.message).join(', ')}`,
-    );
-  }
-
-  let filesystem = loaded.filesystem;
-
-  const raw = loaded.specification as Record<string, unknown>;
-  if (isSwagger2(raw)) {
-    const converted = convertToV3(raw);
-    const reloaded = await load(JSON.stringify(converted));
-    filesystem = reloaded.filesystem;
-  }
-
-  const { specification, errors } = dereference(filesystem);
-
-  if (errors?.length) {
-    logger.warn(
-      `${errors.length} unresolvable $ref(s) in specification — affected fields will be typed as unknown`,
-    );
-  }
-
-  const spec = specification as unknown as OpenAPIV3.Document;
-
-  const schemaNames = new Map<object, string>();
-  for (const [name, s] of Object.entries(spec.components?.schemas ?? {})) {
-    schemaNames.set(s as object, name);
-  }
-
-  return { spec, schemaNames };
-};
 
 export const loadSpec = async (config: ApigConfig): Promise<LoadSpecResult> => {
   const input =
@@ -64,6 +26,10 @@ export const loadSpec = async (config: ApigConfig): Promise<LoadSpecResult> => {
   }
 
   let filesystem = loaded.filesystem;
+
+  // before the 2.0 upgrade, which reloads from a serialized document and so
+  // leaves the neighbouring files behind
+  bundleExternalRefs(filesystem);
 
   const raw = loaded.specification as Record<string, unknown>;
   if (isSwagger2(raw)) {

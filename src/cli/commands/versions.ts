@@ -45,7 +45,7 @@ export const registerVersionsCommands = (program: Command): void => {
       const storage = getStorage(storagePath);
       const list = storage.listWithMeta(pinVersions);
       if (list.length === 0) {
-        logger.info('No snapshots found.');
+        logger.plain('No snapshots found.');
         return;
       }
       console.log(

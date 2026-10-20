@@ -1,13 +1,11 @@
 import { getAdapter } from '@services/adapters';
 import {
-  NAMING_CASES,
   HTTP_CLIENTS,
   toHttpMethodLower,
   type ApigConfig,
   type IROperation,
   type IRSchema,
 } from '@models';
-import { CaseFns } from '@libs/string';
 import { getArgs } from '@services/codegen/common/get-args';
 import { buildArgsList } from '@services/codegen/common/build-args';
 import {
@@ -22,6 +20,7 @@ import { getErrorConfig } from '@services/codegen/common/get-error-config';
 import { buildErrorHandlingBody } from './build-error-handling';
 import { buildRawResponseBody } from './build-raw-response';
 import { buildMultipartBody } from './build-multipart';
+import { getFunctionName } from '@services/codegen/common/get-function-name';
 
 export const generateFunction = (
   operation: IROperation,
@@ -30,13 +29,11 @@ export const generateFunction = (
   baseUrl: string,
   config: ApigConfig,
 ): string => {
-  const fnName = CaseFns[config?.functionNaming ?? NAMING_CASES.CAMEL](
-    operation.id,
-  );
+  const fnName = getFunctionName(operation, config);
   const method = toHttpMethodLower(operation.method);
   const url = getUrl(operation.path, baseUrl);
   const responseType = getResponseType(operation.response, allSchemas);
-  const args = getArgs(operation);
+  const args = getArgs(operation, allSchemas);
   const adapter = getAdapter(config);
   const isMultipart = operation.body?.contentType === 'multipart';
   const httpClient = config.httpClient?.name ?? HTTP_CLIENTS.FETCH;
@@ -55,6 +52,7 @@ export const generateFunction = (
   if (
     queryFormats &&
     httpClient !== HTTP_CLIENTS.FETCH &&
+    httpClient !== HTTP_CLIENTS.KY &&
     hasCustomQueryFormat(operation.params.query)
   ) {
     logger.warn(
@@ -81,13 +79,14 @@ export const generateFunction = (
       ? url.slice(0, -1) + '${toQuery(' + queryArgs + ')}`'
       : url;
     // no Content-Type here on purpose — the runtime sets it with the multipart boundary
-    const fetchCall = `fetch(${urlExpr}, { method: '${method.toUpperCase()}', body: _fd${hasHeaders ? ', headers' : ''} }).then(r => r.json() as Promise<${responseType}>)`;
+    const fetchCall = `fetch(${urlExpr}, { method: '${method.toUpperCase()}', body: _fd${hasHeaders ? ', headers' : ''} })`;
 
     if (config.apiLogging) {
       return [
         `${doc}export const ${fnName} = async (${argsList}): Promise<${returnType}> => {`,
         fdSetup,
-        `  const response = await ${fetchCall};`,
+        `  const r = await ${fetchCall};`,
+        `  const response = (await r.json()) as ${responseType};`,
         `  console.log('${fnName}', response);`,
         `  return response;`,
         `};`,
@@ -96,7 +95,8 @@ export const generateFunction = (
     return [
       `${doc}export const ${fnName} = async (${argsList}): Promise<${returnType}> => {`,
       fdSetup,
-      `  return ${fetchCall};`,
+      `  const r = await ${fetchCall};`,
+      `  return (await r.json()) as ${responseType};`,
       `};`,
     ].join('\n');
   }

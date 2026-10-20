@@ -1,12 +1,13 @@
 import {
   GROUP_BY,
-  NAMING_CASES,
   type ApigConfig,
   type IR,
   type IROperation,
+  type IRSchema,
 } from '@models';
-import { CaseFns, capitalize, toCamelCase, toPascalCase } from '@libs/string';
+import { capitalize, toCamelCase, toPascalCase } from '@libs/string';
 import { getArgs, type FnArg } from '@services/codegen/common/get-args';
+import { getFunctionName } from '@services/codegen/common/get-function-name';
 
 /** Playwright's own shape for a file field inside `multipart`. */
 export const PLAYWRIGHT_FILE_TYPE =
@@ -22,8 +23,11 @@ const BROWSER_FILE_TYPE = 'File | Blob';
  * browser and takes `File | Blob`, while Playwright runs in Node and wants the
  * `{ name, mimeType, buffer }` form its `multipart` option accepts.
  */
-export const getPlaywrightArgs = (operation: IROperation): FnArg[] =>
-  getArgs(operation).map((arg) =>
+export const getPlaywrightArgs = (
+  operation: IROperation,
+  allSchemas: IRSchema[] = [],
+): FnArg[] =>
+  getArgs(operation, allSchemas).map((arg) =>
     arg.type === BROWSER_FILE_TYPE
       ? { ...arg, type: PLAYWRIGHT_FILE_TYPE }
       : arg,
@@ -78,7 +82,7 @@ export const buildNames = (
 export const getMethodName = (
   operation: IROperation,
   config: ApigConfig,
-): string => CaseFns[config.functionNaming ?? NAMING_CASES.CAMEL](operation.id);
+): string => getFunctionName(operation, config);
 
 export const hasQueryParams = (operations: IROperation[]): boolean =>
   operations.some((op) => op.params.query.length > 0);

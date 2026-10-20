@@ -1,12 +1,7 @@
-import {
-  NAMING_CASES,
-  type ApigConfig,
-  type IROperation,
-  type IRSchema,
-} from '@models';
-import { CaseFns } from '@libs/string';
+import { type ApigConfig, type IROperation, type IRSchema } from '@models';
 import { getArgs } from '@services/codegen/common/get-args';
 import { buildInputSchema } from './input-schema';
+import { getFunctionName } from '@services/codegen/common/get-function-name';
 
 /** MCP tool names are restricted to word characters and dashes. */
 export const toToolName = (id: string): string =>
@@ -30,12 +25,10 @@ export const generateMcpTool = (
   config: ApigConfig,
   schemaSuffix: string,
 ): string => {
-  const fnName = CaseFns[config?.functionNaming ?? NAMING_CASES.CAMEL](
-    operation.id,
-  );
+  const fnName = getFunctionName(operation, config);
   const inputSchema = buildInputSchema(operation, allSchemas, schemaSuffix);
   // the input shape mirrors the request function's signature, so the arguments forward as-is
-  const args = getArgs(operation);
+  const args = getArgs(operation, allSchemas);
   const destructured = args.map((a) => a.name).join(', ');
   const callArgs = args.map((a) => a.name).join(', ');
   const handlerArg = args.length > 0 ? `{ ${destructured} }` : '';

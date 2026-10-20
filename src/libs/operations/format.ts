@@ -36,20 +36,24 @@ export const formatFiles = (outputPath: string, formatter: Formatter): void => {
     return;
   }
 
+  // `--no-install` on purpose: without it npx downloads a missing formatter from
+  // the registry mid-generation, which is a surprising thing for a code
+  // generator to do and hangs outright when offline. Failing instead reaches the
+  // catch below, which says what to install.
   try {
     switch (formatter) {
       case FORMATTERS.PRETTIER:
-        execSync(`npx prettier --write "${outputPath}/**/*.ts"`, {
+        execSync(`npx --no-install prettier --write "${outputPath}/**/*.ts"`, {
           stdio: 'pipe',
         });
         break;
       case FORMATTERS.BIOME:
-        execSync(`npx biome format --write "${outputPath}"`, {
+        execSync(`npx --no-install biome format --write "${outputPath}"`, {
           stdio: 'pipe',
         });
         break;
       case FORMATTERS.OXFMT:
-        execSync(`npx oxfmt "${outputPath}"`, { stdio: 'pipe' });
+        execSync(`npx --no-install oxfmt "${outputPath}"`, { stdio: 'pipe' });
         break;
     }
     logger.plugin('writer', 'Formatting done');

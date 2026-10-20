@@ -23,5 +23,12 @@ export const generateFakerFactory = (
     return `export const ${fnName} = (): ${name} => ({\n${fields}\n});`;
   }
 
-  return '';
+  // Arrays, primitives and schemas the spec left empty used to produce nothing
+  // at all, while every factory referencing them still called them by name.
+  // The list excludes this schema so the value does not resolve to itself.
+  const value = generateValue(
+    { name: schema.name, required: true, type: schema.type, schema },
+    allSchemas.filter((s) => s !== schema),
+  );
+  return `export const ${fnName} = (): ${name} => ${value};`;
 };

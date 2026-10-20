@@ -74,6 +74,20 @@ export const NAMING_CASES = {
 export type NamingCase = (typeof NAMING_CASES)[keyof typeof NAMING_CASES];
 
 /**
+ * Conventions a function may be named with.
+ *
+ * `kebab-case` is not an identifier at all, and `PascalCase` puts the function
+ * in the same namespace as the generated type names — `checkPassPermissions`
+ * and a `CheckPassPermissions` schema become one declaration.
+ */
+export const FUNCTION_NAMING_CASES = [
+  NAMING_CASES.CAMEL,
+  NAMING_CASES.SNAKE,
+] as const;
+
+export type FunctionNamingCase = (typeof FUNCTION_NAMING_CASES)[number];
+
+/**
  * Controls how generated files are grouped.
  * - `none`: all files in a single directory
  * - `tags`: files grouped by OpenAPI tags
@@ -163,6 +177,28 @@ export interface Versioning {
    * Examples: "v{apiVersion}-gen{generation}", "{date}-{generation}"
    */
   aliasTemplate?: string;
+}
+
+export interface CacheConfig {
+  /**
+   * How long an entry stays usable, as an amount and a unit — `30s`, `15m`,
+   * `12h`, `7d`. Expired entries are removed on the next run.
+   *
+   * Omitted means an entry never expires on its own: it is replaced when the
+   * spec changes and discarded when apig is upgraded, but nothing else ages it
+   * out.
+   * @example ttl: "7d"
+   */
+  ttl?: string;
+  /**
+   * How many entries to keep — one per spec. The oldest are removed once the
+   * count goes over.
+   *
+   * Omitted means no limit, so a project that generates from many specs keeps
+   * an entry for each of them.
+   * @example maxEntries: 20
+   */
+  maxEntries?: number;
 }
 
 /**
@@ -325,7 +361,7 @@ export interface ApigConfig {
    * Naming convention for generated request function names.
    * @default "camelCase"
    */
-  functionNaming?: NamingCase;
+  functionNaming?: FunctionNamingCase;
 
   /**
    * Snapshot versioning — saves IR and spec snapshots for diffing and rollback.
@@ -348,9 +384,14 @@ export interface ApigConfig {
   /**
    * Cache the parsed IR on disk (.apig/cache). On repeated runs, skips parsing
    * if the spec has not changed (uses ETag for URLs, hash for local files).
+   *
+   * Passing an object turns the cache on as well, so `cache: { ttl: "7d" }`
+   * needs no separate flag.
    * @default false
+   * @example cache: true
+   * @example cache: { ttl: "12h" }
    */
-  cache?: boolean;
+  cache?: boolean | CacheConfig;
 
   /**
    * Add `console.log(functionName, response)` to each generated request function.
@@ -360,7 +401,7 @@ export interface ApigConfig {
 
   /**
    * Configure CLI logging verbosity.
-   * @default { level: "normal" }
+   * @default { level: "minimal" }
    */
   cliLogging?: LoggingConfig;
 

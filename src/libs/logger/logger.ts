@@ -96,8 +96,20 @@ class Logger {
     console.log('');
   }
 
+  /** Progress during generation — silenced at the minimal level. */
   info(message: string): void {
     this.stage(message);
+  }
+
+  /**
+   * The answer to a command the user typed.
+   *
+   * Not a log line: `apig cache status` exists to print this, so the generation
+   * log level has no say in it. Routing these through `info` made three
+   * commands print nothing at all under the default level.
+   */
+  plain(message: string): void {
+    console.log(message);
   }
 
   title(message: string): void {

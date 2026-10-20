@@ -1,1 +1,1 @@
-export { loadSpec, loadSpecFromText } from './load-spec';
+export { loadSpec } from './load-spec';

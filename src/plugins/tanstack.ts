@@ -10,9 +10,10 @@ import {
   DEFAULTS,
 } from '@models';
 import {
-  toCamelCase,
   toPascalCase,
   getTypesImport,
+  getParamTypeNames,
+  getFunctionName,
   getErrorConfig,
   buildTanstackImports,
   generateQueryKeyFn,
@@ -64,8 +65,8 @@ export const tanstackQuery = (
   };
 
   if (opts.queryKeysStyle === 'object') {
-    plugin.generateRootFiles = (ir): ExtraFile[] => [
-      { fileName: 'query-keys.ts', code: generateQueryKeysFile(ir) },
+    plugin.generateRootFiles = (ir, config): ExtraFile[] => [
+      { fileName: 'query-keys.ts', code: generateQueryKeysFile(config, ir) },
     ];
   }
 
@@ -96,7 +97,8 @@ export const generateTanstack = (
   const rawResponse = config.rawResponse === true;
 
   for (const op of ir.operations) {
-    requestsFunctions.push(toCamelCase(op.id));
+    for (const name of getParamTypeNames(op, ir.schemas)) usedTypes.add(name);
+    requestsFunctions.push(getFunctionName(op, config));
     if (op.response?.name) usedTypes.add(toPascalCase(op.response.name));
     if (op.response?.items?.name)
       usedTypes.add(toPascalCase(op.response.items.name));
@@ -192,12 +194,12 @@ export const generateTanstack = (
       ? (strategy.suspense ?? false)
       : isGet && opts.suspense && opts.query;
 
-    const name = toCamelCase(op.id);
+    const name = getFunctionName(op, config);
     const pascalName = toPascalCase(op.id);
 
     if (genQuery) {
       if (style === 'functions') {
-        lines.push(generateQueryKeyFn(op));
+        lines.push(generateQueryKeyFn(config, op));
         lines.push('');
       }
       lines.push(
@@ -205,6 +207,7 @@ export const generateTanstack = (
           op,
           ir.schemas,
           style,
+          config,
           errorHandling,
           rawResponse,
           errCfg.className,
@@ -221,7 +224,14 @@ export const generateTanstack = (
 
     if (genInfinite) {
       lines.push(
-        generateInfiniteQuery(op, ir.schemas, style, errCfg.className, fw),
+        generateInfiniteQuery(
+          op,
+          ir.schemas,
+          style,
+          config,
+          errCfg.className,
+          fw,
+        ),
       );
       lines.push('');
       exports.push(`${fw.exportPrefix}Infinity${pascalName}Query`);
@@ -232,6 +242,7 @@ export const generateTanstack = (
         generateSuspenseQuery(
           op,
           ir.schemas,
+          config,
           errorHandling,
           errCfg.className,
           fw,
@@ -246,6 +257,7 @@ export const generateTanstack = (
         generateTanstackMutation(
           op,
           ir.schemas,
+          config,
           errorHandling,
           rawResponse,
           errCfg.className,

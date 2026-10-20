@@ -11,9 +11,10 @@ import {
   DEFAULTS,
 } from '@models';
 import {
-  toCamelCase,
   toPascalCase,
   getTypesImport,
+  getParamTypeNames,
+  getFunctionName,
   getErrorConfig,
   generateSwrKeyFn,
   generateSwrQueryHook,
@@ -54,8 +55,8 @@ export const swr = (options: SwrOptions = {}): ApigPlugin => {
   };
 
   if (style === 'object') {
-    plugin.generateRootFiles = (ir): ExtraFile[] => [
-      { fileName: 'swr-keys.ts', code: generateSwrKeysFile(ir) },
+    plugin.generateRootFiles = (ir, config): ExtraFile[] => [
+      { fileName: 'swr-keys.ts', code: generateSwrKeysFile(config, ir) },
     ];
   }
 
@@ -92,7 +93,9 @@ export const generateSwr = (
     return s ? (s.mutation ?? false) : op.method !== HTTP_METHODS.GET;
   });
 
-  const requestsFunctions = ir.operations.map((op) => toCamelCase(op.id));
+  const requestsFunctions = ir.operations.map((op) =>
+    getFunctionName(op, config),
+  );
   const requestsErrorTypes = errCfg.enabled
     ? ir.operations
         .filter((op) => op.errors?.length)
@@ -101,6 +104,7 @@ export const generateSwr = (
 
   const usedTypes = new Set<string>();
   for (const op of ir.operations) {
+    for (const name of getParamTypeNames(op, ir.schemas)) usedTypes.add(name);
     if (op.response?.name) usedTypes.add(toPascalCase(op.response.name));
     if (op.response?.items?.name)
       usedTypes.add(toPascalCase(op.response.items.name));
@@ -110,7 +114,10 @@ export const generateSwr = (
   const lines: string[] = [banner, ''];
 
   if (framework === 'vue') {
-    if (queryOps.length > 0) lines.push(`import useSWRV from 'swrv';`);
+    if (queryOps.length > 0) {
+      lines.push(`import useSWRV from 'swrv';`);
+      lines.push(`import type { IConfig } from 'swrv';`);
+    }
     if (mutationOps.length > 0) lines.push(`import { mutate } from 'swrv';`);
   } else {
     if (mutationOps.length > 0) {
@@ -166,18 +173,20 @@ export const generateSwr = (
 
   for (const op of queryOps) {
     if (style === 'functions') {
-      lines.push(generateSwrKeyFn(op));
+      lines.push(generateSwrKeyFn(config, op));
       lines.push('');
-      exports.push(`${toCamelCase(op.id)}SwrKey`);
+      exports.push(`${getFunctionName(op, config)}SwrKey`);
     }
     lines.push(
       generateSwrQueryHook(
         op,
         ir.schemas,
         style,
+        config,
         errorHandling,
         rawResponse,
         errCfg.className,
+        framework,
       ),
     );
     lines.push('');
@@ -189,9 +198,11 @@ export const generateSwr = (
       generateSwrMutationHook(
         op,
         ir.schemas,
+        config,
         errorHandling,
         rawResponse,
         errCfg.className,
+        framework,
       ),
     );
     lines.push('');

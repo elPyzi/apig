@@ -5,3 +5,9 @@ export { toCamelCase } from '@libs/string/to-camel-case';
 export { toKebabCase } from '@libs/string/to-kebab-case';
 export { toSnakeCase } from '@libs/string/to-snake-case';
 export { CaseFns } from '@libs/string/case-fns';
+export {
+  isValidIdentifier,
+  quoteKey,
+  escapeReservedWord,
+  toParamName,
+} from '@libs/string/identifier';

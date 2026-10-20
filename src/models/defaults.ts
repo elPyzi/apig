@@ -6,6 +6,7 @@ import type {
   YupOptions,
   FakerOptions,
 } from './plugin';
+import { LOG_LEVELS } from './config';
 import type { ApigConfig } from './config';
 
 export const DEFAULTS = {
@@ -26,7 +27,9 @@ export const DEFAULTS = {
     apiLogging: false,
     rawResponse: false,
     errorHandling: true,
-    cliLogging: { level: 'normal' },
+    // `minimal` is what the CLI has always done — the constant said `normal`
+    // but nothing read it, so the writer's own fallback was the real default
+    cliLogging: { level: LOG_LEVELS.MINIMAL },
   } satisfies Partial<ApigConfig>,
 
   PLUGINS: {
