@@ -3,6 +3,8 @@ import {
   isValidIdentifier,
   quoteKey,
   escapeReservedWord,
+  enumMemberKey,
+  toStringLiteral,
 } from '@libs/string/identifier';
 
 describe('isValidIdentifier', () => {
@@ -60,5 +62,26 @@ describe('escapeReservedWord', () => {
   test('leaves a name that merely contains a reserved word alone', () => {
     expect(escapeReservedWord('undelete')).toBe('undelete');
     expect(escapeReservedWord('renew')).toBe('renew');
+  });
+});
+
+describe('toStringLiteral', () => {
+  test('escapes quotes and backslashes', () => {
+    expect(toStringLiteral("it's")).toBe("'it\\'s'");
+    expect(toStringLiteral('a\\b')).toBe("'a\\\\b'");
+  });
+});
+
+describe('enumMemberKey', () => {
+  test('keeps a value that PascalCases into an identifier bare', () => {
+    expect(enumMemberKey('in progress')).toBe('InProgress');
+  });
+
+  test('quotes free text that does not', () => {
+    expect(enumMemberKey('1 (першы) квартал')).toBe("'1(першы)Квартал'");
+  });
+
+  test('prefixes a numeric name, which a TS enum rejects even quoted', () => {
+    expect(enumMemberKey('1')).toBe('_1');
   });
 });

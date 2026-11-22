@@ -1,10 +1,6 @@
 import type { IROperation, IRProperty, IRSchema } from '@models';
 import { generateZodValue } from '@services/codegen/zod/generate-zod-schema';
-
-const VALID_IDENTIFIER = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
-
-const quoteKey = (name: string): string =>
-  VALID_IDENTIFIER.test(name) ? name : `'${name}'`;
+import { quoteKey, toParamName } from '@libs/string';
 
 const optional = (expr: string, required: boolean): string =>
   required ? expr : `${expr}.optional()`;
@@ -16,6 +12,18 @@ const zodFor = (
 ): string =>
   schema ? generateZodValue(schema, allSchemas, suffix) : 'z.unknown()';
 
+/**
+ * A parameter declared with `content` instead of `schema` carries its value
+ * serialized — a JSON string in the query — and the request function types it
+ * as `string`; the tool input has to agree, or the handler cannot forward it.
+ */
+const paramZod = (
+  param: IRProperty,
+  allSchemas: IRSchema[],
+  suffix: string,
+): string =>
+  param.schema ? zodFor(param.schema, allSchemas, suffix) : 'z.string()';
+
 const objectOf = (
   props: IRProperty[],
   allSchemas: IRSchema[],
@@ -24,7 +32,7 @@ const objectOf = (
   const fields = props
     .map(
       (p) =>
-        `${quoteKey(p.name)}: ${optional(zodFor(p.schema, allSchemas, suffix), p.required)}`,
+        `${quoteKey(p.name)}: ${optional(paramZod(p, allSchemas, suffix), p.required)}`,
     )
     .join(', ');
   return `z.object({ ${fields} })`;
@@ -44,9 +52,11 @@ export const buildInputSchema = (
 ): string => {
   const entries: string[] = [];
 
+  // keyed by the request function's parameter name, which the handler
+  // destructures — `structure-type` is `structureType` there
   for (const param of operation.params.path) {
     entries.push(
-      `${quoteKey(param.name)}: ${zodFor(param.schema, allSchemas, suffix)}`,
+      `${toParamName(param.name)}: ${paramZod(param, allSchemas, suffix)}`,
     );
   }
 

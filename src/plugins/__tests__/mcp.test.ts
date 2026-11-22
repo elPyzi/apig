@@ -225,4 +225,44 @@ describe('mcp', () => {
       );
     });
   });
+
+  describe('parameter names', () => {
+    test('a hyphenated path parameter is keyed like the handler destructures it', () => {
+      const op = makeOperation({
+        id: 'getMap',
+        path: '/maps/{structure-type}',
+        params: {
+          path: [
+            {
+              name: 'structure-type',
+              required: true,
+              type: 'string',
+              schema: { type: 'string' },
+            },
+          ],
+          query: [],
+          header: [],
+        },
+      });
+      const code = generateMcp(makeIR([op]), withDeps()).code;
+
+      expect(code).toContain('inputSchema: { structureType: z.string() }');
+      expect(code).toContain('async ({ structureType }) =>');
+    });
+
+    test('a content-encoded parameter is a string, as in the request function', () => {
+      const op = makeOperation({
+        id: 'search',
+        params: {
+          path: [],
+          query: [{ name: 'filter', required: true, type: '' as never }],
+          header: [],
+        },
+      });
+
+      expect(generateMcp(makeIR([op]), withDeps()).code).toContain(
+        'params: z.object({ filter: z.string() })',
+      );
+    });
+  });
 });

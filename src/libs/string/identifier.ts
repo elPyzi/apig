@@ -1,4 +1,5 @@
 import { toCamelCase } from '@libs/string/to-camel-case';
+import { toPascalCase } from '@libs/string/to-pascal-case';
 
 /**
  * Words that cannot be bound with `const` in a module. Includes the strict-mode
@@ -66,7 +67,24 @@ export const isValidIdentifier = (name: string): boolean =>
  * are syntax errors as a bare key.
  */
 export const quoteKey = (name: string): string =>
-  isValidIdentifier(name) ? name : `'${name}'`;
+  isValidIdentifier(name) ? name : toStringLiteral(name);
+
+/** A single-quoted string literal, with the quote and backslash escaped. */
+export const toStringLiteral = (value: string): string =>
+  `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+
+/**
+ * The member name an enum value is written under, in a const object or a TS
+ * `enum`.
+ *
+ * Enum values are free text — `1 (першы) квартал` PascalCases to
+ * `1(першы)Квартал`, which is no identifier, so it is quoted. A purely numeric
+ * name is prefixed instead: TypeScript rejects `'1'` as an enum member name.
+ */
+export const enumMemberKey = (value: string): string => {
+  const key = toPascalCase(value) || '_';
+  return quoteKey(/^\d+(\.\d+)?$/.test(key) ? `_${key}` : key);
+};
 
 /**
  * A name safe to bind with `const`.

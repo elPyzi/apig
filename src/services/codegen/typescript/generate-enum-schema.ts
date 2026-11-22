@@ -1,5 +1,5 @@
 import { ENUM_STYLES, type ApigConfig, type IRSchema } from '@models';
-import { toPascalCase } from '@libs/string';
+import { enumMemberKey, toPascalCase, toStringLiteral } from '@libs/string';
 import { buildJsDoc } from '@services/codegen/common/jsdoc';
 
 export const generateEnumSchema = (
@@ -13,20 +13,20 @@ export const generateEnumSchema = (
   const doc = buildJsDoc({ description: schema.description });
 
   if (style === ENUM_STYLES.UNION) {
-    const values = schema.enum.map((v) => `'${v}'`).join(' | ');
+    const values = schema.enum.map((v) => toStringLiteral(v)).join(' | ');
     return `${doc}export type ${name} = ${values};`;
   }
 
   if (style === ENUM_STYLES.ENUM) {
     const members = schema.enum
-      .map((v) => `  ${toPascalCase(v)} = '${v}'`)
+      .map((v) => `  ${enumMemberKey(v)} = ${toStringLiteral(v)}`)
       .join(',\n');
     return `${doc}export enum ${name} {\n${members}\n}`;
   }
 
   if (style === ENUM_STYLES.CONST) {
     const members = schema.enum
-      .map((v) => `  ${toPascalCase(v)}: '${v}'`)
+      .map((v) => `  ${enumMemberKey(v)}: ${toStringLiteral(v)}`)
       .join(',\n');
     return [
       `${doc}export const ${name} = {\n${members}\n} as const;`,

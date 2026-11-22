@@ -97,6 +97,30 @@ describe('typescript', () => {
   });
 
   describe('enum schema', () => {
+    test('a value that is no identifier is quoted, in const and enum styles', () => {
+      const ir = makeIR(
+        [],
+        [
+          makeSchema({
+            name: 'Period',
+            type: 'string',
+            isEnum: true,
+            enum: ['1 (першы) квартал', "it's"],
+          }),
+        ],
+      );
+      const asConst = generateTypes(ir, { ...baseConfig, enumStyle: 'const' });
+      const asEnum = generateTypes(ir, { ...baseConfig, enumStyle: 'enum' });
+
+      expect(asConst.code).toContain(
+        "  '1(першы)Квартал': '1 (першы) квартал',",
+      );
+      expect(asConst.code).toContain("'it\\'s'");
+      expect(asEnum.code).toContain(
+        "  '1(першы)Квартал' = '1 (першы) квартал',",
+      );
+    });
+
     test('union style (default) generates a type union', () => {
       const ir = makeIR(
         [],
