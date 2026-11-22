@@ -18,6 +18,7 @@ export {
   type GenerationStats,
   type FakerLocale,
   type CacheConfig,
+  type SpecAuth,
   type FilterConfig,
   type Formatter,
   type GroupBy,
@@ -33,7 +34,12 @@ export {
   type TypeStyle,
 } from './config';
 
-export { HTTP_METHODS, toHttpMethodLower, QUERY_STYLES } from './ir';
+export {
+  HTTP_METHODS,
+  toHttpMethodLower,
+  isReadMethod,
+  QUERY_STYLES,
+} from './ir';
 export type { QueryStyle } from './ir';
 
 export type {

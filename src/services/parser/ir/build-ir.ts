@@ -24,7 +24,10 @@ export const buildIR = (
     if (!pathItem) continue;
 
     for (const method of methods) {
-      const operation = pathItem[method];
+      // `query` is an OpenAPI 3.2 path item field openapi-types does not know yet
+      const operation = (
+        pathItem as Record<string, OpenAPIV3.OperationObject | undefined>
+      )[method];
       if (!operation) continue;
 
       const errors = buildErrors(operation, schemaNames);

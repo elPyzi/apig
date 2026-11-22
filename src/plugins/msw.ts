@@ -4,6 +4,7 @@ import {
   type ApigPlugin,
   type PluginResult,
   banner,
+  HTTP_METHODS,
 } from '@models';
 import {
   logger,
@@ -40,11 +41,12 @@ export const generateMsw = (ir: IR, config: ApigConfig): PluginResult => {
   const usedGenerators = getMswUsedGenerators(ir.operations);
   const needsFaker = getMswNeedsFaker(ir.operations);
 
-  const lines: string[] = [
-    banner,
-    '',
-    "import { http, HttpResponse } from 'msw';",
-  ];
+  const mswImports = ir.operations.some(
+    (op) => op.method === HTTP_METHODS.QUERY,
+  )
+    ? 'http, HttpHandler, HttpResponse'
+    : 'http, HttpResponse';
+  const lines: string[] = [banner, '', `import { ${mswImports} } from 'msw';`];
 
   if (needsFaker) lines.push("import { faker } from '@faker-js/faker';");
 

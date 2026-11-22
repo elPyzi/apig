@@ -69,6 +69,23 @@ describe('buildIR', () => {
       expect(methods).toContain('POST');
     });
 
+    test('an OpenAPI 3.2 query operation is kept, not dropped', () => {
+      const result = buildIR(
+        makeSpec({
+          '/search': {
+            get: { operationId: 'listItems', responses: {} },
+            query: { operationId: 'searchItems', responses: {} },
+          },
+        } as never),
+        schemaNames,
+      );
+
+      expect(result.operations.map((o) => [o.id, o.method])).toEqual([
+        ['listItems', 'GET'],
+        ['searchItems', 'QUERY'],
+      ]);
+    });
+
     test('several paths become several operations', () => {
       const result = buildIR(
         makeSpec({

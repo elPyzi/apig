@@ -22,7 +22,12 @@ export interface AdapterCtx {
 /** Builds the request expression for a single operation. */
 export type Adapter = (method: HttpMethodLower, ctx: AdapterCtx) => string;
 
-const BODY_METHODS = new Set<HttpMethodLower>(['post', 'put', 'patch']);
+const BODY_METHODS = new Set<HttpMethodLower>([
+  'post',
+  'put',
+  'patch',
+  'query',
+]);
 
 /**
  * Appends the query string inside the URL template literal.
@@ -71,6 +76,14 @@ const axiosAdapter: Adapter = (
   if (hasHeaders) config.push('headers');
   const configArg = config.length > 0 ? `{ ${config.join(', ')} }` : '';
 
+  // axios has no `.query()` shorthand, so QUERY goes through `request`
+  if (method === 'query') {
+    const fields = [`method: 'QUERY'`, `url: ${url}`];
+    if (hasBody) fields.push('data: body');
+    fields.push(...config);
+    return `${client}.request<${type}>({ ${fields.join(', ')} })`;
+  }
+
   if (!BODY_METHODS.has(method)) {
     return `${client}.${method}<${type}>(${url}${configArg ? `, ${configArg}` : ''})`;
   }
@@ -99,6 +112,11 @@ const kyAdapter: Adapter = (
   }
   if (hasHeaders) opts.push('headers');
 
+  // ky 1.x has no `.query()` shorthand; calling the instance works on every version
+  if (method === 'query') {
+    return `${client}(${url}, { ${[`method: 'QUERY'`, ...opts].join(', ')} })${parse}`;
+  }
+
   const args = opts.length > 0 ? `${url}, { ${opts.join(', ')} }` : url;
   return `${client}.${method}(${args})${parse}`;
 };
@@ -108,6 +126,18 @@ const ofetchAdapter: Adapter = (
   { url, type, client, hasQuery, hasBody, hasHeaders },
 ) => {
   const opts = [`method: '${method.toUpperCase()}'`];
+  // ofetch serializes a body only for POST/PUT/PATCH/DELETE — a QUERY body
+  // would be sent as "[object Object]"
+  if (method === 'query') {
+    if (hasBody) {
+      opts.push('body: JSON.stringify(body)');
+      opts.push(
+        `headers: { 'Content-Type': 'application/json'${hasHeaders ? ', ...headers' : ''} }`,
+      );
+    } else if (hasHeaders) opts.push('headers');
+    if (hasQuery) opts.push('query: params');
+    return `${client}<${type}>(${url}, { ${opts.join(', ')} })`;
+  }
   if (BODY_METHODS.has(method) && hasBody) opts.push('body');
   if (hasQuery) opts.push('query: params');
   if (hasHeaders) opts.push('headers');
@@ -123,13 +153,16 @@ const wretchAdapter: Adapter = (
   // wretch's `.query()` takes `string | object`, so an operation whose query
   // parameters are all optional would otherwise pass it `undefined`.
   if (hasQuery) chain.push('.query(params ?? {})');
-  if (hasHeaders) chain.push('.headers(headers)');
+  // header parameters are optional more often than not, and `.headers()`
+  // takes a HeadersInit, which `undefined` is not
+  if (hasHeaders) chain.push('.headers(headers ?? {})');
   // wretch requires an explicit body call on write methods, even an empty one.
   // `.json()` takes an object, and an optional body arrives as `undefined` —
   // the same gap `.query()` had.
   if (BODY_METHODS.has(method))
     chain.push(`.json(${hasBody ? 'body ?? {}' : '{}'})`);
-  chain.push(`.${method}()`);
+  // wretch has no `.query()` verb — its `.query()` sets the query string
+  chain.push(method === 'query' ? `.fetch('QUERY')` : `.${method}()`);
 
   return `${chain.join('')}.json<${type}>()`;
 };

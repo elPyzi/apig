@@ -7,7 +7,7 @@ import {
   type SwrFramework,
   type IR,
   banner,
-  HTTP_METHODS,
+  isReadMethod,
   DEFAULTS,
 } from '@models';
 import {
@@ -86,11 +86,11 @@ export const generateSwr = (
 
   const queryOps = ir.operations.filter((op) => {
     const s = hookGenerationStrategies[op.id];
-    return s ? (s.query ?? false) : op.method === HTTP_METHODS.GET;
+    return s ? (s.query ?? false) : isReadMethod(op.method);
   });
   const mutationOps = ir.operations.filter((op) => {
     const s = hookGenerationStrategies[op.id];
-    return s ? (s.mutation ?? false) : op.method !== HTTP_METHODS.GET;
+    return s ? (s.mutation ?? false) : !isReadMethod(op.method);
   });
 
   const requestsFunctions = ir.operations.map((op) =>

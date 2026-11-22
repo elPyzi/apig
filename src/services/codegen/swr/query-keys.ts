@@ -1,5 +1,5 @@
 import {
-  HTTP_METHODS,
+  isReadMethod,
   banner,
   type ApigConfig,
   type IR,
@@ -49,7 +49,7 @@ export const buildSwrKeyExpr = (
 };
 
 export const generateSwrKeysFile = (config: ApigConfig, ir: IR): string => {
-  const getOps = ir.operations.filter((op) => op.method === HTTP_METHODS.GET);
+  const getOps = ir.operations.filter((op) => isReadMethod(op.method));
   const entries = getOps.map((op) => buildSwrKeyEntry(config, op)).join('\n');
   return [banner, '', 'export const swrKeys = {', entries, '};', ''].join('\n');
 };

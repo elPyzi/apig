@@ -115,12 +115,52 @@ describe('adapters', () => {
           ctx({ hasBody: true, hasQuery: true, hasHeaders: true }),
         ),
       ).toBe(
-        'api.url(`/pets/${id}`).query(params ?? {}).headers(headers).json(body ?? {}).post().json<Pet>()',
+        'api.url(`/pets/${id}`).query(params ?? {}).headers(headers ?? {}).json(body ?? {}).post().json<Pet>()',
       );
     });
 
     test('a write method always sends a body, even an empty one', () => {
       expect(wretch('post', ctx())).toContain('.json({})');
+    });
+  });
+
+  describe('QUERY', () => {
+    const full = ctx({ hasBody: true, hasQuery: true, hasHeaders: true });
+
+    test('fetch sends the method with a JSON body', () => {
+      expect(getAdapterByName('fetch')('query', full)).toContain(
+        `{ method: 'QUERY', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json', ...headers } }`,
+      );
+    });
+
+    test('axios goes through request, having no query shorthand', () => {
+      expect(getAdapterByName('axios')('query', full)).toBe(
+        "api.request<Pet>({ method: 'QUERY', url: `/pets/${id}`, data: body, params, headers })",
+      );
+    });
+
+    test('ky calls the instance with the method', () => {
+      expect(getAdapterByName('ky')('query', full)).toBe(
+        "api(`/pets/${id}`, { method: 'QUERY', json: body, searchParams: toQuery(params), headers }).json<Pet>()",
+      );
+    });
+
+    test('ofetch serializes the body itself', () => {
+      expect(getAdapterByName('ofetch')('query', full)).toBe(
+        "api<Pet>(`/pets/${id}`, { method: 'QUERY', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json', ...headers }, query: params })",
+      );
+    });
+
+    test('ofetch without a body sends no content type', () => {
+      expect(getAdapterByName('ofetch')('query', ctx())).toBe(
+        "api<Pet>(`/pets/${id}`, { method: 'QUERY' })",
+      );
+    });
+
+    test('wretch uses fetch, since its .query() sets the query string', () => {
+      expect(getAdapterByName('wretch')('query', full)).toBe(
+        "api.url(`/pets/${id}`).query(params ?? {}).headers(headers ?? {}).json(body ?? {}).fetch('QUERY').json<Pet>()",
+      );
     });
   });
 

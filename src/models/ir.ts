@@ -4,6 +4,7 @@ export const HTTP_METHODS = {
   PUT: 'PUT',
   PATCH: 'PATCH',
   DELETE: 'DELETE',
+  QUERY: 'QUERY',
 } as const;
 
 export type HttpMethod = (typeof HTTP_METHODS)[keyof typeof HTTP_METHODS];
@@ -11,6 +12,13 @@ export type HttpMethodLower = Lowercase<HttpMethod>;
 
 export const toHttpMethodLower = (method: HttpMethod): HttpMethodLower =>
   method.toLowerCase() as HttpMethodLower;
+
+/**
+ * Safe, cacheable methods — read with query hooks rather than mutations.
+ * QUERY is GET with a request body, so it belongs here too.
+ */
+export const isReadMethod = (method: HttpMethod): boolean =>
+  method === HTTP_METHODS.GET || method === HTTP_METHODS.QUERY;
 
 export type IRType =
   | 'string'

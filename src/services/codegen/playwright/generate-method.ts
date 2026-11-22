@@ -38,7 +38,7 @@ const buildMultipartFields = (operation: IROperation): string[] => {
 };
 
 /** Request options passed to the Playwright call, in `ctx.post(url, { … })`. */
-const buildRequestOptions = (operation: IROperation): string => {
+const buildRequestOptions = (operation: IROperation): string[] => {
   const parts: string[] = [];
 
   if (operation.params.query.length > 0) {
@@ -57,7 +57,7 @@ const buildRequestOptions = (operation: IROperation): string => {
     parts.push(`headers: ${TO_HEADERS_FN}(headers)`);
   }
 
-  return parts.length > 0 ? `, { ${parts.join(', ')} }` : '';
+  return parts;
 };
 
 /**
@@ -80,7 +80,11 @@ export const generatePlaywrightMethod = (
   const responseType = getResponseType(operation.response, allSchemas);
   const args = getPlaywrightArgs(operation, allSchemas);
   const argsList = buildArgsList(args);
-  const call = `ctx.${method}(${url}${buildRequestOptions(operation)})`;
+  const options = buildRequestOptions(operation);
+  // APIRequestContext has no `.query()`; `fetch` takes any method
+  if (method === 'query') options.unshift(`method: 'QUERY'`);
+  const target = method === 'query' ? 'fetch' : method;
+  const call = `ctx.${target}(${url}${options.length > 0 ? `, { ${options.join(', ')} }` : ''})`;
 
   const doc = buildJsDoc({
     description: operation.summary ?? operation.description,
