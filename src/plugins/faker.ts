@@ -5,7 +5,12 @@ import {
   type PluginResult,
   banner,
 } from '@models';
-import { toPascalCase, getTypesImport, generateFakerFactory } from '../libs';
+import {
+  toPascalCase,
+  getTypesImport,
+  generateFakerFactory,
+  findRecursiveSchemas,
+} from '../libs';
 
 /**
  * Generates Faker.js factories for all OpenAPI schemas.
@@ -39,8 +44,9 @@ export const generateFaker = (ir: IR, config: ApigConfig): PluginResult => {
     '',
   ];
 
+  const recursive = findRecursiveSchemas(ir.schemas);
   for (const schema of ir.schemas) {
-    const generated = generateFakerFactory(schema, ir.schemas);
+    const generated = generateFakerFactory(schema, ir.schemas, recursive);
     if (generated) {
       lines.push(generated);
       lines.push('');

@@ -18,6 +18,110 @@ describe('faker', () => {
     });
   });
 
+  describe('inline objects', () => {
+    test('an inline object property is built as an object, keys quoted', () => {
+      const headers = {
+        name: 'headers',
+        required: true,
+        type: 'object' as const,
+        schema: makeSchema({
+          type: 'object',
+          properties: [makeProp('X-Real-IP'), makeProp('count', 'number')],
+        }),
+      };
+      const result = generateFaker(makeUser(headers), baseConfig);
+
+      expect(result.code).toContain(
+        "headers: ({ 'X-Real-IP': faker.lorem.word(), count: faker.number.int() }),",
+      );
+    });
+
+    test('an object with only additionalProperties gets an empty one', () => {
+      const meta = {
+        name: 'meta',
+        required: true,
+        type: 'object' as const,
+        schema: makeSchema({ type: 'object' }),
+      };
+      expect(generateFaker(makeUser(meta), baseConfig).code).toContain(
+        'meta: ({}),',
+      );
+    });
+
+    test('a boolean named like a status stays a boolean', () => {
+      const result = generateFaker(
+        makeUser(makeProp('updateStatus', 'boolean')),
+        baseConfig,
+      );
+      expect(result.code).toContain('updateStatus: faker.datatype.boolean(),');
+    });
+  });
+
+  describe('recursive schemas', () => {
+    const ref = (name: string, required = true) => ({
+      name: name.toLowerCase(),
+      required,
+      type: 'object' as const,
+      schema: { type: 'object' as const, name },
+    });
+    const node = makeSchema({
+      name: 'Node',
+      type: 'object',
+      properties: [
+        {
+          name: 'children',
+          required: true,
+          type: 'array',
+          schema: { type: 'array', items: { type: 'object', name: 'Node' } },
+        },
+        { ...ref('Node', false), name: 'parent' },
+      ],
+    });
+
+    test('a self-referencing factory counts depth and cuts arrays and optional fields', () => {
+      const code = generateFaker(makeIR([], [node]), baseConfig).code;
+
+      expect(code).toContain(
+        'export const generateNode = (depth = 0): Node => ({',
+      );
+      expect(code).toContain(
+        'children: (depth < 2 ? faker.helpers.multiple(() => generateNode(depth + 1), { count: 3 }) : []),',
+      );
+      expect(code).toContain(
+        'parent: depth < 2 ? generateNode(depth + 1) : undefined,',
+      );
+    });
+
+    test('a factory outside the cycle calls in without a depth', () => {
+      const leaf = makeSchema({
+        name: 'Leaf',
+        type: 'object',
+        properties: [ref('Node')],
+      });
+      const code = generateFaker(makeIR([], [node, leaf]), baseConfig).code;
+
+      expect(code).toContain('export const generateLeaf = (): Leaf => ({');
+      expect(code).toContain('  node: generateNode(),');
+    });
+
+    test('the generated factory terminates', () => {
+      const code = generateFaker(makeIR([], [node]), baseConfig).code;
+      const body = code.slice(code.indexOf('export const generateNode'));
+      const fakerStub = {
+        helpers: {
+          multiple: (fn: () => unknown, o: { count: number }) =>
+            Array.from({ length: o.count }, fn),
+        },
+      };
+      const run = new Function(
+        'faker',
+        `${body.replace('export const', 'const').replace(/\): Node =>/, ') =>')}; return generateNode();`,
+      );
+
+      expect(() => run(fakerStub)).not.toThrow();
+    });
+  });
+
   describe('empty IR', () => {
     test('contains the banner and the faker import', () => {
       const result = generateFaker(emptyIR, baseConfig);

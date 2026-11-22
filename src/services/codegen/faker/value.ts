@@ -1,5 +1,5 @@
 import type { IRSchema, IRProperty } from '@models';
-import { toPascalCase } from '@libs/string';
+import { quoteKey, toPascalCase, toStringLiteral } from '@libs/string';
 import { isSchemaReference } from '@services/codegen/common/schema-graph';
 
 export const typeMap: Record<string, string> = {
@@ -26,6 +26,62 @@ export const formatMap: Record<string, string> = {
   date: 'faker.date.past().toISOString().slice(0, 10)',
 };
 
+/** How many levels of a recursive schema a factory builds before stopping. */
+export const MAX_DEPTH = 2;
+
+/**
+ * Where a factory is being written. Inside the factory of a recursive schema
+ * there is a `depth` parameter, and calls to other factories in the cycle
+ * pass `depth + 1` along so the cycle can be cut.
+ */
+export interface FakerContext {
+  recursive: Set<string>;
+  guarded: boolean;
+}
+
+const NO_CONTEXT: FakerContext = { recursive: new Set(), guarded: false };
+
+const factoryCall = (name: string, ctx: FakerContext): string => {
+  const recurse = ctx.guarded && ctx.recursive.has(name);
+  return `generate${toPascalCase(name)}(${recurse ? 'depth + 1' : ''})`;
+};
+
+const recurses = (code: string): boolean => code.includes('(depth + 1)');
+
+/**
+ * Arrays and optional properties are the only places a cycle can end in a
+ * valid value, so that is where it is cut once `depth` runs out: an empty
+ * array, or the property left out. A cycle made only of required single
+ * references describes a value that cannot exist, and is left alone.
+ */
+export const cutArray = (expr: string): string =>
+  recurses(expr) ? `(depth < ${MAX_DEPTH} ? ${expr} : [])` : expr;
+
+export const fieldValue = (
+  prop: IRProperty,
+  schemas: IRSchema[],
+  ctx: FakerContext = NO_CONTEXT,
+): string => {
+  const value = generateValue(prop, schemas, ctx);
+  // an array already ends in `[]` at the limit, which an optional field accepts
+  const alreadyCut = value.startsWith('(depth < ');
+  return !prop.required && recurses(value) && !alreadyCut
+    ? `depth < ${MAX_DEPTH} ? ${value} : undefined`
+    : value;
+};
+
+/**
+ * An object literal for inline properties, parenthesized so it reads as an
+ * expression after an arrow too. Keys are quoted where needed: `X-Real-IP` and
+ * `content-type` are ordinary property names in a spec.
+ */
+export const objectLiteral = (
+  props: IRProperty[],
+  schemas: IRSchema[],
+  ctx: FakerContext = NO_CONTEXT,
+): string =>
+  `({ ${props.map((p) => `${quoteKey(p.name)}: ${fieldValue(p, schemas, ctx)}`).join(', ')} })`;
+
 /** `id`, `ownerId`, `user_id` — but not `video` or `width`. */
 const isIdName = (name: string): boolean =>
   name === 'id' || name.endsWith('id') || name.endsWith('_id');
@@ -33,13 +89,14 @@ const isIdName = (name: string): boolean =>
 export const generateValue = (
   prop: IRProperty,
   schemas: IRSchema[],
+  ctx: FakerContext = NO_CONTEXT,
 ): string => {
   const schema = prop.schema;
 
   if (!schema) return typeMap[prop.type] ?? 'faker.lorem.word()';
 
   if (isSchemaReference(schema, schemas)) {
-    return `generate${toPascalCase(schema.name!)}()`;
+    return factoryCall(schema.name!, ctx);
   }
 
   // A `$ref` often arrives wrapped in a single-member composition, and without
@@ -52,11 +109,15 @@ export const generateValue = (
     schema.schemas?.length
   ) {
     const first = schema.schemas[0]!;
-    return generateValue({ ...prop, type: first.type, schema: first }, schemas);
+    return generateValue(
+      { ...prop, type: first.type, schema: first },
+      schemas,
+      ctx,
+    );
   }
 
   if (schema.isEnum && schema.enum) {
-    const values = schema.enum.map((v) => `'${v}'`).join(', ');
+    const values = schema.enum.map((v) => toStringLiteral(v)).join(', ');
     return `faker.helpers.arrayElement([${values}])`;
   }
 
@@ -73,6 +134,7 @@ export const generateValue = (
             schema: member,
           },
           schemas,
+          ctx,
         ),
       )
       .join(', ');
@@ -82,13 +144,14 @@ export const generateValue = (
   if (schema.type === 'array' && schema.items) {
     const itemSchema = schema.items;
     if (isSchemaReference(itemSchema, schemas)) {
-      return `faker.helpers.multiple(() => generate${toPascalCase(itemSchema.name!)}(), { count: 3 })`;
+      return cutArray(
+        `faker.helpers.multiple(() => ${factoryCall(itemSchema.name!, ctx)}, { count: 3 })`,
+      );
     }
     if (itemSchema.type === 'object' && itemSchema.properties) {
-      const inlineFields = itemSchema.properties
-        .map((p) => `${p.name}: ${generateValue(p, schemas)}`)
-        .join(', ');
-      return `faker.helpers.multiple(() => ({ ${inlineFields} }), { count: 3 })`;
+      return cutArray(
+        `faker.helpers.multiple(() => ${objectLiteral(itemSchema.properties, schemas, ctx)}, { count: 3 })`,
+      );
     }
     // back through the value generator rather than a bare type lookup: an array
     // of enums was typed as `string[]` against a literal union
@@ -100,8 +163,17 @@ export const generateValue = (
         schema: itemSchema,
       },
       schemas,
+      ctx,
     );
-    return `faker.helpers.multiple(() => ${itemValue}, { count: 3 })`;
+    return cutArray(`faker.helpers.multiple(() => ${itemValue}, { count: 3 })`);
+  }
+
+  // an inline object is built field by field; one with no declared fields —
+  // a map typed only by additionalProperties — is satisfied by an empty one
+  if (schema.type === 'object') {
+    return schema.properties?.length
+      ? objectLiteral(schema.properties, schemas, ctx)
+      : '({})';
   }
 
   if (schema.format && formatMap[schema.format]) {
@@ -137,7 +209,7 @@ export const generateValue = (
       return 'faker.person.fullName()';
     case takesString && nameLower.includes('date'):
       return 'faker.date.past().toISOString()';
-    case nameLower.includes('status'):
+    case (takesString || takesNumber) && nameLower.includes('status'):
       return isNumeric ? 'faker.number.int()' : 'faker.lorem.word()';
     case takesNumber && isIdName(nameLower):
       return 'faker.number.int()';
