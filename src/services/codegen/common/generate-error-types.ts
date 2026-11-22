@@ -19,7 +19,7 @@ export const generateErrorType = (
     const bodyType = isDeclaredSchema(schema, allSchemas)
       ? toPascalCase(schema.name!)
       : generateTypeValue(schema, allSchemas);
-    return `  | { status: ${status}; body: ${bodyType} }`;
+    return `  | { status: ${status ?? 'number'}; body: ${bodyType} }`;
   });
 
   return `export type ${name} =\n${variants.join('\n')};`;

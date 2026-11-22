@@ -13,6 +13,7 @@ import {
   getTypesImport,
   topoSortSchemas,
   findRecursiveSchemas,
+  nativeEnumProps,
 } from '../libs';
 import type { YupOpts } from '../libs';
 
@@ -56,6 +57,14 @@ export const generateYup = (
     lines.push(
       `import type { ${names.join(', ')} } from '${getTypesImport(config, 'root')}';`,
     );
+    // validated against the enum itself, so needed as values, not just types
+    const enums = ir.schemas.flatMap((s) => [
+      ...nativeEnumProps(s, ir.schemas, config, recursive).values(),
+    ]);
+    if (enums.length > 0)
+      lines.push(
+        `import { ${enums.sort().join(', ')} } from '${getTypesImport(config, 'root')}';`,
+      );
   }
 
   lines.push('');

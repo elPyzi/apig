@@ -3,6 +3,8 @@ import { toPascalCase, quoteKey } from '@libs/string';
 import { generateSchema } from '@services/codegen/typescript/generate-schema';
 import { generateYupValue, generateYupProperty } from './value';
 import { generateYupEnum } from './enum';
+import { withNullable } from './primitives';
+import { nativeEnumProps } from '@services/codegen/typescript/inline-enum-names';
 
 export interface YupOpts {
   withTypes: boolean;
@@ -32,11 +34,18 @@ export const generateYupSchema = (
   const lines: string[] = [];
 
   if (schema.type === 'object' && schema.properties) {
+    const nativeEnums = nativeEnumProps(schema, allSchemas, config, recursive);
     const fields = schema.properties
-      .map(
-        (prop) =>
-          `  ${quoteKey(prop.name)}: ${generateYupProperty(prop, allSchemas, opts.schemaSuffix, recursive)},`,
-      )
+      .map((prop) => {
+        const enumName = nativeEnums.get(prop.name);
+        const value = enumName
+          ? withNullable(
+              `yup.mixed<${enumName}>().oneOf(Object.values(${enumName}) as ${enumName}[])`,
+              prop.schema!,
+            ) + (prop.required ? '.required()' : '.optional()')
+          : generateYupProperty(prop, allSchemas, opts.schemaSuffix, recursive);
+        return `  ${quoteKey(prop.name)}: ${value},`;
+      })
       .join('\n');
     lines.push(`export const ${varName}${ann} = yup.object({\n${fields}\n});`);
   } else {

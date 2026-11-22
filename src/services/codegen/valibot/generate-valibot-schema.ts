@@ -3,6 +3,8 @@ import { toPascalCase, quoteKey } from '@libs/string';
 import { generateSchema } from '@services/codegen/typescript/generate-schema';
 import { generateValibotValue, generateValibotProperty } from './value';
 import { generateValibotEnum } from './enum';
+import { withNullable } from './primitives';
+import { nativeEnumProps } from '@services/codegen/typescript/inline-enum-names';
 
 export interface ValibotOpts {
   withTypes: boolean;
@@ -32,11 +34,23 @@ export const generateValibotSchema = (
   const lines: string[] = [];
 
   if (schema.type === 'object' && schema.properties) {
+    const nativeEnums = nativeEnumProps(schema, allSchemas, config, recursive);
     const fields = schema.properties
-      .map(
-        (prop) =>
-          `  ${quoteKey(prop.name)}: ${generateValibotProperty(prop, allSchemas, opts.schemaSuffix, recursive)},`,
-      )
+      .map((prop) => {
+        const enumName = nativeEnums.get(prop.name);
+        let value: string;
+        if (enumName) {
+          value = withNullable(`v.enum(${enumName})`, prop.schema!);
+          if (!prop.required) value = `v.optional(${value})`;
+        } else
+          value = generateValibotProperty(
+            prop,
+            allSchemas,
+            opts.schemaSuffix,
+            recursive,
+          );
+        return `  ${quoteKey(prop.name)}: ${value},`;
+      })
       .join('\n');
     lines.push(`export const ${varName}${ann} = v.object({\n${fields}\n});`);
   } else {

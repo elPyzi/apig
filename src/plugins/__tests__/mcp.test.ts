@@ -265,4 +265,45 @@ describe('mcp', () => {
       );
     });
   });
+
+  describe('groupBy', () => {
+    const ir = makeIR([
+      makeOperation({ id: 'listPets', tag: 'pets', path: '/pets' }),
+      makeOperation({ id: 'getPet', tag: 'pets', path: '/pets/1' }),
+      makeOperation({ id: 'listOrders', tag: 'store.orders', path: '/orders' }),
+    ]);
+
+    test('without it, request functions come from the root file', () => {
+      expect(generateMcp(ir, withDeps()).code).toContain(
+        "import { listPets, getPet, listOrders } from './requests';",
+      );
+    });
+
+    test('each function comes from the file of its group', () => {
+      const tags = generateMcp(ir, withDeps({ groupBy: 'tags' })).code;
+      expect(tags).toContain(
+        "import { listPets, getPet } from './pets/pets.requests';",
+      );
+      expect(tags).toContain(
+        "import { listOrders } from './store.orders/store.orders.requests';",
+      );
+      expect(tags).not.toContain("from './requests'");
+
+      const ops = generateMcp(
+        ir,
+        withDeps({ groupBy: 'operations', fileNaming: 'PascalCase' }),
+      ).code;
+      expect(ops).toContain(
+        "import { listPets } from './ListPets/ListPets.requests';",
+      );
+
+      const endpoints = generateMcp(
+        ir,
+        withDeps({ groupBy: 'endpoints' }),
+      ).code;
+      expect(endpoints).toContain(
+        "import { getPet } from './pets/get-pet/get-pet.requests';",
+      );
+    });
+  });
 });

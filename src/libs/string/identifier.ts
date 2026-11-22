@@ -1,5 +1,5 @@
 import { toCamelCase } from '@libs/string/to-camel-case';
-import { toPascalCase } from '@libs/string/to-pascal-case';
+import { joinPascalWords } from '@libs/string/to-pascal-case';
 
 /**
  * Words that cannot be bound with `const` in a module. Includes the strict-mode
@@ -82,7 +82,9 @@ export const toStringLiteral = (value: string): string =>
  * name is prefixed instead: TypeScript rejects `'1'` as an enum member name.
  */
 export const enumMemberKey = (value: string): string => {
-  const key = toPascalCase(value) || '_';
+  // not toPascalCase: a member key may be quoted, so it keeps the punctuation
+  // that function strips — changing it would rename keys users already reference
+  const key = joinPascalWords(value) || '_';
   return quoteKey(/^\d+(\.\d+)?$/.test(key) ? `_${key}` : key);
 };
 

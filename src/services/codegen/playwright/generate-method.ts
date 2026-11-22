@@ -4,6 +4,7 @@ import {
   type IROperation,
   type IRSchema,
 } from '@models';
+import { quoteKey, toParamName } from '@libs/string';
 import { buildArgsList } from '@services/codegen/common/build-args';
 import { buildJsDoc } from '@services/codegen/common/jsdoc';
 import { getResponseType } from '@services/codegen/common/get-response-type';
@@ -23,14 +24,22 @@ export interface PlaywrightMethodOptions {
   rawResponse: boolean;
 }
 
-/** Field names posted through Playwright's `multipart` option. */
+/**
+ * Fields posted through Playwright's `multipart` option. The form field keeps
+ * the spec's name and takes the argument `getArgs` renamed it to, so
+ * `created-at` posts as `'created-at': createdAt`.
+ */
 const buildMultipartFields = (operation: IROperation): string[] => {
   const schema = operation.body?.schema;
 
   if (schema?.type === 'object' && schema.properties) {
     return [...schema.properties]
       .sort((a, b) => Number(b.required) - Number(a.required))
-      .map((prop) => prop.name);
+      .map((prop) => {
+        const key = quoteKey(prop.name);
+        const arg = toParamName(prop.name);
+        return key === arg ? key : `${key}: ${arg}`;
+      });
   }
 
   // octet-stream or bare binary — `getArgs` names the single argument `file`

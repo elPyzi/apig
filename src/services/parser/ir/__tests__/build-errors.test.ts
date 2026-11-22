@@ -147,4 +147,50 @@ describe('buildErrors', () => {
       expect(result).toEqual([]);
     });
   });
+
+  describe('keys that stand for many statuses', () => {
+    test('default has no single status, rather than NaN', () => {
+      const result = buildErrors(
+        makeOperation({
+          responses: {
+            '200': jsonResponse({ type: 'object' }),
+            default: jsonResponse({ type: 'object' }),
+          },
+        }),
+        schemaNames,
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0]!.status).toBeNull();
+    });
+
+    test('an error range has no single status', () => {
+      const result = buildErrors(
+        makeOperation({
+          responses: {
+            '4XX': jsonResponse({ type: 'object' }),
+            '5xx': jsonResponse({ type: 'object' }),
+          },
+        }),
+        schemaNames,
+      );
+
+      expect(result.map((e) => e.status)).toEqual([null, null]);
+    });
+
+    test('a success or redirect range is not an error', () => {
+      const result = buildErrors(
+        makeOperation({
+          responses: {
+            '2XX': jsonResponse({ type: 'object' }),
+            '3XX': jsonResponse({ type: 'object' }),
+            '302': jsonResponse({ type: 'object' }),
+          },
+        }),
+        schemaNames,
+      );
+
+      expect(result).toEqual([]);
+    });
+  });
 });

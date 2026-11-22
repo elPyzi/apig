@@ -22,6 +22,14 @@ export interface AdapterCtx {
 /** Builds the request expression for a single operation. */
 export type Adapter = (method: HttpMethodLower, ctx: AdapterCtx) => string;
 
+/**
+ * An operation whose success response declares no JSON body — a `204`, or a
+ * `200` with no content — is typed `void`. Its body is empty, and parsing an
+ * empty body as JSON throws `Unexpected end of JSON input`, so it is not parsed.
+ */
+export const NO_BODY = 'void';
+export const DISCARD_BODY = '.then(() => undefined)';
+
 const BODY_METHODS = new Set<HttpMethodLower>([
   'post',
   'put',
@@ -42,7 +50,10 @@ const fetchUrl = ({ url, hasQuery, queryFormats }: AdapterCtx): string => {
 };
 
 const fetchAdapter: Adapter = (method, ctx) => {
-  const parse = `.then(r => r.json() as Promise<${ctx.type}>)`;
+  const parse =
+    ctx.type === NO_BODY
+      ? DISCARD_BODY
+      : `.then(r => r.json() as Promise<${ctx.type}>)`;
   const url = fetchUrl(ctx);
 
   const init: string[] = [];
@@ -100,7 +111,7 @@ const kyAdapter: Adapter = (
   method,
   { url, type, client, hasQuery, hasBody, hasHeaders, queryFormats },
 ) => {
-  const parse = `.json<${type}>()`;
+  const parse = type === NO_BODY ? DISCARD_BODY : `.json<${type}>()`;
   const opts: string[] = [];
   if (BODY_METHODS.has(method) && hasBody) opts.push('json: body');
   // ky's `searchParams` is a flat record of scalars, so a nested object or an
@@ -164,7 +175,8 @@ const wretchAdapter: Adapter = (
   // wretch has no `.query()` verb — its `.query()` sets the query string
   chain.push(method === 'query' ? `.fetch('QUERY')` : `.${method}()`);
 
-  return `${chain.join('')}.json<${type}>()`;
+  const parse = type === NO_BODY ? `.res()${DISCARD_BODY}` : `.json<${type}>()`;
+  return `${chain.join('')}${parse}`;
 };
 
 const ADAPTERS: Record<HttpClients, Adapter> = {

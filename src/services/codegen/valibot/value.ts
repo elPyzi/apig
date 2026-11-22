@@ -1,5 +1,5 @@
 import type { IRSchema, IRProperty } from '@models';
-import { toPascalCase, quoteKey } from '@libs/string';
+import { toPascalCase, quoteKey, toStringLiteral } from '@libs/string';
 import { isSchemaReference } from '@services/codegen/common/schema-graph';
 import { valibotString, valibotNumber, withNullable } from './primitives';
 
@@ -33,7 +33,7 @@ export const generateValibotValue = (
   }
 
   if (schema.isEnum && schema.enum) {
-    const values = schema.enum.map((v) => `'${v}'`).join(', ');
+    const values = schema.enum.map((v) => toStringLiteral(v)).join(', ');
     return withNullable(`v.picklist([${values}])`, schema);
   }
 

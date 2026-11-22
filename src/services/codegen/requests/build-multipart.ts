@@ -1,4 +1,5 @@
 import { type IROperation } from '@models';
+import { toParamName, toStringLiteral } from '@libs/string';
 
 export const buildMultipartBody = (operation: IROperation): string => {
   const schema = operation.body!.schema;
@@ -9,12 +10,12 @@ export const buildMultipartBody = (operation: IROperation): string => {
       (a, b) => Number(b.required) - Number(a.required),
     );
     for (const prop of sorted) {
+      const field = toStringLiteral(prop.name);
+      const arg = toParamName(prop.name);
       if (prop.required) {
-        lines.push(`  _fd.append('${prop.name}', ${prop.name});`);
+        lines.push(`  _fd.append(${field}, ${arg});`);
       } else {
-        lines.push(
-          `  if (${prop.name} !== undefined) _fd.append('${prop.name}', ${prop.name});`,
-        );
+        lines.push(`  if (${arg} !== undefined) _fd.append(${field}, ${arg});`);
       }
     }
   } else {

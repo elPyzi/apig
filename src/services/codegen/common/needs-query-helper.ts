@@ -14,15 +14,26 @@ const serializesQueryItself = (config: ApigConfig): boolean => {
   return client === HTTP_CLIENTS.FETCH || client === HTTP_CLIENTS.KY;
 };
 
+/** A multipart body always goes out through the built-in fetch, whatever the client. */
+const isMultipart = (op: IR['operations'][number]): boolean =>
+  op.body?.contentType === 'multipart';
+
 export const needsQueryHelper = (ir: IR, config: ApigConfig): boolean =>
-  serializesQueryItself(config) &&
-  ir.operations.some((op) => op.params.query.length > 0);
+  ir.operations.some(
+    (op) =>
+      op.params.query.length > 0 &&
+      (serializesQueryItself(config) || isMultipart(op)),
+  );
 
 /**
- * The `parseErrorBody` helper is only used on the built-in fetch path — the
- * other clients surface the error body themselves.
+ * The `parseErrorBody` helper is used on the built-in fetch path — the other
+ * clients surface the error body themselves, except for a multipart request,
+ * which is sent through fetch for every client.
  */
 export const needsParseErrorHelper = (
+  ir: IR,
   config: ApigConfig,
   errorHandlingEnabled: boolean,
-): boolean => usesFetch(config) && errorHandlingEnabled;
+): boolean =>
+  errorHandlingEnabled &&
+  (usesFetch(config) || ir.operations.some(isMultipart));

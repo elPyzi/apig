@@ -1,11 +1,13 @@
 import { HTTP_CLIENTS } from '@models';
-
-const stripThen = (call: string): string =>
-  call.replace(/\.then\(r => r\.json\(\)[^)]*\)$/, '');
+import { DISCARD_BODY, NO_BODY } from '@services/adapters';
+import { stripThen } from './build-error-handling';
+import { KY_ERROR_BODY, returnLines } from './return-lines';
 
 // cut at the last `.json<` — the type argument can nest (`Array<Item>`), so a
 // pattern stopping at the first `>` leaves the parse call in place
 const stripJson = (call: string): string => {
+  for (const tail of [`.res()${DISCARD_BODY}`, DISCARD_BODY])
+    if (call.endsWith(tail)) return call.slice(0, -tail.length);
   const at = call.lastIndexOf('.json<');
   return at === -1 ? call : call.slice(0, at);
 };
@@ -15,8 +17,7 @@ const AXIOS_HEADERS =
   'new Headers(Object.entries(r.headers).filter(([, v]) => v != null).map(([k, v]): [string, string] => [k, String(v)]))';
 
 /**
- * @param logging When true, assigns the result to `const response = { ... }` instead of returning,
- *                so the caller can insert console.log before the return.
+ * @param logAs Function name to log the result under (`apiLogging`), if any.
  */
 export const buildRawResponseBody = (
   call: string,
@@ -24,10 +25,14 @@ export const buildRawResponseBody = (
   client: string,
   withError: boolean,
   errorClass: string,
-  logging = false,
+  logAs?: string,
 ): string => {
-  const ret = (expr: string) =>
-    logging ? `  const response = ${expr};` : `  return ${expr};`;
+  const ret = (expr: string) => returnLines(expr, '  ', logAs);
+  const noBody = responseType === NO_BODY;
+  // an empty body cannot be parsed as JSON, so there is no `data` to read
+  const readData = (res: string) =>
+    noBody ? [] : [`  const data = await ${res}.json() as ${responseType};`];
+  const body = noBody ? 'undefined' : 'data';
 
   if (client === HTTP_CLIENTS.FETCH) {
     const bare = stripThen(call);
@@ -36,8 +41,9 @@ export const buildRawResponseBody = (
       : '';
     return [
       `  const r = await ${bare};`,
-      `${errorLine}  const data = await r.json() as ${responseType};`,
-      ret(`{ body: data, status: r.status, headers: r.headers }`),
+      ...(errorLine ? [errorLine.trimEnd()] : []),
+      ...readData('r'),
+      ...ret(`{ body: ${body}, status: r.status, headers: r.headers }`),
     ].join('\n');
   }
   if (client === HTTP_CLIENTS.AXIOS) {
@@ -45,7 +51,9 @@ export const buildRawResponseBody = (
     if (withError) {
       lines.unshift(`  try {`);
       lines.push(
-        `    ${ret(`{ body: r.data as ${responseType}, status: r.status, headers: ${AXIOS_HEADERS} }`).trimStart()}`,
+        ...ret(
+          `{ body: r.data as ${responseType}, status: r.status, headers: ${AXIOS_HEADERS} }`,
+        ).map((l) => `  ${l}`),
       );
       lines.push(`  } catch (e: unknown) {`);
       lines.push(
@@ -62,7 +70,7 @@ export const buildRawResponseBody = (
       lines.push(`  }`);
     } else {
       lines.push(
-        ret(
+        ...ret(
           `{ body: r.data as ${responseType}, status: r.status, headers: ${AXIOS_HEADERS} }`,
         ),
       );
@@ -73,17 +81,17 @@ export const buildRawResponseBody = (
     const stripped = stripJson(call);
     const lines = [
       `  const res = await ${stripped};`,
-      `  const data = await res.json() as ${responseType};`,
-      ret(`{ body: data, status: res.status, headers: res.headers }`),
+      ...readData('res'),
+      ...ret(`{ body: ${body}, status: res.status, headers: res.headers }`),
     ];
     if (withError) {
       return [
         `  try {`,
         ...lines.map((l) => `  ${l}`),
         `  } catch (e: unknown) {`,
-        `    const err = e as { response?: Response };`,
+        `    const err = e as { response?: Response; data?: unknown };`,
         `    if (err.response instanceof Response)`,
-        `      throw new ${errorClass}(err.response.status, await err.response.json());`,
+        `      throw new ${errorClass}(err.response.status, ${KY_ERROR_BODY});`,
         `    throw e;`,
         `  }`,
       ].join('\n');
@@ -94,8 +102,8 @@ export const buildRawResponseBody = (
     const stripped = stripJson(call);
     const lines = [
       `  const res = await ${stripped}.res();`,
-      `  const data = await res.json() as ${responseType};`,
-      ret(`{ body: data, status: res.status, headers: res.headers }`),
+      ...readData('res'),
+      ...ret(`{ body: ${body}, status: res.status, headers: res.headers }`),
     ];
     if (withError) {
       return [
@@ -115,7 +123,7 @@ export const buildRawResponseBody = (
   const rawCall = call.replace(/^(\w+)</, '$1.raw<');
   const lines = [
     `  const r = await ${rawCall};`,
-    ret(
+    ...ret(
       `{ body: r._data as ${responseType}, status: r.status, headers: r.headers }`,
     ),
   ];
