@@ -159,15 +159,19 @@ export const generateFunction = (
     ].join('\n');
   }
 
+  // the other paths unwrap `r.data` themselves; here the call is returned as is
+  const dataCall =
+    httpClient === HTTP_CLIENTS.AXIOS ? `${call}.then(r => r.data)` : call;
+
   if (config.apiLogging) {
     return [
       `${doc}export const ${fnName} = async (${argsList}): Promise<${returnType}> => {`,
-      `  const response = await ${call};`,
+      `  const response = await ${dataCall};`,
       `  console.log('${fnName}', response);`,
       `  return response;`,
       `};`,
     ].join('\n');
   }
 
-  return `${doc}export const ${fnName} = (${argsList}): Promise<${returnType}> =>\n  ${call};`;
+  return `${doc}export const ${fnName} = (${argsList}): Promise<${returnType}> =>\n  ${dataCall};`;
 };

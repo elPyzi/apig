@@ -4,8 +4,30 @@ import { readFiles } from '@scalar/openapi-parser/plugins/read-files';
 import { upgrade } from '@scalar/openapi-upgrader';
 import type { OpenAPIV3 } from 'openapi-types';
 import { logger } from '@libs/logger';
+import { authFailureMessage, specRequestHeaders } from '@libs/auth';
 import type { ApigConfig, LoadSpecResult } from '@models';
 import { bundleExternalRefs } from './bundle-external';
+
+const isUrl = (value: unknown): value is string =>
+  typeof value === 'string' && /^https?:\/\//.test(value);
+
+/**
+ * `readFiles` claims every relative `$ref`, including one inside a spec that
+ * was fetched over HTTP, and joins it with `path.join` — which collapses
+ * `http://host` into `http:/host`, a path that exists nowhere. Next to a URL a
+ * relative reference is resolved the way a browser would, and the result is
+ * then picked up by `fetchUrls`.
+ */
+const readFilesBesideUrls = () => {
+  const files = readFiles();
+  return {
+    ...files,
+    resolvePath: (value: unknown, reference: string): string =>
+      isUrl(value)
+        ? new URL(reference, value).href
+        : files.resolvePath!(value, reference),
+  };
+};
 
 const isSwagger2 = (spec: Record<string, unknown>): boolean =>
   typeof spec.swagger === 'string' && spec.swagger.startsWith('2.');
@@ -17,7 +39,28 @@ export const loadSpec = async (config: ApigConfig): Promise<LoadSpecResult> => {
   const input =
     typeof config.input === 'function' ? await config.input() : config.input;
 
-  const loaded = await load(input, { plugins: [fetchUrls(), readFiles()] });
+  // the parser reports a refused request as unparseable content, so the
+  // status is caught here to say what actually went wrong
+  // asserted, not annotated: assigned inside a callback, so TypeScript would
+  // otherwise narrow it to `null` for good
+  let refused = null as { status: number; url: string } | null;
+  const fetchWithAuth = async (url: string): Promise<Response> => {
+    const res = await fetch(url, {
+      headers: specRequestHeaders(url, input, config.auth),
+    });
+    if ((res.status === 401 || res.status === 403) && !refused)
+      refused = { status: res.status, url };
+    return res;
+  };
+
+  const loaded = await load(input, {
+    plugins: [fetchUrls({ fetch: fetchWithAuth }), readFilesBesideUrls()],
+  });
+
+  if (refused) {
+    const { status, url } = refused;
+    throw new Error(authFailureMessage(status, url, config.auth));
+  }
 
   if (loaded.errors?.length) {
     throw new Error(

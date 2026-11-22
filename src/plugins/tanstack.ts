@@ -6,7 +6,7 @@ import {
   type TanstackQueryOptions,
   type IR,
   banner,
-  HTTP_METHODS,
+  isReadMethod,
   DEFAULTS,
 } from '@models';
 import {
@@ -116,18 +116,18 @@ export const generateTanstack = (
     suspense: false,
   };
   for (const op of ir.operations) {
-    const isGet = op.method === HTTP_METHODS.GET;
+    const isRead = isReadMethod(op.method);
     const strategy = opts.hookGenerationStrategies?.[op.id];
-    if (strategy ? (strategy.query ?? false) : isGet && opts.query)
+    if (strategy ? (strategy.query ?? false) : isRead && opts.query)
       usedHooks.query = true;
-    if (strategy ? (strategy.mutation ?? false) : !isGet && opts.mutation)
+    if (strategy ? (strategy.mutation ?? false) : !isRead && opts.mutation)
       usedHooks.mutation = true;
-    if (strategy ? (strategy.infinite ?? false) : isGet && opts.infinite)
+    if (strategy ? (strategy.infinite ?? false) : isRead && opts.infinite)
       usedHooks.infinite = true;
     if (
       strategy
         ? (strategy.suspense ?? false)
-        : isGet && opts.suspense && opts.query
+        : isRead && opts.suspense && opts.query
     )
       usedHooks.suspense = true;
   }
@@ -181,18 +181,20 @@ export const generateTanstack = (
   const exports: string[] = [];
 
   for (const op of ir.operations) {
-    const isGet = op.method === HTTP_METHODS.GET;
+    const isRead = isReadMethod(op.method);
     const strategy = opts.hookGenerationStrategies?.[op.id];
-    const genQuery = strategy ? (strategy.query ?? false) : isGet && opts.query;
+    const genQuery = strategy
+      ? (strategy.query ?? false)
+      : isRead && opts.query;
     const genMutation = strategy
       ? (strategy.mutation ?? false)
-      : !isGet && opts.mutation;
+      : !isRead && opts.mutation;
     const genInfinite = strategy
       ? (strategy.infinite ?? false)
-      : isGet && opts.infinite;
+      : isRead && opts.infinite;
     const genSuspense = strategy
       ? (strategy.suspense ?? false)
-      : isGet && opts.suspense && opts.query;
+      : isRead && opts.suspense && opts.query;
 
     const name = getFunctionName(op, config);
     const pascalName = toPascalCase(op.id);

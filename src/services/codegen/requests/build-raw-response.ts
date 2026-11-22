@@ -3,6 +3,17 @@ import { HTTP_CLIENTS } from '@models';
 const stripThen = (call: string): string =>
   call.replace(/\.then\(r => r\.json\(\)[^)]*\)$/, '');
 
+// cut at the last `.json<` — the type argument can nest (`Array<Item>`), so a
+// pattern stopping at the first `>` leaves the parse call in place
+const stripJson = (call: string): string => {
+  const at = call.lastIndexOf('.json<');
+  return at === -1 ? call : call.slice(0, at);
+};
+
+// axios headers are a plain object, not the `Headers` that ApigResponse promises
+const AXIOS_HEADERS =
+  'new Headers(Object.entries(r.headers).filter(([, v]) => v != null).map(([k, v]): [string, string] => [k, String(v)]))';
+
 /**
  * @param logging When true, assigns the result to `const response = { ... }` instead of returning,
  *                so the caller can insert console.log before the return.
@@ -34,7 +45,7 @@ export const buildRawResponseBody = (
     if (withError) {
       lines.unshift(`  try {`);
       lines.push(
-        `    ${ret(`{ body: r.data as ${responseType}, status: r.status, headers: r.headers }`).trimStart()}`,
+        `    ${ret(`{ body: r.data as ${responseType}, status: r.status, headers: ${AXIOS_HEADERS} }`).trimStart()}`,
       );
       lines.push(`  } catch (e: unknown) {`);
       lines.push(
@@ -44,7 +55,7 @@ export const buildRawResponseBody = (
         `      const ae = e as { response?: { status: number; data: unknown } };`,
       );
       lines.push(
-        `      throw new ${errorClass}(ae.response?.status, ae.response?.data);`,
+        `      throw new ${errorClass}(ae.response?.status ?? 0, ae.response?.data);`,
       );
       lines.push(`    }`);
       lines.push(`    throw e;`);
@@ -52,14 +63,14 @@ export const buildRawResponseBody = (
     } else {
       lines.push(
         ret(
-          `{ body: r.data as ${responseType}, status: r.status, headers: r.headers }`,
+          `{ body: r.data as ${responseType}, status: r.status, headers: ${AXIOS_HEADERS} }`,
         ),
       );
     }
     return lines.join('\n');
   }
   if (client === HTTP_CLIENTS.KY) {
-    const stripped = call.replace(/\.json<[^>]+>\(\)$/, '');
+    const stripped = stripJson(call);
     const lines = [
       `  const res = await ${stripped};`,
       `  const data = await res.json() as ${responseType};`,
@@ -80,7 +91,7 @@ export const buildRawResponseBody = (
     return lines.join('\n');
   }
   if (client === HTTP_CLIENTS.WRETCH) {
-    const stripped = call.replace(/\.json<[^>]+>\(\)$/, '');
+    const stripped = stripJson(call);
     const lines = [
       `  const res = await ${stripped}.res();`,
       `  const data = await res.json() as ${responseType};`,

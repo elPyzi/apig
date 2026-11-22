@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { registerMigrateCommand } from '@/cli/commands/migrate.ts';
 import { Command } from 'commander';
 
 import { registerGenerateCommand } from './commands/generate';
@@ -24,6 +25,7 @@ registerInfoCommand(program);
 registerConfigCommand(program);
 registerVersionsCommands(program);
 registerCacheCommands(program);
+registerMigrateCommand(program);
 
 program
   .command('start')

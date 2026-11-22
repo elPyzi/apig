@@ -120,6 +120,17 @@ describe('fetchWithCache', () => {
     const result = await fetchWithCache(input);
     expect(result.hit).toBe(false);
   });
+
+  test('takes the spec itself, as a function in input may return it', async () => {
+    const text = JSON.stringify(spec);
+    const specHash = new Bun.CryptoHasher('sha256').update(text).digest('hex');
+
+    const miss = await fetchWithCache(text);
+    expect(miss).toEqual({ hit: false, text, etag: undefined });
+
+    writeCacheFiles(inputKey(text), ir, { specHash }, spec);
+    expect((await fetchWithCache(text)).hit).toBe(true);
+  });
 });
 
 describe('cache storage', () => {

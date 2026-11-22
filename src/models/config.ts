@@ -202,6 +202,17 @@ export interface CacheConfig {
 }
 
 /**
+ * Credentials for a spec served behind HTTP basic auth.
+ *
+ * Optional in the type so `process.env.*` values can be passed as they are —
+ * a missing one is reported when the config is validated.
+ */
+export interface SpecAuth {
+  username?: string;
+  password?: string;
+}
+
+/**
  * Output path as a string or configuration object.
  * When specified as a string, clean defaults to true.
  */
@@ -264,6 +275,14 @@ export interface ApigConfig {
    * @example () => fetch('...').then(r => r.json())
    */
   input: string | (() => Promise<string>);
+
+  /**
+   * Basic auth credentials for fetching a spec that requires a login — one
+   * served behind `express-basic-auth`, for example. Sent only to the spec's
+   * own origin, never to other hosts its external `$ref`s point at.
+   * @example auth: { username: process.env.SWAGGER_USER, password: process.env.SWAGGER_PASSWORD }
+   */
+  auth?: SpecAuth;
 
   /**
    * Output directory path or configuration object.

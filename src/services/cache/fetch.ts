@@ -1,7 +1,8 @@
 import { createHash } from 'crypto';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
-import type { IR } from '@models';
+import type { IR, SpecAuth } from '@models';
+import { authFailureMessage, specRequestHeaders } from '@libs/auth';
 import type { OpenAPIV3 } from 'openapi-types';
 import {
   inputKey,
@@ -42,6 +43,7 @@ const usableEntry = (
 export const fetchWithCache = async (
   input: string,
   ttlMs: number | null = null,
+  auth?: SpecAuth,
 ): Promise<CacheResult> => {
   // swept before reading, so entries for specs nobody generates any more are
   // cleaned up too rather than lingering until someone asks for them
@@ -52,7 +54,7 @@ export const fetchWithCache = async (
   const entry = usableEntry(key, meta, ttlMs);
 
   if (isUrl(input)) {
-    const headers: Record<string, string> = {};
+    const headers = specRequestHeaders(input, input, auth);
     // asking for a 304 only makes sense when there is something to fall back on;
     // a 304 body is empty, and parsing that used to fail with an error naming
     // neither the cache nor the reason
@@ -60,13 +62,18 @@ export const fetchWithCache = async (
 
     const res = await fetch(input, { headers });
     if (res.status === 304 && entry) return { hit: true, ...entry };
+    if (res.status === 401 || res.status === 403)
+      throw new Error(authFailureMessage(res.status, input, auth));
 
     const text = await res.text();
     const etag = res.headers.get('etag') ?? undefined;
     return { hit: false, text, etag };
   }
 
-  const text = readFileSync(resolve(input), 'utf-8');
+  // a function in `input` may return the spec itself rather than where it
+  // lives; a path that does not exist is left for the parser to report
+  const path = resolve(input);
+  const text = existsSync(path) ? readFileSync(path, 'utf-8') : input;
   const hash = createHash('sha256').update(text).digest('hex');
   if (meta?.specHash === hash && entry) return { hit: true, ...entry };
 

@@ -3,6 +3,42 @@ import { validateConfig } from '../validate-config';
 import { NEGATIVE_CONFIGS, POSITIVE_CONFIGS } from './fixtures';
 
 describe('validateConfig', () => {
+  describe('auth', () => {
+    const base = { input: 'https://api.example.com/docs', output: './out' };
+    const errorsOf = (config: unknown): string[] => {
+      try {
+        validateConfig(config);
+        return [];
+      } catch (e) {
+        return (e as { validationErrors: string[] }).validationErrors;
+      }
+    };
+
+    test('accepts a username and a password', () => {
+      expect(
+        errorsOf({ ...base, auth: { username: 'u', password: 'p' } }),
+      ).toEqual([]);
+    });
+
+    test('names an unset environment variable as the likely cause', () => {
+      const errors = errorsOf({
+        ...base,
+        auth: { username: undefined, password: '' },
+      });
+
+      expect(errors).toHaveLength(2);
+      expect(errors[0]).toStartWith('auth.username is missing');
+      expect(errors[1]).toStartWith('auth.password is empty');
+      expect(errors[0]).toContain('environment variable');
+    });
+
+    test('rejects a value that is not an object', () => {
+      expect(errorsOf({ ...base, auth: 'u:p' })).toEqual([
+        'auth must be an object with username and password',
+      ]);
+    });
+  });
+
   describe('cache', () => {
     const base = { input: 'spec.yaml', output: './out' };
 

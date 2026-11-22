@@ -19,10 +19,15 @@ export const generateMswHandler = (
   const method = toHttpMethodLower(operation.method);
   const path = toMswPath(operation.path, config.baseUrl);
   const fakerFn = getFakerResponse(operation);
+  // msw has no `http.query()`; a handler for any other method is built directly
+  const open =
+    operation.method === HTTP_METHODS.QUERY
+      ? `new HttpHandler('QUERY', '${path}', `
+      : `http.${method}('${path}', `;
 
   if (method === toHttpMethodLower(HTTP_METHODS.DELETE) || !fakerFn) {
     return [
-      `  http.${method}('${path}', () => {`,
+      `  ${open}() => {`,
       `    return new HttpResponse(null, { status: 204 });`,
       `  }),`,
     ].join('\n');
@@ -30,7 +35,7 @@ export const generateMswHandler = (
 
   if (operation.body) {
     return [
-      `  http.${method}('${path}', async ({ request }) => {`,
+      `  ${open}async ({ request }) => {`,
       `    await request.json();`,
       `    return HttpResponse.json(${fakerFn});`,
       `  }),`,
@@ -39,14 +44,14 @@ export const generateMswHandler = (
 
   if (operation.params.path.length > 0) {
     return [
-      `  http.${method}('${path}', ({ params }) => {`,
+      `  ${open}({ params }) => {`,
       `    return HttpResponse.json(${fakerFn});`,
       `  }),`,
     ].join('\n');
   }
 
   return [
-    `  http.${method}('${path}', () => {`,
+    `  ${open}() => {`,
     `    return HttpResponse.json(${fakerFn});`,
     `  }),`,
   ].join('\n');

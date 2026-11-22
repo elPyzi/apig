@@ -8,6 +8,8 @@ export { CaseFns } from '@libs/string/case-fns';
 export {
   isValidIdentifier,
   quoteKey,
+  toStringLiteral,
+  enumMemberKey,
   escapeReservedWord,
   toParamName,
 } from '@libs/string/identifier';
