@@ -39,19 +39,31 @@ defineConfig({
 })
 ```
 
-Output:
+Output (default `fetch`, `errorHandling: true`):
 
 ```ts
-export const getUsers = (params?: { page?: number }) =>
-  fetch(`/users?${new URLSearchParams(params)}`).then(r => r.json() as Promise<UserList>)
+export type GetUserErrors =
+  | { status: 404; body: Error };
 
-export const createUser = (body: CreateUserInput) =>
-  fetch('/users', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  }).then(r => r.json() as Promise<User>)
+export const getUser = async (id: string): Promise<User> => {
+  const r = await fetch(`/users/${id}`);
+  if (!r.ok) throw new ApigError(r.status, await parseErrorBody(r));
+  return (await r.json()) as User;
+};
+
+export const listUsers = async (params?: { page?: number }): Promise<UserList> => {
+  const r = await fetch(`/users${toQuery(params)}`);
+  if (!r.ok) throw new ApigError(r.status, await parseErrorBody(r));
+  return (await r.json()) as UserList;
+};
+
+export const deleteUser = async (id: string): Promise<void> => { // 204: no body, not parsed
+  const r = await fetch(`/users/${id}`, { method: 'DELETE' });
+  if (!r.ok) throw new ApigError(r.status, await parseErrorBody(r));
+};
 ```
+
+Arguments: path params (one each) → `params` (query object) → `body` → `headers` (header object). `ApigError`, `parseErrorBody` and `toQuery` live in the generated `config.ts`. `rawResponse: true` returns `ApigResponse<T>` = `{ body, status, headers }`; `errorHandling: false` returns the client's result with no status check. `default` and `4XX`-style responses appear in `<Op>Errors` as `{ status: number; body: X }`.
 
 ---
 
@@ -62,10 +74,10 @@ Generates Zod schemas with OpenAPI constraint mapping (email, uuid, min/max, dis
 ```ts
 zod({
   withTypes: true,        // default true — gate for infer/input/output exports
-  infer: true,             // export type X = z.infer<typeof XSchema> (default false)
+  infer: true,             // export type X = z.infer<typeof XSchema> (default true)
   input: false,             // export type XInput = z.input<typeof XSchema> (default false)
   output: false,            // export type XOutput = z.output<typeof XSchema> (default false)
-  validateResponse: false, // generate validateXResponse() (default false)
+  validateResponse: false, // generate standalone validateXResponse(data) helpers — request functions do NOT call them (default false)
   schemaSuffix: 'Schema',  // default 'Schema'
 })
 ```
@@ -141,6 +153,12 @@ export const useCreateUserMutation = (options?) => useMutation({ mutationFn: ...
 
 Query key function: `getUsersQueryKey(...)` (style `'functions'`) or `queryKeys.getUsers(...)` (style `'object'`).
 
+- Mutation variables are an object: `useUpdateUserMutation().mutate({ id, body })` — named path params plus `params`/`body`/`headers`.
+- `framework: 'svelte' | 'solid'` use the `create` prefix: `createGetUsersQuery`, `createCreateUserMutation`.
+- `GET` and the OpenAPI 3.2 `QUERY` method get query hooks; every other method gets a mutation hook (override per operation with `hookGenerationStrategies`).
+- Infinite hooks are generated with `getNextPageParam: () => undefined` — pass your own in `options`.
+- The error type is `ApigError<GetUserErrors>` when the operation declares error responses.
+
 ---
 
 ## swr()
@@ -191,13 +209,13 @@ export const createUserInputResolver = zodResolver(CreateUserInputSchema)
 
 ## faker()
 
-Generates Faker.js factories, one per object/enum schema. Takes **no options**.
+Generates Faker.js factories, one per schema. The only option is `locale`.
 
 ```ts
-faker()
+faker({ locale: 'en' }) // 'en' (default) | 'ru'
 ```
 
-Field-name heuristics are limited to: `username`, `email`, `password`, `phone`, `url`/`photo`, `firstName`, `lastName`, `name`, `date`, `status`, `id`. Everything else falls back to a generic value by schema type (`faker.lorem.word()` for strings, `faker.number.int()` for numbers, `faker.datatype.boolean()` for booleans). There is no special-casing for `uuid`, `avatar`, `title`, `price`, `city`, etc.
+A declared `format` wins first (`uuid`, `email`, `uri`/`url`, `hostname`, `ipv4`, `ipv6`, `password`, `date-time`, `date`). Then field-name heuristics, for string and number fields only, limited to: `username`, `email`, `password`, `phone`, `url`/`photo`, `firstName`, `lastName`, `name`, `date`, `status`, `id`. Everything else falls back to a generic value by schema type (`faker.lorem.word()` for strings, `faker.number.int()` for numbers, `faker.datatype.boolean()` for booleans). There is no special-casing for `avatar`, `title`, `price`, `city`, etc. Arrays get 3 items; inline objects are built field by field; recursive schemas stop after two levels.
 
 Output:
 
@@ -213,7 +231,7 @@ export const generateUser = (): User => ({
 
 ## msw()
 
-Generates Mock Service Worker handlers. Requires `faker()` — throws if missing. Takes **no options**.
+Generates Mock Service Worker handlers. Requires `faker()` — the config fails validation without it. Takes **no options**.
 
 ```ts
 msw()
@@ -223,7 +241,7 @@ Output:
 
 ```ts
 import { http, HttpResponse } from 'msw';
-import { generateUser } from '@/plugins/faker'; // known quirk: hardcoded alias path, may need manual fixup
+import { generateUser } from './faker';
 
 export const handlers = [
   http.get('/users', () => {
@@ -238,6 +256,8 @@ export const handlers = [
   }),
 ];
 ```
+
+Use with `setupWorker(...handlers).start()` (browser, `msw/browser`) or `setupServer(...handlers)` (Node, `msw/node`). A `QUERY` operation uses `new HttpHandler('QUERY', path, …)`.
 
 ---
 

@@ -10,6 +10,23 @@ defineConfig({
 })
 ```
 
+## Options
+
+```ts
+cache: true                            // entries never expire; replaced when the spec changes
+cache: { ttl: '7d' }                   // turns the cache on; ttl units: s, m, h, d
+cache: { ttl: '12h', maxEntries: 20 }  // keep at most 20 entries (one per spec), oldest removed first
+```
+
+Expired entries are swept on the next run. Entries written by another apig version are discarded, so an upgrade never serves a stale IR. A cache that cannot be written (read-only disk, permissions) only logs a warning — the run continues uncached.
+
+## CLI
+
+```bash
+apig cache status   # what is cached
+apig cache clear    # drop every entry so the next run parses again
+```
+
 ## How It Works
 
 **Remote specs (URL):**
