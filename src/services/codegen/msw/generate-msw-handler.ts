@@ -2,7 +2,7 @@ import {
   HTTP_METHODS,
   toHttpMethodLower,
   type IROperation,
-  type ApigConfig,
+  type ZvyappyConfig,
 } from '@models';
 import { toMswPath, getFakerResponse } from './utils';
 
@@ -14,7 +14,7 @@ export {
 
 export const generateMswHandler = (
   operation: IROperation,
-  config: ApigConfig,
+  config: ZvyappyConfig,
 ): string => {
   const method = toHttpMethodLower(operation.method);
   const path = toMswPath(operation.path, config.baseUrl);

@@ -3,11 +3,11 @@ import type {
   IRSchema,
   IROperation,
   IRProperty,
-  ApigConfig,
+  ZvyappyConfig,
 } from '@models';
 import { HTTP_METHODS } from '@models';
 
-export const baseConfig: ApigConfig = {
+export const baseConfig: ZvyappyConfig = {
   input: 'spec.yaml',
   output: './out',
 };

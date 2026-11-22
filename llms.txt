@@ -1,14 +1,14 @@
-# @travjek/apig
+# zvyappy
 
-> OpenAPI code generator for TypeScript with a plugin system. Reads an OpenAPI 3.0/3.1 spec (Swagger 2.0 is upgraded automatically; JSON or YAML; file, URL or function) and writes typed TypeScript into an output directory: types, request functions, Zod/Valibot/Yup schemas, TanStack Query and SWR hooks, React Hook Form resolvers, Faker factories, MSW handlers, a Playwright API client and an MCP server. Configured in `apig.config.ts`, run with `npx apig generate`.
+> OpenAPI code generator for TypeScript with a plugin system. Reads an OpenAPI 3.0/3.1 spec (Swagger 2.0 is upgraded automatically; JSON or YAML; file, URL or function) and writes typed TypeScript into an output directory: types, request functions, Zod/Valibot/Yup schemas, TanStack Query and SWR hooks, React Hook Form resolvers, Faker factories, MSW handlers, a Playwright API client and an MCP server. Configured in `zvyappy.config.ts`, run with `npx zvyappy generate`.
 
-Package: `@travjek/apig` (dev dependency). CLI binary: `apig`. Node >= 18, TypeScript >= 5. Docs: https://apig-docs.vercel.app
+Package: `zvyappy` (dev dependency). CLI binaries: `zvyappy` and the alias `zvy` (identical). Formerly published as `@travjek/apig` (≤ 0.13.0; CLI `apig`, config `apig.config.ts`, `ApigError`) — renamed in 0.14.0 with no fallback, see "Renamed from @travjek/apig" below. Node >= 18, TypeScript >= 5. Docs: https://apig-docs.vercel.app
 
 ## Key facts (read before answering)
 
-- Everything is configured in `defineConfig({...})` imported from `@travjek/apig`. Plugins are functions imported from the same package: `typescript, requests, zod, valibot, yup, tanstackQuery, swr, rhf, faker, msw, playwright, mcp`.
+- Everything is configured in `defineConfig({...})` imported from `zvyappy`. Plugins are functions imported from the same package: `typescript, requests, zod, valibot, yup, tanstackQuery, swr, rhf, faker, msw, playwright, mcp`.
 - `typescript()`, `requests()` and `msw()` take NO options. HTTP client, base URL, error handling, raw responses, logging, enum style and type style are TOP-LEVEL config options, not plugin options.
-- `ApigError` is GENERATED into the user's output directory (`<output>/config.ts`). It is NOT exported by `@travjek/apig` or `@travjek/apig/client`. `@travjek/apig/client` exports only `isApigError(e)` and `isApigStatus(e, status)`.
+- `ZvyappyError` is GENERATED into the user's output directory (`<output>/config.ts`). It is NOT exported by `zvyappy` or `zvyappy/client`. `zvyappy/client` exports only `isZvyappyError(e)` and `isZvyappyStatus(e, status)`.
 - If `zod()`/`valibot()`/`yup()` is enabled with `withTypes: true` (the default), it emits the TypeScript types and `types.ts` is NOT written. Use `withTypes: false` to keep a separate `types.ts`.
 - `tanstackQuery()` and `swr()` need `requests()`; `msw()` needs `faker()`; `mcp()` needs `requests()` and `zod()`; `rhf()` needs a validation plugin.
 - `playwright()` generates a client and a `test.extend()` fixture, never test bodies or assertions.
@@ -18,7 +18,7 @@ Package: `@travjek/apig` (dev dependency). CLI binary: `apig`. Node >= 18, TypeS
 ## Install
 
 ```bash
-npm install -D @travjek/apig
+npm install -D zvyappy
 ```
 
 Runtime libraries per plugin (install only what you use): `zod` | `valibot` | `yup` | `@tanstack/react-query` (or `vue-query`, `svelte-query`, `solid-query`) | `swr` (React) or `swrv` (Vue) | `react-hook-form` + `@hookform/resolvers` | `@faker-js/faker` | `msw` | `@playwright/test` >= 1.30 | `@modelcontextprotocol/sdk` + `zod`. HTTP client for `requests()`: none for fetch, or `axios` | `ky` | `ofetch` | `wretch`.
@@ -26,8 +26,8 @@ Runtime libraries per plugin (install only what you use): `zod` | `valibot` | `y
 ## Minimal config
 
 ```ts
-// apig.config.ts
-import { defineConfig, typescript, requests, tanstackQuery } from '@travjek/apig';
+// zvyappy.config.ts
+import { defineConfig, typescript, requests, tanstackQuery } from 'zvyappy';
 
 export default defineConfig({
   input: './openapi.json',
@@ -41,11 +41,11 @@ Several APIs in one run: `export default defineConfig([configA, configB])` (each
 ## Full config reference
 
 ```ts
-import { defineConfig } from '@travjek/apig';
+import { defineConfig } from 'zvyappy';
 
 export default defineConfig({
   input: './openapi.yaml',              // REQUIRED. path (JSON/YAML), URL, or () => Promise<string> returning a path, URL or the spec text
-  output: './src/api',                  // or { path: './src/api', clean: true }. Default '.apig/generated'
+  output: './src/api',                  // or { path: './src/api', clean: true }. Default '.zvyappy/generated'
   name: 'petstore',                     // label in CLI output
   auth: {                               // HTTP Basic Auth for a protected spec; sent only to the spec's own origin
     username: process.env.SWAGGER_USER,
@@ -53,7 +53,7 @@ export default defineConfig({
   },
   httpClient: { name: 'fetch' },        // 'fetch' | 'axios' | 'ky' | 'ofetch' | 'wretch'; non-fetch: { name, path, export }
   baseUrl: '/api/v1',                   // prefix for every request path
-  errorHandling: true,                  // true: throw ApigError | false: no status check | { path, export }: custom class (status, body)
+  errorHandling: true,                  // true: throw ZvyappyError | false: no status check | { path, export }: custom class (status, body)
   rawResponse: false,                   // true: return { body, status, headers }
   apiLogging: false,                    // console.log(fnName, result) in each request function
   groupBy: 'none',                      // 'none' | 'tags' | 'endpoints' | 'operations'
@@ -68,7 +68,7 @@ export default defineConfig({
   formatter: 'none',                    // 'prettier' | 'biome' | 'oxfmt' | 'none' (must be installed; never downloaded)
   hooks: { afterAllFilesWrite: 'eslint --fix src/api' },
   cache: false,                         // true | { ttl: '7d', maxEntries: 20 } — ttl units s m h d
-  versioning: { enabled: true, storage: '.apig/versions', maxSaves: 10, pinVersions: [], saveSpec: false, aliasTemplate: 'gen{generation}' },
+  versioning: { enabled: true, storage: '.zvyappy/versions', maxSaves: 10, pinVersions: [], saveSpec: false, aliasTemplate: 'gen{generation}' },
   comment: 'before auth refactor',      // note on this run's snapshot
   cliLogging: { level: 'minimal' },     // 'minimal' | 'normal' | 'detailed'
   plugins: [],
@@ -81,7 +81,7 @@ export default defineConfig({
 |------|--------|---------|
 | `types.ts` | `typescript()` | `type Pet` (or `interface`), enums per `enumStyle` |
 | `requests.ts` | `requests()` | `getPet(...)` per operation; `type GetPetErrors` per operation with error responses |
-| `config.ts` | `requests()`/`playwright()` | `ApigError`, `parseErrorBody`, `toQuery`, `QueryFormat`, `ApigResponse<T>` (with `rawResponse`) |
+| `config.ts` | `requests()`/`playwright()` | `ZvyappyError`, `parseErrorBody`, `toQuery`, `QueryFormat`, `ZvyappyResponse<T>` (with `rawResponse`) |
 | `zod.ts` / `valibot.ts` / `yup.ts` | validators | `PetSchema` per schema; `type Pet` when `withTypes` |
 | `tanstack.ts` | `tanstackQuery()` | keys, `queryOptions`, hooks |
 | `query-keys.ts` | `tanstackQuery({ queryKeysStyle: 'object' })` | `queryKeys` |
@@ -89,7 +89,7 @@ export default defineConfig({
 | `rhf.ts` | `rhf()` | `petResolver` per schema |
 | `faker.ts` | `faker()` | `generatePet()` per schema |
 | `msw.ts` | `msw()` | `handlers` |
-| `playwright.ts` | `playwright()` | `createApiClient`, `type ApiClient`, `apigPlaywrightTest` |
+| `playwright.ts` | `playwright()` | `createApiClient`, `type ApiClient`, `zvyappyPlaywrightTest` |
 | `mcp.ts` | `mcp()` | `server` (runs on stdio when executed) |
 | `endpoints.ts` | `endpointsMap: true` | `ENDPOINTS` (`{ listPets: '/pets', getPet: '/pets/{id}' }`), `type EndpointKey` |
 | `index.ts` | always unless `index: false` | named re-exports of all of the above except `config.ts` and the `<Op>Errors` types |
@@ -110,7 +110,7 @@ For `operationId: listPets` (GET), `getPet` (GET /pets/{id}), `createPet` (POST)
 | `swr()` | `listPetsSwrKey(params)`, `useListPets` (no suffix), `useCreatePetMutation` |
 | `rhf()` | `petResolver`, `createPetInputResolver` (camelCase schema + `Resolver`) |
 | `faker()` | `generatePet()` |
-| `playwright()` | `createApiClient(ctx).listPets(...)`; under groupBy `createPetsApiClient`, `petsApigPlaywrightTest` |
+| `playwright()` | `createApiClient(ctx).listPets(...)`; under groupBy `createPetsApiClient`, `petsZvyappyPlaywrightTest` |
 | `mcp()` | one tool per operation named after the operationId |
 
 Spec names are made safe: `created-at` keys are quoted (`'created-at'?: string`), `v1.Pet` becomes `V1Pet`, `3dModel` becomes `_3dModel`, a reserved-word operationId `delete` becomes `_delete`, colliding operationIds get a numeric suffix. An inline enum on `Pet.status` is named `PetStatus`, or `PetStatusEnum` if a `PetStatus` schema exists.
@@ -126,19 +126,19 @@ export type GetPetErrors =
 
 export const getPet = async (id: string): Promise<Pet> => {
   const r = await fetch(`/pets/${id}`);
-  if (!r.ok) throw new ApigError(r.status, await parseErrorBody(r));
+  if (!r.ok) throw new ZvyappyError(r.status, await parseErrorBody(r));
   return (await r.json()) as Pet;
 };
 
 export const listPets = async (params?: { limit?: number; status?: 'available' | 'pending' | 'sold' }): Promise<PetList> => {
   const r = await fetch(`/pets${toQuery(params)}`);
-  if (!r.ok) throw new ApigError(r.status, await parseErrorBody(r));
+  if (!r.ok) throw new ZvyappyError(r.status, await parseErrorBody(r));
   return (await r.json()) as PetList;
 };
 
 export const deletePet = async (id: string): Promise<void> => {
   const r = await fetch(`/pets/${id}`, { method: 'DELETE' });
-  if (!r.ok) throw new ApigError(r.status, await parseErrorBody(r));
+  if (!r.ok) throw new ZvyappyError(r.status, await parseErrorBody(r));
 };
 ```
 
@@ -150,7 +150,7 @@ await updatePet('42', { name: 'Max' });
 ```
 
 - `errorHandling: false` → plain `fetch(...).then(r => r.json())`, no status check.
-- `rawResponse: true` → `Promise<ApigResponse<Pet>>` = `{ body: Pet; status: number; headers: Headers }`.
+- `rawResponse: true` → `Promise<ZvyappyResponse<Pet>>` = `{ body: Pet; status: number; headers: Headers }`.
 - `default` and range responses (`4XX`) appear in the error union as `{ status: number; body: X }`.
 - Query serialization follows `style`/`explode` (repeat, comma, space, pipe, deepObject).
 - `multipart/form-data` → one argument per form field, sent as `FormData` through fetch (whatever the client).
@@ -161,23 +161,23 @@ await updatePet('42', { name: 'Max' });
 ```ts
 import { getPet } from './api';
 import type { GetPetErrors } from './api/requests';
-import { ApigError } from './api/config';            // generated class
-import { isApigError, isApigStatus } from '@travjek/apig/client';
+import { ZvyappyError } from './api/config';            // generated class
+import { isZvyappyError, isZvyappyStatus } from 'zvyappy/client';
 
 try {
   await getPet('42');
 } catch (e) {
-  if (e instanceof ApigError) {
-    const err = e as ApigError<GetPetErrors>;
+  if (e instanceof ZvyappyError) {
+    const err = e as ZvyappyError<GetPetErrors>;
     err.status; // number
     err.body;   // parsed JSON, or text, of the error response
   }
-  if (isApigStatus(e, 404)) { /* ... */ }
-  if (isApigError(e)) { e.status; e.body; }
+  if (isZvyappyStatus(e, 404)) { /* ... */ }
+  if (isZvyappyError(e)) { e.status; e.body; }
 }
 ```
 
-`ApigError<T>` has `name = 'ApigError'`, `status: number`, `body: T`, message `ApigError <status>`. Non-fetch clients rethrow their own errors as `ApigError(status, body)`.
+`ZvyappyError<T>` has `name = 'ZvyappyError'`, `status: number`, `body: T`, message `ZvyappyError <status>`. Non-fetch clients rethrow their own errors as `ZvyappyError(status, body)`.
 
 ## HTTP clients
 
@@ -186,7 +186,7 @@ try {
 import axios from 'axios';
 export const api = axios.create({ baseURL: 'https://api.example.com' });
 
-// apig.config.ts — path is relative to the project root
+// zvyappy.config.ts — path is relative to the project root
 httpClient: { name: 'axios', path: './src/lib/http', export: 'api' }
 ```
 
@@ -250,13 +250,13 @@ tanstackQuery({
 ```ts
 export const listPetsQueryKey = (params?: {...}) => ['listPets', ...[params]] as const;
 export const listPetsQueryOptions = (params?: {...}) =>
-  queryOptions<PetList, ApigError>({ queryKey: listPetsQueryKey(params), queryFn: () => listPets(params) });
-export const useListPetsQuery = (params?, options?: Omit<UseQueryOptions<PetList, ApigError>, 'queryKey' | 'queryFn'>) =>
-  useQuery<PetList, ApigError>({ ...listPetsQueryOptions(params), ...options });
+  queryOptions<PetList, ZvyappyError>({ queryKey: listPetsQueryKey(params), queryFn: () => listPets(params) });
+export const useListPetsQuery = (params?, options?: Omit<UseQueryOptions<PetList, ZvyappyError>, 'queryKey' | 'queryFn'>) =>
+  useQuery<PetList, ZvyappyError>({ ...listPetsQueryOptions(params), ...options });
 export const useCreatePetMutation = (options?) =>
-  useMutation<Pet, ApigError, { body: CreatePetInput }>({ mutationFn: (vars) => createPet(vars.body), ...options });
+  useMutation<Pet, ZvyappyError, { body: CreatePetInput }>({ mutationFn: (vars) => createPet(vars.body), ...options });
 ```
-Usage: `useListPetsQuery({ status: 'available' })`, `useGetPetQuery(id)`, `useCreatePetMutation().mutate({ body })`, `useUpdatePetMutation().mutate({ id, body })`. Mutation variables are an object of named path params plus `params`/`body`/`headers`. Error type is `ApigError<GetPetErrors>` when errors are declared. Infinite hooks ship with `getNextPageParam: () => undefined` — pass your own via options. Invalidate with `queryClient.invalidateQueries({ queryKey: listPetsQueryKey() })`.
+Usage: `useListPetsQuery({ status: 'available' })`, `useGetPetQuery(id)`, `useCreatePetMutation().mutate({ body })`, `useUpdatePetMutation().mutate({ id, body })`. Mutation variables are an object of named path params plus `params`/`body`/`headers`. Error type is `ZvyappyError<GetPetErrors>` when errors are declared. Infinite hooks ship with `getNextPageParam: () => undefined` — pass your own via options. Invalidate with `queryClient.invalidateQueries({ queryKey: listPetsQueryKey() })`.
 
 ### swr(options)
 ```ts
@@ -264,7 +264,7 @@ swr({ framework: 'react', queryKeysStyle: 'functions', hookGenerationStrategies:
 ```
 ```ts
 export const useListPets = (params?, options?: SWRConfiguration<PetList>) =>
-  useSWR<PetList, ApigError>(listPetsSwrKey(params), () => listPets(params), options);
+  useSWR<PetList, ZvyappyError>(listPetsSwrKey(params), () => listPets(params), options);
 export const useCreatePetMutation = (options?) =>
   useSWRMutation('createPet', (_key, { arg }: { arg: CreatePetInput }) => createPet(arg), options);
 ```
@@ -306,7 +306,7 @@ export const handlers = [
 ### playwright(options)
 ```ts
 playwright({
-  testName: 'apigPlaywrightTest',
+  testName: 'zvyappyPlaywrightTest',
   fixtureName: 'api',
   baseUrl: undefined,             // default: baseURL from playwright.config.ts
   withFaker: false,               // sample<Operation>() bodies; needs faker()
@@ -321,37 +321,37 @@ playwright({
 })
 ```
 ```ts
-import { apigPlaywrightTest as test } from './api/playwright';
+import { zvyappyPlaywrightTest as test } from './api/playwright';
 test('creates a pet', async ({ api }) => {
   const pet = await api.createPet({ name: 'Rex', status: 'available' });
 });
 ```
-`createApiClient(ctx)` accepts any `APIRequestContext` (`request` or `page.request`). Methods throw `ApigError` on non-2xx; with `rawResponse: true` they return `APIResponse`.
+`createApiClient(ctx)` accepts any `APIRequestContext` (`request` or `page.request`). Methods throw `ZvyappyError` on non-2xx; with `rawResponse: true` they return `APIResponse`.
 
 ### mcp(options)
 ```ts
-mcp({ name: 'apig', version: '1.0.0' })
+mcp({ name: 'zvyappy', version: '1.0.0' })
 ```
 Writes a runnable MCP stdio server (`mcp.ts`) with one tool per operation, inputs validated by the generated Zod schemas. Run it with `npx tsx src/api/mcp.ts` or `bun src/api/mcp.ts`; register in `.mcp.json` as `{ "mcpServers": { "api": { "command": "npx", "args": ["tsx", "src/api/mcp.ts"] } } }`. Multipart operations are skipped. Not allowed with `apiLogging: true`.
 
 ## CLI
 
 ```bash
-apig generate                  # alias g; -c, --config <path> (default apig.config.ts); -d, --dry-run; -w, --watch
-apig start                     # alias s; interactive wizard that writes apig.config.ts
-apig config                    # alias c; scaffold apig.config.ts; -p, --preset <minimal|react|react-swr|testing|forms|full>; --list-presets
-apig migrate <generator>       # alias m; orval | kubb | hey-api; -t, --target <path>; -c, --clean (delete source config)
-apig info                      # alias i; spec statistics without generating; -c, --config
-apig versions                  # list snapshots; -c, --config; -s, --storage
-apig version show <id|alias>   # snapshot details
-apig version checkout <id|alias> [--dry-run]  # regenerate from a snapshot
-apig cache status              # show cached specs
-apig cache clear               # drop the cache
+zvyappy generate                  # alias g; -c, --config <path> (default zvyappy.config.ts); -d, --dry-run; -w, --watch
+zvyappy start                     # alias s; interactive wizard that writes zvyappy.config.ts
+zvyappy config                    # alias c; scaffold zvyappy.config.ts; -p, --preset <minimal|react|react-swr|testing|forms|full>; --list-presets
+zvyappy migrate <generator>       # alias m; orval | kubb | hey-api; -t, --target <path>; -c, --clean (delete source config)
+zvyappy info                      # alias i; spec statistics without generating; -c, --config
+zvyappy versions                  # list snapshots; -c, --config; -s, --storage
+zvyappy version show <id|alias>   # snapshot details
+zvyappy version checkout <id|alias> [--dry-run]  # regenerate from a snapshot
+zvyappy cache status              # show cached specs
+zvyappy cache clear               # drop the cache
 ```
 
 ## Migration from other generators
 
-`apig migrate orval|kubb|hey-api` reads `orval.config.*`, `kubb.config.*` or `openapi-ts.config.*` (or `--target <path>`) and writes `apig.config.ts`: input, output, plugins, grouping, tag filters, formatter, enum style, HTTP client. Unmappable settings (mutators, SDK classes, unknown plugins, registry inputs, raw auth headers) become `// TODO(migrate): ...` comments and are printed. Refuses to overwrite an existing `apig.config.ts`.
+`zvyappy migrate orval|kubb|hey-api` reads `orval.config.*`, `kubb.config.*` or `openapi-ts.config.*` (or `--target <path>`) and writes `zvyappy.config.ts`: input, output, plugins, grouping, tag filters, formatter, enum style, HTTP client. Unmappable settings (mutators, SDK classes, unknown plugins, registry inputs, raw auth headers) become `// TODO(migrate): ...` comments and are printed. Refuses to overwrite an existing `zvyappy.config.ts`.
 
 ## Validation rules (enforced on load)
 
@@ -362,6 +362,9 @@ apig cache clear               # drop the cache
 - No plugin listed twice; `functionNaming` only `camelCase` | `snake_case`.
 - `auth.username` and `auth.password` must be non-empty strings (a missing env var is reported).
 
+## Renamed from @travjek/apig (0.14.0)
+Old -> new, no compatibility aliases: package `@travjek/apig` -> `zvyappy`; CLI `apig` -> `zvyappy` / `zvy`; `apig.config.ts` -> `zvyappy.config.ts`; `ApigConfig`/`ApigPlugin` -> `ZvyappyConfig`/`ZvyappyPlugin`; `@travjek/apig/client` (`isApigError`, `isApigStatus`) -> `zvyappy/client` (`isZvyappyError`, `isZvyappyStatus`); generated `ApigError`/`ApigResponse` -> `ZvyappyError`/`ZvyappyResponse`; `apigPlaywrightTest` -> `zvyappyPlaywrightTest`; `.apig/` (cache, versions, default output) -> `.zvyappy/`. If a user shows code using the old names, it is the old package: tell them to rename as above. Files generated by @travjek/apig are still recognised by `output.clean`.
+
 ## Supported OpenAPI
 
 OpenAPI 3.0, 3.1 (`type: [..., 'null']`), Swagger 2.0 (auto-upgraded), the 3.2 `QUERY` method. External `$ref`s to files and URLs. Objects, arrays, tuples (`prefixItems`), enums, nullable, `allOf`, `oneOf`/`anyOf` with optional `discriminator`, `additionalProperties`, recursive schemas. Formats and `minLength`/`maxLength`/`minimum`/`maximum`/`minItems`/`maxItems`. Path/query/header params, `content`-style params, `style`/`explode`. JSON, multipart and binary bodies. `200`/`201` success types; `4xx`/`5xx`, `default` and `4XX`-style error responses; bodiless `204`.
@@ -369,9 +372,9 @@ OpenAPI 3.0, 3.1 (`type: [..., 'null']`), Swagger 2.0 (auto-upgraded), the 3.2 `
 ## Custom plugins
 
 ```ts
-import type { ApigPlugin } from '@travjek/apig';
+import type { ZvyappyPlugin } from 'zvyappy';
 
-export const routesList = (): ApigPlugin => ({
+export const routesList = (): ZvyappyPlugin => ({
   name: 'routes-list',     // unique
   fileName: 'routes',      // → routes.ts
   scope: 'root',           // 'root': once for the whole spec | 'operations': once per group under groupBy
@@ -384,4 +387,4 @@ export const routesList = (): ApigPlugin => ({
 });
 ```
 
-`ir.operations[]`: `{ id, method, path, tag, summary, description, deprecated, params: { path, query, header }, body, response, errors }`. `ir.schemas[]`: `{ name, type, properties, enum, items, ... }`. The interface is `ApigPlugin` (there is no exported `Plugin` type), and `generate` returns one `{ code, exports, typeExports }` object.
+`ir.operations[]`: `{ id, method, path, tag, summary, description, deprecated, params: { path, query, header }, body, response, errors }`. `ir.schemas[]`: `{ name, type, properties, enum, items, ... }`. The interface is `ZvyappyPlugin` (there is no exported `Plugin` type), and `generate` returns one `{ code, exports, typeExports }` object.

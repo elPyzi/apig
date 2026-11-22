@@ -1,10 +1,10 @@
 {
-  "name": "apig",
-  "description": "apig's official plugin for Claude Code",
+  "name": "zvyappy",
+  "description": "zvyappy's official plugin for Claude Code",
   "plugins": {
-    "apig": {
-      "name": "apig",
-      "source": "./skills/apig",
+    "zvyappy": {
+      "name": "zvyappy",
+      "source": "./skills/zvyappy",
       "description": "Generate TypeScript types, SDK clients, Zod/Valibot/Yup schemas, TanStack Query/SWR hooks, React Hook Form resolvers, Faker factories, and MSW handlers from OpenAPI specs"
     }
   }

@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-The following table outlines which versions of **@travjek/apig** currently receive security updates.
+The following table outlines which versions of **zvyappy** currently receive security updates.
 
 | Version | Supported |
 |---------|-----------|

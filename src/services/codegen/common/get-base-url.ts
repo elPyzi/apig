@@ -1,4 +1,4 @@
-import type { ApigConfig } from '@models';
+import type { ZvyappyConfig } from '@models';
 import { logger } from '@libs/logger';
 
 let warned = false;
@@ -7,7 +7,7 @@ export const resetBaseUrlWarning = (): void => {
   warned = false;
 };
 
-export const getBaseUrl = (config: ApigConfig): string => {
+export const getBaseUrl = (config: ZvyappyConfig): string => {
   if (config.baseUrl) return config.baseUrl;
 
   const isFetch = !config.httpClient || config.httpClient.name === 'fetch';

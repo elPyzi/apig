@@ -1,4 +1,4 @@
-# Contributing to @travjek/apig
+# Contributing to zvyappy
 
 Thank you for your interest in contributing! Here's how to get started.
 
@@ -30,8 +30,8 @@ bun run build
 
 Open a [GitHub Issue](https://github.com/elPyzi/apig/issues) and include:
 
-- `@travjek/apig` version
-- Your `apig.config.ts`
+- `zvyappy` version
+- Your `zvyappy.config.ts`
 - The OpenAPI spec (or a minimal reproduction)
 - Expected vs actual output
 

@@ -1,13 +1,13 @@
-import type { ApigConfig, LazyOrAsync } from '@models';
+import type { ZvyappyConfig, LazyOrAsync } from '@models';
 
 export function defineConfig(
-  config: LazyOrAsync<ApigConfig>,
-): LazyOrAsync<ApigConfig>;
+  config: LazyOrAsync<ZvyappyConfig>,
+): LazyOrAsync<ZvyappyConfig>;
 export function defineConfig(
-  config: LazyOrAsync<ApigConfig[]>,
-): LazyOrAsync<ApigConfig[]>;
+  config: LazyOrAsync<ZvyappyConfig[]>,
+): LazyOrAsync<ZvyappyConfig[]>;
 export function defineConfig(
-  config: LazyOrAsync<ApigConfig | ApigConfig[]>,
-): LazyOrAsync<ApigConfig | ApigConfig[]> {
+  config: LazyOrAsync<ZvyappyConfig | ZvyappyConfig[]>,
+): LazyOrAsync<ZvyappyConfig | ZvyappyConfig[]> {
   return config;
 }

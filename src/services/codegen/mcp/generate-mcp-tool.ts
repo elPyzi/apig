@@ -1,4 +1,4 @@
-import { type ApigConfig, type IROperation, type IRSchema } from '@models';
+import { type ZvyappyConfig, type IROperation, type IRSchema } from '@models';
 import { getArgs } from '@services/codegen/common/get-args';
 import { buildInputSchema } from './input-schema';
 import { getFunctionName } from '@services/codegen/common/get-function-name';
@@ -22,7 +22,7 @@ const toolDescription = (operation: IROperation): string => {
 export const generateMcpTool = (
   operation: IROperation,
   allSchemas: IRSchema[],
-  config: ApigConfig,
+  config: ZvyappyConfig,
   schemaSuffix: string,
 ): string => {
   const fnName = getFunctionName(operation, config);

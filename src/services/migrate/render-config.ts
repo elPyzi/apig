@@ -79,10 +79,10 @@ export const renderConfig = (
       : `[\n${projects.map((p) => `  ${renderProject(p, '  ')}`).join(',\n')},\n]`;
 
   return [
-    `// @travjek/apig — ${DOCS_BASE}`,
+    `// zvyappy — ${DOCS_BASE}`,
     `// Migrated from ${source}. Values were resolved when the migration ran:`,
     `// anything that came from an environment variable is now a literal.`,
-    `import { defineConfig, ${factories.join(', ')} } from '@travjek/apig';`,
+    `import { defineConfig, ${factories.join(', ')} } from 'zvyappy';`,
     ``,
     `export default defineConfig(${body});`,
     ``,

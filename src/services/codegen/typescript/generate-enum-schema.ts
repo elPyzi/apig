@@ -1,10 +1,10 @@
-import { ENUM_STYLES, type ApigConfig, type IRSchema } from '@models';
+import { ENUM_STYLES, type ZvyappyConfig, type IRSchema } from '@models';
 import { enumMemberKey, toPascalCase, toStringLiteral } from '@libs/string';
 import { buildJsDoc } from '@services/codegen/common/jsdoc';
 
 export const generateEnumSchema = (
   schema: IRSchema,
-  config: ApigConfig,
+  config: ZvyappyConfig,
 ): string => {
   if (!schema.name || !schema.enum) return '';
 

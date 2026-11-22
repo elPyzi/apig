@@ -25,8 +25,8 @@ import {
 import { getCacheSettings } from '@services/cache';
 import { CURRENT_CACHE_VERSION } from '@services/cache/storage';
 
-const CACHE_DIR = resolve('.apig/cache');
-const SCRATCH = resolve('.apig-cache-test');
+const CACHE_DIR = resolve('.zvyappy/cache');
+const SCRATCH = resolve('.zvyappy-cache-test');
 const SPEC_FILE = join(SCRATCH, 'spec.json');
 
 const spec = {
@@ -88,7 +88,7 @@ describe('fetchWithCache', () => {
     expect(result.hit).toBe(false);
   });
 
-  test('misses when a different apig wrote the entry', async () => {
+  test('misses when a different zvyappy wrote the entry', async () => {
     const input = seed();
     const text = JSON.stringify(spec);
     const specHash = new Bun.CryptoHasher('sha256').update(text).digest('hex');
@@ -99,7 +99,7 @@ describe('fetchWithCache', () => {
     // trusted — a warm cache would otherwise hide what an upgrade fixed
     writeFileSync(
       join(CACHE_DIR, `${key}.meta.json`),
-      JSON.stringify({ specHash, apigVersion: '0.0.1-other' }),
+      JSON.stringify({ specHash, zvyappyVersion: '0.0.1-other' }),
       'utf-8',
     );
 
@@ -241,9 +241,9 @@ describe('cache.ttl', () => {
   });
 
   test('an entry from before timestamps were kept is not trusted forever', () => {
-    expect(isExpired({ apigVersion: 'x' }, 60_000)).toBe(true);
+    expect(isExpired({ zvyappyVersion: 'x' }, 60_000)).toBe(true);
     // with no ttl there is nothing to measure against, so it stays usable
-    expect(isExpired({ apigVersion: 'x' }, null)).toBe(false);
+    expect(isExpired({ zvyappyVersion: 'x' }, null)).toBe(false);
   });
 
   test('sweeps entries nothing asks for any more', async () => {
@@ -296,38 +296,38 @@ describe('getCacheSettings', () => {
 });
 
 describe('an unwritable cache', () => {
-  const APIG_DIR = dirname(CACHE_DIR);
+  const ZVYAPPY_DIR = dirname(CACHE_DIR);
 
   test('reports the reason instead of throwing', () => {
-    rmSync(APIG_DIR, { recursive: true, force: true });
+    rmSync(ZVYAPPY_DIR, { recursive: true, force: true });
     // a file where the directory should be: mkdir cannot proceed, whatever the
     // permissions or the user
-    writeFileSync(APIG_DIR, 'not a directory', 'utf-8');
+    writeFileSync(ZVYAPPY_DIR, 'not a directory', 'utf-8');
 
     const result = writeCacheFiles(inputKey('./x.json'), ir, {}, spec);
 
     expect(result.ok).toBe(false);
     expect(result.ok === false && result.reason).toContain('ENOTDIR');
 
-    rmSync(APIG_DIR, { force: true });
+    rmSync(ZVYAPPY_DIR, { force: true });
   });
 
   test('sweeping an unreadable cache is not an error', () => {
-    rmSync(APIG_DIR, { recursive: true, force: true });
-    writeFileSync(APIG_DIR, 'not a directory', 'utf-8');
+    rmSync(ZVYAPPY_DIR, { recursive: true, force: true });
+    writeFileSync(ZVYAPPY_DIR, 'not a directory', 'utf-8');
 
     expect(purgeExpired(-1)).toBe(0);
 
-    rmSync(APIG_DIR, { force: true });
+    rmSync(ZVYAPPY_DIR, { force: true });
   });
 
   test('inspecting one reports nothing rather than failing', () => {
-    rmSync(APIG_DIR, { recursive: true, force: true });
-    writeFileSync(APIG_DIR, 'not a directory', 'utf-8');
+    rmSync(ZVYAPPY_DIR, { recursive: true, force: true });
+    writeFileSync(ZVYAPPY_DIR, 'not a directory', 'utf-8');
 
     expect(inspectCache().entries).toBe(0);
 
-    rmSync(APIG_DIR, { force: true });
+    rmSync(ZVYAPPY_DIR, { force: true });
   });
 });
 
@@ -338,7 +338,7 @@ describe('cache.maxEntries', () => {
     // rewritten so the age is deterministic rather than "all within one ms"
     writeFileSync(
       join(CACHE_DIR, `${key}.meta.json`),
-      JSON.stringify({ apigVersion: CURRENT_CACHE_VERSION, createdAt }),
+      JSON.stringify({ zvyappyVersion: CURRENT_CACHE_VERSION, createdAt }),
       'utf-8',
     );
   };
@@ -370,7 +370,7 @@ describe('cache.maxEntries', () => {
     writeCacheFiles(key, ir, {}, spec);
     writeFileSync(
       join(CACHE_DIR, `${key}.meta.json`),
-      JSON.stringify({ apigVersion: CURRENT_CACHE_VERSION }),
+      JSON.stringify({ zvyappyVersion: CURRENT_CACHE_VERSION }),
       'utf-8',
     );
 

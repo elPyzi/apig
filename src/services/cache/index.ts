@@ -1,4 +1,4 @@
-import type { ApigConfig, IR } from '@models';
+import type { ZvyappyConfig, IR } from '@models';
 import type { OpenAPIV3 } from 'openapi-types';
 import { parseDuration } from '@libs/duration';
 import { inputKey, writeCacheFiles } from './storage';
@@ -18,7 +18,7 @@ export interface CacheSettings {
  * separate flag. An unparseable ttl is rejected by config validation before
  * this runs, so it degrades to "no expiry" rather than throwing here.
  */
-export const getCacheSettings = (config: ApigConfig): CacheSettings => {
+export const getCacheSettings = (config: ZvyappyConfig): CacheSettings => {
   const cache = config.cache;
   if (!cache) return { enabled: false, ttlMs: null, maxEntries: null };
   if (cache === true) return { enabled: true, ttlMs: null, maxEntries: null };

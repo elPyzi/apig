@@ -1,4 +1,4 @@
-import { type IRSchema, type IRProperty, type ApigConfig } from '@models';
+import { type IRSchema, type IRProperty, type ZvyappyConfig } from '@models';
 import { quoteKey, toPascalCase, toStringLiteral } from '@libs/string';
 import { zodString, zodNumber, withNullable } from './zod-primitives';
 import { generateZodEnum } from './generate-zod-enum';
@@ -127,7 +127,7 @@ export const generateZodProperty = (
 export const generateZodSchema = (
   schema: IRSchema,
   allSchemas: IRSchema[],
-  config: ApigConfig,
+  config: ZvyappyConfig,
   opts: ZodOpts,
   recursive: ReadonlySet<string> = new Set(),
 ): string => {

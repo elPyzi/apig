@@ -5,7 +5,7 @@ export const isUrl = (value: string): boolean => /^https?:\/\//.test(value);
 
 /**
  * Re-expresses a path written relative to the source config's directory as one
- * relative to the current directory, where `apig.config.ts` is written.
+ * relative to the current directory, where `zvyappy.config.ts` is written.
  */
 export const rebasePath = (value: string, fromDir: string): string => {
   if (isUrl(value)) return value;
@@ -17,7 +17,7 @@ export const rebasePath = (value: string, fromDir: string): string => {
 
 /**
  * Projects that wrote different files into one directory cannot share it under
- * apig, where a directory is one project's output and `clean` empties it. Each
+ * zvyappy, where a directory is one project's output and `clean` empties it. Each
  * of them moves into its own subdirectory — all of them, since leaving one at
  * the shared path would have it clean out the others nested inside.
  */

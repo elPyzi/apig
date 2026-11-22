@@ -1,8 +1,8 @@
 export { defineConfig } from './config';
 
 export type {
-  ApigConfig,
-  ApigPlugin,
+  ZvyappyConfig,
+  ZvyappyPlugin,
   PluginContext,
   ExtraFile,
   HttpClient,

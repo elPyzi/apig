@@ -1,6 +1,6 @@
 import {
-  type ApigConfig,
-  type ApigPlugin,
+  type ZvyappyConfig,
+  type ZvyappyPlugin,
   type ExtraFile,
   type PluginResult,
   type TanstackQueryOptions,
@@ -37,7 +37,7 @@ const DEFAULT_OPTS = DEFAULTS.PLUGINS.TANSTACK;
  */
 export const tanstackQuery = (
   options: TanstackQueryOptions = {},
-): ApigPlugin => {
+): ZvyappyPlugin => {
   const opts: Required<TanstackQueryOptions> = {
     query: options.query ?? true,
     mutation: options.mutation ?? true,
@@ -48,7 +48,7 @@ export const tanstackQuery = (
     framework: options.framework ?? 'react',
   };
 
-  const plugin: ApigPlugin = {
+  const plugin: ZvyappyPlugin = {
     name: 'tanstack-query',
     fileName: 'tanstack',
     scope: 'operations',
@@ -77,7 +77,7 @@ export { generateQueryKeysFile };
 
 export const generateTanstack = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   requestsImportPath = './requests',
   queryKeysImportPath = './query-keys',
   opts: Required<TanstackQueryOptions> = { ...DEFAULT_OPTS },
@@ -154,7 +154,7 @@ export const generateTanstack = (
     const errorPath = customErrorImportPath ?? errCfg.importPath;
     lines.push(`import type { ${errCfg.className} } from '${errorPath}';`);
     if (config.rawResponse)
-      lines.push(`import type { ApigResponse } from '${configImportPath}';`);
+      lines.push(`import type { ZvyappyResponse } from '${configImportPath}';`);
   } else if (
     errCfg.enabled ||
     config.rawResponse ||
@@ -169,7 +169,7 @@ export const generateTanstack = (
       usedHooks.suspense
         ? errCfg.className
         : '',
-      config.rawResponse ? 'ApigResponse' : '',
+      config.rawResponse ? 'ZvyappyResponse' : '',
     ]
       .filter(Boolean)
       .join(', ');

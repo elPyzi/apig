@@ -13,7 +13,7 @@ const AT = new Date('2026-09-06T23:10:00');
 
 const dirs: string[] = [];
 const scratch = (): string => {
-  const dir = mkdtempSync(join(tmpdir(), 'apig-versions-'));
+  const dir = mkdtempSync(join(tmpdir(), 'zvyappy-versions-'));
   dirs.push(dir);
   return dir;
 };

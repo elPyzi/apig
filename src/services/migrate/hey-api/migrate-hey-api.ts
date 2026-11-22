@@ -61,7 +61,7 @@ const splitJobs = (config: UserConfig, notes: string[]): Job[] => {
     return inputs.map((input, i) => ({ input, output: outputs[i] }));
   if (inputs.length > 1)
     notes.push(
-      `hey-api merged ${inputs.length} specs into one output; apig reads one — only the first is used`,
+      `hey-api merged ${inputs.length} specs into one output; zvyappy reads one — only the first is used`,
     );
   return [{ input: inputs[0], output: outputs[0] }];
 };
@@ -126,13 +126,13 @@ const readFilters = (config: UserConfig, project: MigratedProject) => {
     project.filter = {
       ...(include.length ? { tags: include } : {}),
       ...(exclude.length ? { exclude } : {}),
-      // a filter makes apig drop deprecated operations; hey-api keeps them
+      // a filter makes zvyappy drop deprecated operations; hey-api keeps them
       deprecated: filters.deprecated !== false,
     };
   else if (filters.deprecated === false) project.filter = { deprecated: false };
   if (filters.operations || filters.schemas || filters.parameters)
     project.notes.push(
-      'filters on operations, schemas or parameters have no apig equivalent — apig filters by tag',
+      'filters on operations, schemas or parameters have no zvyappy equivalent — zvyappy filters by tag',
     );
 };
 
@@ -183,7 +183,7 @@ const readPlugins = (config: UserConfig, project: MigratedProject) => {
             ? enums
             : enumOptions?.mode;
       const enabled = enumOptions ? enumOptions.enabled !== false : !!enums;
-      // without enums hey-api writes unions; apig defaults to const objects
+      // without enums hey-api writes unions; zvyappy defaults to const objects
       project.enumStyle =
         enabled && typeof mode === 'string'
           ? (ENUM_STYLES[mode] ?? 'const')
@@ -193,7 +193,7 @@ const readPlugins = (config: UserConfig, project: MigratedProject) => {
       features.requests = true;
       if (options.asClass)
         project.notes.push(
-          'hey-api generated an SDK class; apig generates standalone request functions',
+          'hey-api generated an SDK class; zvyappy generates standalone request functions',
         );
     } else if (name.startsWith('@hey-api/client-')) {
       client = name;
@@ -213,15 +213,15 @@ const readPlugins = (config: UserConfig, project: MigratedProject) => {
       features.msw = true;
     } else if (name === '@hey-api/schemas') {
       project.notes.push(
-        '@hey-api/schemas (JSON Schema exports) has no apig equivalent — zod() or valibot() validate at runtime instead',
+        '@hey-api/schemas (JSON Schema exports) has no zvyappy equivalent — zod() or valibot() validate at runtime instead',
       );
     } else if (name === '@hey-api/transformers') {
       project.notes.push(
-        '@hey-api/transformers (e.g. string → Date) has no apig equivalent',
+        '@hey-api/transformers (e.g. string → Date) has no zvyappy equivalent',
       );
     } else if (name) {
       project.notes.push(
-        `hey-api plugin ${name} has no apig equivalent and was dropped`,
+        `hey-api plugin ${name} has no zvyappy equivalent and was dropped`,
       );
     }
   }
@@ -232,16 +232,18 @@ const readPlugins = (config: UserConfig, project: MigratedProject) => {
     (features.requests || features.tanstack || features.swr)
   ) {
     project.notes.push(
-      `hey-api used ${client}; apig takes a client instance — set httpClient: { name: '${instanceClient}', path, export } to a module exporting one, until then requests use fetch`,
+      `hey-api used ${client}; zvyappy takes a client instance — set httpClient: { name: '${instanceClient}', path, export } to a module exporting one, until then requests use fetch`,
     );
   } else if (client !== '@hey-api/client-fetch') {
-    project.notes.push(`${client} has no apig equivalent — requests use fetch`);
+    project.notes.push(
+      `${client} has no zvyappy equivalent — requests use fetch`,
+    );
   }
 
   project.plugins = buildPlugins(features);
 };
 
-/** Translates every job in a hey-api config into an apig config. */
+/** Translates every job in a hey-api config into a zvyappy config. */
 export const migrateHeyApi = (
   configs: UserConfig[],
   configPath: string,

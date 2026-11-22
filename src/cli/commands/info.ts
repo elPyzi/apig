@@ -5,13 +5,13 @@ import { toMessage } from '@libs/error';
 
 import { load } from '@services/parser';
 import { logger } from '@libs/logger';
-import type { ApigConfig } from '@models';
+import type { ZvyappyConfig } from '@models';
 
-const loadConfig = async (configPath: string): Promise<ApigConfig[]> => {
+const loadConfig = async (configPath: string): Promise<ZvyappyConfig[]> => {
   const jiti = createJiti(import.meta.url);
 
   const mod = (await jiti.import(resolve(process.cwd(), configPath))) as {
-    default: ApigConfig | ApigConfig[];
+    default: ZvyappyConfig | ZvyappyConfig[];
   };
 
   return Array.isArray(mod.default) ? mod.default : [mod.default];
@@ -22,7 +22,7 @@ export const registerInfoCommand = (program: Command): void => {
     .command('info')
     .alias('i')
     .description('Show spec statistics without generating files')
-    .option('-c, --config <path>', 'Path to config file', 'apig.config.ts')
+    .option('-c, --config <path>', 'Path to config file', 'zvyappy.config.ts')
     .action(async (options) => {
       try {
         const configs = await loadConfig(options.config);

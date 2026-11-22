@@ -7,11 +7,11 @@ import type {
   FakerOptions,
 } from './plugin';
 import { LOG_LEVELS } from './config';
-import type { ApigConfig } from './config';
+import type { ZvyappyConfig } from './config';
 
 export const DEFAULTS = {
   CONFIG: {
-    output: '.apig/generated',
+    output: '.zvyappy/generated',
     httpClient: {
       name: 'fetch',
     },
@@ -30,7 +30,7 @@ export const DEFAULTS = {
     // `minimal` is what the CLI has always done — the constant said `normal`
     // but nothing read it, so the writer's own fallback was the real default
     cliLogging: { level: LOG_LEVELS.MINIMAL },
-  } satisfies Partial<ApigConfig>,
+  } satisfies Partial<ZvyappyConfig>,
 
   PLUGINS: {
     TANSTACK: {
@@ -77,7 +77,7 @@ export const DEFAULTS = {
     },
 
     MCP: {
-      name: 'apig',
+      name: 'zvyappy',
       version: '1.0.0',
     },
   },

@@ -1,7 +1,7 @@
 import { join, resolve, relative } from 'path';
 import { mkdirSync } from 'fs';
 
-import type { ApigConfig, ApigPlugin, PluginResult } from '@models';
+import type { ZvyappyConfig, ZvyappyPlugin, PluginResult } from '@models';
 import type { IR, IROperation } from '@models';
 import { applyNaming } from '@libs/string';
 import type { WriteFn } from '@services/writer/write-fn';
@@ -31,9 +31,9 @@ export const buildTagMap = (
 
 export const writeRootPlugins = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   outputPath: string,
-  plugins: ApigPlugin[],
+  plugins: ZvyappyPlugin[],
   results: Record<string, PluginResult>,
   writeFn: WriteFn,
 ): void => {
@@ -53,10 +53,10 @@ export const writeRootPlugins = (
 
 export const writeOpPlugins = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   dir: string,
   fileBaseName: string,
-  plugins: ApigPlugin[],
+  plugins: ZvyappyPlugin[],
   results: Record<string, PluginResult>,
   resultKeySuffix: string,
   logPrefix: string,
@@ -96,9 +96,9 @@ export const writeOpPlugins = (
 
 export const writePluginRootFiles = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   outputPath: string,
-  plugins: ApigPlugin[],
+  plugins: ZvyappyPlugin[],
   writeFn: WriteFn,
 ): void => {
   for (const plugin of plugins) {
@@ -111,9 +111,9 @@ export const writePluginRootFiles = (
 
 export const writeAll = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   outputPath: string,
-  plugins: ApigPlugin[],
+  plugins: ZvyappyPlugin[],
   results: Record<string, PluginResult>,
   writeFn: WriteFn,
 ): void => {
@@ -145,9 +145,9 @@ export const writeAll = (
 
 export const writeByTags = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   outputPath: string,
-  plugins: ApigPlugin[],
+  plugins: ZvyappyPlugin[],
   results: Record<string, PluginResult>,
   tagMap: Map<string, IROperation[]>,
   writeFn: WriteFn,
@@ -178,9 +178,9 @@ export const writeByTags = (
 
 export const writeByEndpoints = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   outputPath: string,
-  plugins: ApigPlugin[],
+  plugins: ZvyappyPlugin[],
   results: Record<string, PluginResult>,
   writeFn: WriteFn,
   dryRun = false,
@@ -219,9 +219,9 @@ export const writeByEndpoints = (
 
 export const writeByOperations = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   outputPath: string,
-  plugins: ApigPlugin[],
+  plugins: ZvyappyPlugin[],
   results: Record<string, PluginResult>,
   writeFn: WriteFn,
   dryRun = false,

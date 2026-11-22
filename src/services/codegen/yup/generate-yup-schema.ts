@@ -1,4 +1,4 @@
-import type { IRSchema, ApigConfig } from '@models';
+import type { IRSchema, ZvyappyConfig } from '@models';
 import { toPascalCase, quoteKey } from '@libs/string';
 import { generateSchema } from '@services/codegen/typescript/generate-schema';
 import { generateYupValue, generateYupProperty } from './value';
@@ -14,7 +14,7 @@ export interface YupOpts {
 export const generateYupSchema = (
   schema: IRSchema,
   allSchemas: IRSchema[],
-  config: ApigConfig,
+  config: ZvyappyConfig,
   opts: YupOpts,
   recursive: ReadonlySet<string> = new Set(),
 ): string => {

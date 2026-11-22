@@ -1,7 +1,7 @@
 import {
   type IR,
-  type ApigConfig,
-  type ApigPlugin,
+  type ZvyappyConfig,
+  type ZvyappyPlugin,
   type PluginResult,
   banner,
   HTTP_METHODS,
@@ -22,14 +22,14 @@ import {
  * Requires `msw >= 2.0.0` as a peer dependency.
  * @example msw()
  */
-export const msw = (): ApigPlugin => ({
+export const msw = (): ZvyappyPlugin => ({
   name: 'msw',
   fileName: 'msw',
   scope: 'root',
   generate: (ir, config) => generateMsw(ir, config),
 });
 
-export const generateMsw = (ir: IR, config: ApigConfig): PluginResult => {
+export const generateMsw = (ir: IR, config: ZvyappyConfig): PluginResult => {
   logger.plugin('msw', 'Generating handlers...');
 
   if (!hasFakerPlugin(config)) {

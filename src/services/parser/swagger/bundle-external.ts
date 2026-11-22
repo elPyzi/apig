@@ -30,7 +30,7 @@ const atPointer = (root: unknown, pointer: string): unknown =>
  * Rewrites `$ref`s that point at another file into local ones.
  *
  * The parser hands back the entrypoint exactly as it was read, references and
- * all — apig resolves them itself, by the name the pointer ends in. That works
+ * all — zvyappy resolves them itself, by the name the pointer ends in. That works
  * only for a target the document declares: `./common.json#/…/Pet` named a `Pet`
  * that lives in a file nobody ever looked at, so the generated code imported a
  * type that was never emitted. Every such target is copied into

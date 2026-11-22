@@ -1,7 +1,7 @@
 import {
   type IR,
-  type ApigConfig,
-  type ApigPlugin,
+  type ZvyappyConfig,
+  type ZvyappyPlugin,
   type PluginResult,
   type ValibotOptions,
   banner,
@@ -26,7 +26,7 @@ const DEFAULT_OPTS = DEFAULTS.PLUGINS.VALIBOT;
  * Requires `valibot >= 1.0.0` as a peer dependency.
  * @example valibot({ withTypes: true })
  */
-export const valibot = (options: ValibotOptions = {}): ApigPlugin => {
+export const valibot = (options: ValibotOptions = {}): ZvyappyPlugin => {
   const opts: ValibotOpts = {
     withTypes: options.withTypes ?? DEFAULT_OPTS.withTypes,
     schemaSuffix: options.schemaSuffix ?? DEFAULT_OPTS.schemaSuffix,
@@ -44,7 +44,7 @@ export const valibot = (options: ValibotOptions = {}): ApigPlugin => {
 
 export const generateValibot = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   opts: ValibotOpts = { ...DEFAULT_OPTS },
 ): PluginResult => {
   const recursive = findRecursiveSchemas(ir.schemas);

@@ -1,6 +1,6 @@
 import {
-  type ApigConfig,
-  type ApigPlugin,
+  type ZvyappyConfig,
+  type ZvyappyPlugin,
   type ExtraFile,
   type PluginResult,
   type SwrOptions,
@@ -29,14 +29,14 @@ import {
  * Requires `swr >= 2.0.0` as a peer dependency.
  * @example swr({ queryKeysStyle: "object" })
  */
-export const swr = (options: SwrOptions = {}): ApigPlugin => {
+export const swr = (options: SwrOptions = {}): ZvyappyPlugin => {
   const style = options.queryKeysStyle ?? DEFAULTS.PLUGINS.SWR.queryKeysStyle;
   const hookGenerationStrategies =
     options.hookGenerationStrategies ??
     DEFAULTS.PLUGINS.SWR.hookGenerationStrategies;
   const framework = options.framework ?? DEFAULTS.PLUGINS.SWR.framework;
 
-  const plugin: ApigPlugin = {
+  const plugin: ZvyappyPlugin = {
     name: 'swr',
     fileName: 'swr',
     scope: 'operations',
@@ -67,7 +67,7 @@ export { generateSwrKeysFile };
 
 export const generateSwr = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   requestsImportPath = './requests',
   swrKeysImportPath = './swr-keys',
   style: 'functions' | 'object' = 'functions',
@@ -156,11 +156,11 @@ export const generateSwr = (
     const errorPath = customErrorImportPath ?? errCfg.importPath;
     lines.push(`import type { ${errCfg.className} } from '${errorPath}';`);
     if (config.rawResponse)
-      lines.push(`import type { ApigResponse } from '${configImportPath}';`);
+      lines.push(`import type { ZvyappyResponse } from '${configImportPath}';`);
   } else if (errCfg.enabled || config.rawResponse) {
     const named = [
       errCfg.enabled ? errCfg.className : '',
-      config.rawResponse ? 'ApigResponse' : '',
+      config.rawResponse ? 'ZvyappyResponse' : '',
     ]
       .filter(Boolean)
       .join(', ');

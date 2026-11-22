@@ -1,8 +1,8 @@
 import {
   type IR,
   type IRSchema,
-  type ApigConfig,
-  type ApigPlugin,
+  type ZvyappyConfig,
+  type ZvyappyPlugin,
   type PluginResult,
   type RhfOptions,
   type RhfResolver,
@@ -24,7 +24,7 @@ const RESOLVER_META: Record<RhfResolver, { pkg: string; fn: string }> = {
 
 export const generateRhf = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   opts: RhfOptions & { schemaSuffix: string },
 ): PluginResult => {
   const meta = RESOLVER_META[opts.resolver];
@@ -81,7 +81,7 @@ export const generateRhf = (
  * Requires `react-hook-form` and `@hookform/resolvers` as peer dependencies.
  * @example rhf({ resolver: "zod" })
  */
-export const rhf = (options: RhfOptions): ApigPlugin => {
+export const rhf = (options: RhfOptions): ZvyappyPlugin => {
   const opts = {
     resolver: options.resolver,
     schemaSuffix: options.schemaSuffix ?? DEFAULTS.PLUGINS.RHF.schemaSuffix,

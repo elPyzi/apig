@@ -3,7 +3,7 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 /**
- * Documentation site root — used by the banner, `apig start`/`apig config`,
+ * Documentation site root — used by the banner, `zvyappy start`/`zvyappy config`,
  * and as the fallback link in config validation errors.
  */
 export const DOCS_BASE =
@@ -23,7 +23,7 @@ export const GUIDE_DOCS = {
 } as const;
 
 /**
- * Package version, read from the nearest package.json at runtime so `apig --version`
+ * Package version, read from the nearest package.json at runtime so `zvyappy --version`
  * can never drift from what was published. Works both from `src` in dev and from
  * `dist` in the installed package.
  */

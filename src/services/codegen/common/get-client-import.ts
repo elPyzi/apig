@@ -1,7 +1,7 @@
-import type { ApigConfig } from '@models';
+import type { ZvyappyConfig } from '@models';
 
 export const getClientImport = (
-  config: ApigConfig,
+  config: ZvyappyConfig,
   resolvedPath?: string,
 ): { name: string; path: string } => {
   if (!config.httpClient || config.httpClient.name === 'fetch') {

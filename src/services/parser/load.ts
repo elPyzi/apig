@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 import type { IR } from '@models';
-import type { ApigConfig } from '@models';
+import type { ZvyappyConfig } from '@models';
 import type { OpenAPIV3 } from 'openapi-types';
 import { logger } from '@libs/logger';
 import { loadSpec } from './swagger';
@@ -17,7 +17,7 @@ export interface LoadResult {
   spec: OpenAPIV3.Document;
 }
 
-export const load = async (config: ApigConfig): Promise<LoadResult> => {
+export const load = async (config: ZvyappyConfig): Promise<LoadResult> => {
   logger.stage('Specification loading...');
 
   const input =

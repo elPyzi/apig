@@ -50,11 +50,11 @@ const readClient = (
       options.client !== 'fetch');
   if (typeof options.importPath === 'string') {
     project.notes.push(
-      `kubb used a custom client from ${options.importPath}; apig takes a client instance — set httpClient: { name, path, export }`,
+      `kubb used a custom client from ${options.importPath}; zvyappy takes a client instance — set httpClient: { name, path, export }`,
     );
   } else if (axios) {
     project.notes.push(
-      "kubb used axios's default instance; apig needs a module that exports one — set httpClient: { name: 'axios', path, export }, until then requests use fetch",
+      "kubb used axios's default instance; zvyappy needs a module that exports one — set httpClient: { name: 'axios', path, export }, until then requests use fetch",
     );
   }
 };
@@ -106,7 +106,7 @@ const migrateProject = (
     if (asObject(options.group)?.type === 'tag') project.groupBy = 'tags';
     else if (asObject(options.group)?.type === 'path')
       project.notes.push(
-        `${name} grouped by path; apig groups by tag (groupBy: 'tags')`,
+        `${name} grouped by path; zvyappy groups by tag (groupBy: 'tags')`,
       );
 
     if (SILENT_PLUGINS.has(name)) continue;
@@ -142,7 +142,7 @@ const migrateProject = (
       features.mcp = true;
     } else {
       project.notes.push(
-        `kubb ${name || 'plugin'} has no apig equivalent and was dropped`,
+        `kubb ${name || 'plugin'} has no zvyappy equivalent and was dropped`,
       );
     }
   }
@@ -151,7 +151,7 @@ const migrateProject = (
   return project;
 };
 
-/** Translates every project in a kubb config into an apig config. */
+/** Translates every project in a kubb config into a zvyappy config. */
 export const migrateKubb = (configs: UserConfig[]): MigratedProject[] => {
   const projects = configs.map((config, i) =>
     migrateProject(config, i, configs.length === 1),

@@ -104,7 +104,7 @@ class Logger {
   /**
    * The answer to a command the user typed.
    *
-   * Not a log line: `apig cache status` exists to print this, so the generation
+   * Not a log line: `zvyappy cache status` exists to print this, so the generation
    * log level has no say in it. Routing these through `info` made three
    * commands print nothing at all under the default level.
    */

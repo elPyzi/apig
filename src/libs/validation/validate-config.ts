@@ -8,7 +8,7 @@ import {
   FORMATTERS,
   TYPE_STYLES,
 } from '@models';
-import type { ApigConfig } from '@models';
+import type { ZvyappyConfig } from '@models';
 import { CONFIG_DOCS_URL, GUIDE_DOCS } from '@constants';
 import { isValidDuration, DURATION_UNITS } from '@libs/duration';
 
@@ -23,7 +23,7 @@ const TYPE_STYLE_VALUES = Object.values(TYPE_STYLES);
 
 /**
  * Per-option documentation links, also the source of truth for typo detection.
- * Keep in sync with `ApigConfig`.
+ * Keep in sync with `ZvyappyConfig`.
  */
 const DOCS_LINKS: Record<string, string> = {
   name: CONFIG_DOCS_URL,
@@ -76,7 +76,7 @@ export class ConfigValidationError extends Error {
       if (DOCS_LINKS[field]) links[field] = DOCS_LINKS[field];
     }
 
-    super(`[apig] Config validation failed`);
+    super(`[zvyappy] Config validation failed`);
     this.name = 'ConfigValidationError';
     this.validationErrors = errors;
     this.docLinks = links;
@@ -86,7 +86,7 @@ export class ConfigValidationError extends Error {
 const KNOWN_KEYS = new Set(Object.keys(DOCS_LINKS));
 
 /**
- * Validates a config object loaded from the user's `apig.config.ts`.
+ * Validates a config object loaded from the user's `zvyappy.config.ts`.
  * The input is whatever that module exported, so it is typed as `unknown` —
  * checking it is exactly this function's job.
  */
@@ -97,7 +97,7 @@ export const validateConfig = (input: unknown): void => {
     throw new ConfigValidationError(['config must be an object']);
   }
 
-  const config = input as ApigConfig;
+  const config = input as ZvyappyConfig;
 
   // unknown keys
   for (const key of Object.keys(config)) {

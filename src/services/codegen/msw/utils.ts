@@ -1,4 +1,4 @@
-import type { IROperation, ApigConfig } from '@models';
+import type { IROperation, ZvyappyConfig } from '@models';
 import { toPascalCase, toParamName } from '@libs/string';
 
 export const primitiveMap: Record<string, string> = {
@@ -7,7 +7,7 @@ export const primitiveMap: Record<string, string> = {
   boolean: 'faker.datatype.boolean()',
 };
 
-export const hasFakerPlugin = (config: ApigConfig): boolean =>
+export const hasFakerPlugin = (config: ZvyappyConfig): boolean =>
   (config.plugins ?? []).some((p) => p.name === 'faker');
 
 export const toMswPath = (path: string, baseUrl?: string): string => {

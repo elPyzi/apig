@@ -1,4 +1,4 @@
-import type { ApigConfig, IRSchema } from '@models';
+import type { ZvyappyConfig, IRSchema } from '@models';
 import { toPascalCase } from '@libs/string';
 
 /**
@@ -39,7 +39,7 @@ export const inlineEnumNames = (
 export const nativeEnumProps = (
   schema: IRSchema,
   allSchemas: IRSchema[],
-  config: ApigConfig,
+  config: ZvyappyConfig,
   recursive: ReadonlySet<string>,
 ): Map<string, string> =>
   config.enumStyle === 'enum' && schema.name && recursive.has(schema.name)

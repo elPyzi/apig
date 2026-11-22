@@ -1,4 +1,4 @@
-import { type ApigConfig, type IROperation, type IRSchema } from '@models';
+import { type ZvyappyConfig, type IROperation, type IRSchema } from '@models';
 import { toPascalCase } from '@libs/string';
 import { getResponseType } from '@services/codegen/common/get-response-type';
 import { getArgs } from '@services/codegen/common/get-args';
@@ -14,8 +14,8 @@ import { getFunctionName } from '@services/codegen/common/get-function-name';
 /**
  * The error type the hook and its `queryOptions` helper have to agree on.
  *
- * The helper is spread into the hook, so options typed `ApigError<GetPetErrors>`
- * flowing into a hook generic over a bare `ApigError` is an overload error in
+ * The helper is spread into the hook, so options typed `ZvyappyError<GetPetErrors>`
+ * flowing into a hook generic over a bare `ZvyappyError` is an overload error in
  * the user's project — the two must be built from the same expression.
  */
 const buildErrorType = (
@@ -72,16 +72,16 @@ export const generateQuery = (
   operation: IROperation,
   allSchemas: IRSchema[],
   queryKeysStyle: 'functions' | 'object',
-  config: ApigConfig,
+  config: ZvyappyConfig,
   errorHandling = false,
   rawResponse = false,
-  errorClass = 'ApigError',
+  errorClass = 'ZvyappyError',
   fw: TanstackFrameworkConfig = DEFAULT_FW,
 ): string => {
   const name = getFunctionName(operation, config);
   const pascalName = toPascalCase(operation.id);
   const baseType = getResponseType(operation.response, allSchemas);
-  const responseType = rawResponse ? `ApigResponse<${baseType}>` : baseType;
+  const responseType = rawResponse ? `ZvyappyResponse<${baseType}>` : baseType;
   const args = getArgs(operation, allSchemas);
   const argsList = buildArgsList(args);
   const callArgs = buildCallArgs(args);
@@ -109,8 +109,8 @@ export const generateInfiniteQuery = (
   operation: IROperation,
   allSchemas: IRSchema[],
   queryKeysStyle: 'functions' | 'object',
-  config: ApigConfig,
-  errorClass = 'ApigError',
+  config: ZvyappyConfig,
+  errorClass = 'ZvyappyError',
   fw: TanstackFrameworkConfig = DEFAULT_FW,
 ): string => {
   const name = getFunctionName(operation, config);
@@ -141,9 +141,9 @@ export const generateInfiniteQuery = (
 export const generateSuspenseQuery = (
   operation: IROperation,
   allSchemas: IRSchema[],
-  config: ApigConfig,
+  config: ZvyappyConfig,
   errorHandling = false,
-  errorClass = 'ApigError',
+  errorClass = 'ZvyappyError',
   fw: TanstackFrameworkConfig = DEFAULT_FW,
 ): string => {
   const name = getFunctionName(operation, config);

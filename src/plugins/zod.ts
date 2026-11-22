@@ -1,7 +1,7 @@
 import {
   type IR,
-  type ApigConfig,
-  type ApigPlugin,
+  type ZvyappyConfig,
+  type ZvyappyPlugin,
   type PluginResult,
   type ZodOptions,
   banner,
@@ -26,7 +26,7 @@ const DEFAULT_OPTS = DEFAULTS.PLUGINS.ZOD;
  * Requires `zod >= 3.0.0` as a peer dependency.
  * @example zod({ infer: true, validateResponse: true })
  */
-export const zod = (options: ZodOptions = {}): ApigPlugin => {
+export const zod = (options: ZodOptions = {}): ZvyappyPlugin => {
   const opts: ZodOpts = {
     infer: options.infer ?? DEFAULT_OPTS.infer,
     input: options.input ?? DEFAULT_OPTS.input,
@@ -48,7 +48,7 @@ export const zod = (options: ZodOptions = {}): ApigPlugin => {
 
 export const generateZod = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   opts: ZodOpts = { ...DEFAULT_OPTS },
 ): PluginResult => {
   const recursive = findRecursiveSchemas(ir.schemas);

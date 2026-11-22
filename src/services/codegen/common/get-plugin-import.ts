@@ -1,7 +1,7 @@
 import {
   GROUP_BY,
-  type ApigConfig,
-  type ApigPlugin,
+  type ZvyappyConfig,
+  type ZvyappyPlugin,
   type IROperation,
 } from '@models';
 import { applyNaming } from '@libs/string';
@@ -16,7 +16,10 @@ export type FileScope = 'root' | 'operations';
  * with `./` no matter how the project is grouped. Only operation-scoped files
  * are nested by `groupBy` and have to climb back up.
  */
-export const getRootPrefix = (config: ApigConfig, scope: FileScope): string => {
+export const getRootPrefix = (
+  config: ZvyappyConfig,
+  scope: FileScope,
+): string => {
   if (scope === 'root') return './';
 
   switch (config?.groupBy ?? GROUP_BY.NONE) {
@@ -31,9 +34,9 @@ export const getRootPrefix = (config: ApigConfig, scope: FileScope): string => {
 };
 
 export const findPlugin = (
-  config: ApigConfig,
+  config: ZvyappyConfig,
   name: string,
-): ApigPlugin | undefined =>
+): ZvyappyPlugin | undefined =>
   (config.plugins ?? []).find((p) => p.name === name);
 
 /**
@@ -42,7 +45,7 @@ export const findPlugin = (
  * @example getRootPluginImport(config, 'faker', 'root') → './faker'
  */
 export const getRootPluginImport = (
-  config: ApigConfig,
+  config: ZvyappyConfig,
   name: string,
   scope: FileScope,
 ): string => {
@@ -57,7 +60,7 @@ export const getRootPluginImport = (
  * @example getOperationPluginImport(config, 'requests', op) → './pets/pets.requests'
  */
 export const getOperationPluginImport = (
-  config: ApigConfig,
+  config: ZvyappyConfig,
   name: string,
   op: IROperation,
 ): string => {

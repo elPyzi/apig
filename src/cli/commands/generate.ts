@@ -22,7 +22,7 @@ export const registerGenerateCommand = (program: Command): void => {
     .command('generate')
     .alias('g')
     .description('Generate code from OpenAPI spec')
-    .option('-c, --config <path>', 'Path to config file', 'apig.config.ts')
+    .option('-c, --config <path>', 'Path to config file', 'zvyappy.config.ts')
     .option(
       '-d, --dry-run',
       'Show what would be generated without writing files',

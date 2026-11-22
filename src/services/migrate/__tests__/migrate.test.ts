@@ -174,7 +174,7 @@ describe('migrateKubb', () => {
     ]);
 
     expect(project!.notes).toEqual([
-      'kubb plugin-redoc has no apig equivalent and was dropped',
+      'kubb plugin-redoc has no zvyappy equivalent and was dropped',
     ]);
   });
 });
@@ -332,7 +332,7 @@ describe('renderConfig', () => {
     );
 
     expect(code).toContain(
-      "import { defineConfig, typescript, tanstackQuery } from '@travjek/apig';",
+      "import { defineConfig, typescript, tanstackQuery } from 'zvyappy';",
     );
     expect(code).toContain('  // TODO(migrate): check this');
     expect(code).toContain("  input: './it\\'s.json',");

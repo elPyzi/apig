@@ -1,4 +1,4 @@
-import { defineConfig, typescript, requests, swr } from '@travjek/apig'
+import { defineConfig, typescript, requests, swr } from 'zvyappy'
 
 export default defineConfig({
   input: './openapi.json',

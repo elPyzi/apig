@@ -1,4 +1,4 @@
-import { defineConfig, typescript } from '@travjek/apig'
+import { defineConfig, typescript } from 'zvyappy'
 
 export default defineConfig({
   input: './openapi.json',

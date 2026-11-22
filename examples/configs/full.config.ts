@@ -7,7 +7,7 @@ import {
   rhf,
   faker,
   msw,
-} from '@travjek/apig'
+} from 'zvyappy'
 
 export default defineConfig({
   input: './openapi.json',

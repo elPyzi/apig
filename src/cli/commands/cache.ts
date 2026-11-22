@@ -11,7 +11,7 @@ const formatSize = (bytes: number): string => {
 };
 
 /**
- * The cache lives under the directory apig was run from, so the path is worth
+ * The cache lives under the directory zvyappy was run from, so the path is worth
  * printing — running from elsewhere reads and writes a different one.
  */
 const describe = ({ dir, entries, bytes }: CacheSummary): string => {
