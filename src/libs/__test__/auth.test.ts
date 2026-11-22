@@ -2,12 +2,13 @@ import { describe, test, expect } from 'bun:test';
 import { specRequestHeaders } from '@libs/auth';
 
 const SPEC = 'https://docs.example.com/api-docs';
-const auth = { username: 'swagger', password: 's3cret' };
+// not a real credential — fake placeholder values for this test only
+const auth = { username: 'test-user', password: 'test-pass' };
 
 describe('specRequestHeaders', () => {
   test('sends basic auth to the spec itself', () => {
     expect(specRequestHeaders(SPEC, SPEC, auth)).toEqual({
-      Authorization: `Basic ${Buffer.from('swagger:s3cret').toString('base64')}`,
+      Authorization: `Basic ${Buffer.from('test-user:test-pass').toString('base64')}`,
     });
   });
 
