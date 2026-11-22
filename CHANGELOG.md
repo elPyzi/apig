@@ -2,9 +2,30 @@
 
 All notable changes to `@travjek/apig` will be documented in this file.
 
+## [0.13.0]
+
+### Added
+
+- `apig migrate <orval|kubb|hey-api>` reads an existing orval, kubb or `@hey-api/openapi-ts` config and writes an equivalent `apig.config.ts`, so switching to apig does not start from a blank file. Plugins, output path, `groupBy`/tag filters, formatter, enum style and HTTP client are carried across; anything with no apig equivalent — a mutator or custom client instance, an SDK class, `@hey-api/schemas`/`@hey-api/transformers`, an unrecognized plugin, an API-registry shorthand input, auth passed as a raw `Authorization` header — becomes a `TODO(migrate)` comment in the generated config instead of being silently dropped, and the CLI prints the same list as a review summary. `-t/--target <path>` points at a config outside the current directory; `-c/--clean` removes the source config once the migration succeeds. Refuses to run if `apig.config.ts` already exists
+- The HTTP `QUERY` method (OpenAPI 3.2) is now generated end to end instead of being dropped by the parser: request functions, `tanstackQuery()`/`swr()` hooks (as a query, not a mutation, the same as `GET`), `msw()` handlers and `playwright()` helpers all support it, and every HTTP client — `fetch`, `axios`, `ky`, `ofetch`, `wretch` — sends it correctly even though none of them has a native verb for it
+- `auth: { username, password }` lets a config supply HTTP Basic Auth for a spec that requires login, such as one behind `express-basic-auth`. The credentials are scoped to the spec's own origin and are never sent to an external host reached through a `$ref`; a `401`/`403` now fails with a message pointing at `auth` instead of a generic fetch error
+
+### Fixed
+
+- An enum member whose name did not survive `toPascalCase` into a valid identifier — a value like `1(першы)Квартал` — was emitted as a bare, unescaped object key, which does not parse. Member keys and values are now escaped and quoted where needed
+- MCP's input schema keyed a path parameter differently from the request function it calls, so a name like `structure-type` reached the handler as `structureType` and the call failed at the mismatched key. Both now go through the same naming helper. A parameter with no declared schema (an OpenAPI `content`-style parameter) was also typed `z.unknown()` in the MCP schema while the request function types it as a string; it is now `z.string()` in both
+- `rawResponse`'s `.json<...>()` stripping matched only up to the first `>`, so a nested generic like `.json<Array<Item>>()` was cut mid-type. It now strips from the last `.json<`
+- A request function with `errorHandling: false` returned the raw `AxiosResponse` from the axios client instead of its unwrapped `.data`, the one client among the five that does not hand back the body directly
+- The `wretch` adapter passed `undefined` to `.headers()` when a request had no header parameters, which TypeScript rejects
+- `faker()` generated an inline object property (no `$ref`) as a lorem word typed as the object, having no branch for an unnamed object schema at all; it now builds a real object literal field by field. An object typed only by `additionalProperties`, with no declared properties, now generates `{}` instead of the same fallback. A boolean field named like `...Status` was stringified regardless of its declared type; the name-based heuristic now checks that the schema is actually a string or number first
+- `faker()` overflowed the stack on a self-referencing or mutually recursive schema, calling its own factory unconditionally through the cycle. A factory for a schema in a cycle now takes a `depth` parameter, and every array or optional property along the cycle is cut off once depth passes a limit (2), so a tree- or linked-list-shaped mock terminates instead of recursing forever. A cycle made entirely of required single references has no finite value and is not handled
+- Relative `$ref` resolution broke when the spec itself was fetched from a URL: the stock resolver joined paths with `path.join`, collapsing `http://host` and `./b.json` into a single-slash `http:/host/b.json` that resolves nowhere. It is now resolved as a URL
+- `cache: true` crashed when a function-based `input` returned the spec text directly rather than a file path, trying to `readFileSync` the entire document as if it were one
+
 ## [0.12.1]
 
 ### Fixed
+
 - An `operationId` that is a JavaScript reserved word generated `export const delete = …`, which does not parse. Reserved words are now escaped with a leading underscore (`_delete`, `_new`), and every plugin that declares or calls a request function — `requests()`, `tanstackQuery()`, `swr()`, `mcp()`, `playwright()` — derives the name through one helper so the declaration and its callers cannot drift apart
 - Query parameter names that are not valid JavaScript identifiers were emitted as bare keys in the inline parameter type: `{ employee-search-form-selection: string }` is a syntax error, and it took `requests.ts` down along with every file importing from it. Such keys are now quoted, as header parameters already were
 - A schema the spec leaves empty (`ErrorInfo: {}`) was silently skipped by `zod()` while still being referenced by the schemas that used it, and still listed in the generated `index.ts` — `Cannot find name 'ErrorInfoSchema'`. A declared schema now always gets a declaration, falling back to `z.unknown()`
@@ -40,11 +61,13 @@ All notable changes to `@travjek/apig` will be documented in this file.
 - The fetch request functions returned `r.json() as Promise<T>` from an `async` function. Valid, but it tripped the "missing await" inspection in every generated function, and apig's own raw-response path already awaited. They now `return (await r.json()) as T`
 
 ### Added
+
 - `cache.maxEntries` bounds how many entries are kept — one per spec — removing the oldest once the count goes over, the way `versioning.maxSaves` bounds snapshots. An entry with no timestamp goes first. Omitted means no limit
 - `cache.ttl` gives a cached entry a lifetime, written as an amount and a unit — `30s`, `15m`, `12h`, `7d`. Passing the object turns the cache on by itself, so `cache: { ttl: "7d" }` needs no separate flag, and leaving `ttl` out keeps the old behaviour of entries that never age out. Expired entries are swept on the next run, including ones for specs nobody generates any more — until now nothing ever removed an entry
 - `apig cache clear` drops every cached spec so the next run parses again, and `apig cache status` shows what is there. Two of the cache defects above surfaced as a partially present entry whose only cure was knowing to delete `.apig/` by hand
 
 ### Changed
+
 - A matrix of thirty-one plugin and config combinations was run against a real 500-schema spec — every validation plugin, all four TanStack Query framework targets, all four HTTP clients compiled against a real instance of each, all four `groupBy` layouts, `rawResponse`, `errorHandling: false`, the Vue SWR target, and every `groupBy` layout crossed with the full plugin set and with a non-fetch client. `typeStyle` in both forms (`interface` emits 207 interfaces on a real spec, leaving only the enums and aliases an interface cannot express), `hooks.afterAllFilesWrite` (a successful command, a failing one, and one that does not exist), `formatter` (each of the four, with and without a config file present), `name` (including a multi-config run), `comment` on a snapshot, `cliLogging` at every level, `fileNaming` (all four conventions, each crossed with `groupBy`) and `filter` (by tag, by exclusion, by `deprecated`, and a filter matching nothing) were verified too. `cache` was exercised across both of its forms, every ttl unit, expiry, the sweep, and a ttl the validator has to reject. Snapshot versioning was exercised end to end as well — generation counting, `maxSaves` pruning, `pinVersions`, checkout by id and by alias, and checkout from a snapshot saved without its spec. Only the combination already in use compiled; the fixes above come from that run
 - The MCP server needs a single `zod` install to type-check: two copies of the same version are still two nominally different sets of types, and the SDK's schemas will not match the generated ones
 - The hostile spec (`examples/edge-cases`) now also covers a property name colliding with a component name, path parameters that are not identifiers, and self- and mutually recursive schemas. Verified against eleven real-world specs (6.7 MB, up to 2.3 MB each): every generated file compiles under `--strict`, matching orval on the same input
@@ -55,6 +78,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 ## [0.12.0]
 
 ### Breaking
+
 - **`sdk()` is now `requests()`.** "SDK" described the shape of the output rather than what the plugin does, and it read as the umbrella for everything apig generates — the hooks, the schemas and the mocks are just as much an SDK as the request functions are. The plugin now says what it emits.
 
   There is no compatibility alias: `sdk` is no longer exported, so a stale config fails at the import rather than silently generating into a file nobody reads.
@@ -83,6 +107,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
   For custom plugins: `PluginContext.sdkImportPath` is now `requestsImportPath`, and the `SdkOptions` type is `RequestsOptions`.
 
 ### Fixed
+
 - `tanstackQuery()` typed a query hook's error as a bare `ApigError` while its own `queryOptions` helper used `ApigError<XErrors>`. The helper is spread into the hook, so any operation with declared error responses produced a hook that did not compile. `useSuspense*Query` had the same mismatch and additionally ignored a custom `errorHandling` class, always emitting `ApigError`
 - `swr()` generated mutation hooks whose `SWRMutationConfiguration` generics did not match the `useSWRMutation` call — an operation with no request body pins SWR's `Arg` to `never`, and the options argument stopped being assignable. The fetcher's unused `_key` parameter was also unannotated, an implicit `any` in any strict project
 - The `wretch` adapter passed `params` straight into `.query()`, which takes `string | object`, so an operation with only optional query parameters did not compile
@@ -94,17 +119,20 @@ All notable changes to `@travjek/apig` will be documented in this file.
 ## [0.11.0]
 
 ### Added
+
 - `playwright()` plugin — generates a typed Playwright API client (`createApiClient(ctx)`) and a `test.extend()` fixture from OpenAPI operations. The factory takes any `APIRequestContext`, so one client covers both standalone `request` tests and `page.request` calls that share the browser's session. It generates the client, not the tests — assertions stay yours
 - `playwright()` options: `testName` and `fixtureName` for the generated exports, `baseUrl` to override the project's `baseURL`, and `withFaker` to re-export the `faker()` factories as `sample<Operation>()`
 - `playwright({ authFixture })` — an extra fixture that logs in first, with a `cookie` strategy (the request context replays `Set-Cookie` on its own, so httpOnly tokens work) and a `bearer` strategy (token read from the login response, attached to a context of its own). The login payload is passed straight through as an inline expression or an import, so apig never touches credentials
 - `@playwright/test` declared as an optional peer dependency
 
 ### Fixed
+
 - `faker()` guessed a value's **type** from its field name, so the generated factories did not compile against the generated types. A field named `id` or `*Id` became `faker.number.int()` even when the spec declared it a `string` — on a spec with uuid ids, every factory holding one failed `tsc`. Name heuristics now apply only when they agree with the declared type, and a string id falls back to `faker.string.uuid()`
 - `faker()` ignored the schema's `format`. `uuid`, `email`, `uri`, `date` and `date-time` fields now generate matching values instead of `faker.lorem.word()` — a `createdAt` with `format: date-time` was previously a random word
-- `faker()` treated any field name *containing* `id` as an id, so `video` and `width` were generated as numbers. The match is now anchored to the end of the name (`id`, `ownerId`, `user_id`)
+- `faker()` treated any field name _containing_ `id` as an id, so `video` and `width` were generated as numbers. The match is now anchored to the end of the name (`id`, `ownerId`, `user_id`)
 
 ### Changed
+
 - The end-to-end suite now type-checks **every** generated file, not just the four that import nothing. The peer libraries are dev dependencies for this reason alone — they are not new runtime dependencies and consumers install nothing extra. Coverage was extended to all four `groupBy` layouts and to every `httpClient`, each compiled against a real instance of the client it names. Every fix listed above was found by this change, not by hand
 - `wretch` users must register the `queryString` addon on their client instance — the generated calls use `.query()`, which the addon provides. Documented in the `httpClient` config reference
 - Documentation is now English-only — the eight machine-translated locales under `docs/` were dropped, since they drifted from the source with every release. Full docs live at https://apig-docs.vercel.app
@@ -115,6 +143,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 ## [0.10.1]
 
 ### Fixed
+
 - `homepage` in `package.json` pointed at the GitHub README instead of the docs site
 - Doc links in the banner, `apig start`/`apig config`, and config-validation errors pointed at a placeholder domain (`example.com`) instead of the real docs site
 
@@ -123,6 +152,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 ## [0.10.0]
 
 ### Added
+
 - `mcp()` plugin — generates an MCP server exposing every operation as a tool, so an AI assistant can call the API through the generated SDK. Requires `sdk()` and `zod()`
 - Plugin dependency validation — `msw()` without `faker()`, `mcp()` without `sdk()`/`zod()`, and `rhf()` without a validation plugin are now caught during config validation instead of failing mid-generation
 - `schemaSuffix` is exposed on validation plugins, so `mcp()` resolves imported schema names without the option being repeated by hand
@@ -130,6 +160,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 - `apiLogging` combined with `mcp()` is now a config error: the SDK's `console.log` writes to stdout, which is the MCP transport
 
 ### Fixed
+
 - A non-JSON error response (a gateway 502, a plain-text 404) made the generated fetch SDK throw a JSON parse error and lose the status code entirely. Error bodies now go through a `parseErrorBody` helper that falls back to text
 
 ---
@@ -137,11 +168,13 @@ All notable changes to `@travjek/apig` will be documented in this file.
 ## [0.9.0]
 
 ### Added
+
 - `framework` option for `tanstackQuery()` and `swr()` — Vue, Solid and Svelte targets alongside React
 - Plugin option types (`ZodOptions`, `TanstackQueryOptions`, `SdkOptions`, …) are now exported from the package root
 - `toQuery` helper is emitted into `config.ts` when generating fetch-based SDKs with query parameters
 
 ### Fixed
+
 - `msw()` emitted an internal `@/plugins/faker` import into user code, so the generated `msw.ts` never compiled
 - Generated fetch calls passed the typed params object straight to `new URLSearchParams`, which fails `tsc --strict` on any non-string query parameter, always appended a trailing `?`, serialized `undefined` as the string `"undefined"` and ignored array values
 - `zod({ withTypes: false })` (and the valibot/yup equivalents) still made the SDK import its types from the validation file, which no longer exported them
@@ -151,11 +184,13 @@ All notable changes to `@travjek/apig` will be documented in this file.
 - `allOf` with an empty `schemas` list crashed zod and yup generation
 
 ### Changed
+
 - `clean` no longer deletes the whole output directory — only files carrying the generator's banner are removed, and anything else is kept and reported. `deletedFiles` in the run summary is now accurate instead of always `0`
 - Generated `config.ts` carries the standard banner like every other generated file
 - The five HTTP client adapters were collapsed into one table-driven module
 
 ### Removed
+
 - `validate` config option from the docs — it was never read by `ApigConfig`, and passing it fails validation as an unknown property
 
 ---
@@ -163,6 +198,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 ## [0.8.1]
 
 ### Changed
+
 - Plugin default values centralized into a single `DEFAULTS` constant
 - `@faker-js/faker` dropped from devDependencies
 
@@ -171,6 +207,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 ## [0.8.0]
 
 ### Added
+
 - `groupBy` option: `none` | `tags` | `endpoints` | `operations` — split generated files by structure
 - `version checkout <id|alias>` CLI command — regenerate code from a saved snapshot
 - `wretch` HTTP client support (`httpClient: { name: 'wretch' }`)
@@ -182,6 +219,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 - `output` is now optional — defaults to `.apig/generated`
 
 ### Fixed
+
 - `$ref` schemas inside object properties now resolve correctly instead of falling back to `unknown`
 - Inline object indentation in generated zod/valibot/yup schemas
 
@@ -190,6 +228,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 ## [0.7.0]
 
 ### Added
+
 - `versioning` — snapshot-based versioning of generated IR
   - `enabled`, `storage`, `maxSaves`, `saveSpec` options
   - `pinVersions` — array of snapshot IDs protected from auto-deletion
@@ -202,6 +241,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 ## [0.6.0]
 
 ### Added
+
 - `swr()` plugin — generates SWR hooks
   - `useSWR` query hooks with `SWRConfiguration` options
   - `useSWRMutation` mutation hooks with `SWRMutationConfiguration` options
@@ -216,6 +256,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 ## [0.5.0]
 
 ### Added
+
 - `faker()` plugin — generates Faker.js factories for all schemas
   - Semantic field name heuristics (`email`, `name`, `phone`, `url`, `date`, `id`, etc.)
   - Enum fields use `faker.helpers.arrayElement`
@@ -231,6 +272,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 ## [0.4.0]
 
 ### Added
+
 - `valibot()` plugin — generates Valibot schemas
   - `v.picklist` for enums, `v.pipe` for string/number constraints
   - `v.intersect` for `allOf`, `v.variant` for `oneOf` with discriminator
@@ -249,6 +291,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 ## [0.3.0]
 
 ### Added
+
 - `zod()` plugin — generates Zod schemas
   - `z.enum` for enums, `z.discriminatedUnion` for `oneOf` with discriminator
   - `z.string().email()`, `.uuid()`, `.url()`, `.datetime()`
@@ -265,6 +308,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 ## [0.2.0]
 
 ### Added
+
 - `tanstackQuery()` plugin — generates TanStack Query v5 hooks
   - `useQuery` with `queryOptions` helper for prefetch / router loaders
   - `useMutation` with typed variables and `ApigError` generics
@@ -279,6 +323,7 @@ All notable changes to `@travjek/apig` will be documented in this file.
 ## [0.1.0]
 
 ### Added
+
 - `typescript()` plugin — generates TypeScript types from OpenAPI schemas
   - `typeStyle`: `type` | `interface`
   - `enumStyle`: `union` | `enum` | `const`
