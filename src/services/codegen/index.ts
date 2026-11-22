@@ -45,8 +45,10 @@ export {
   findPlugin,
   getRootPrefix,
   getRootPluginImport,
+  getOperationPluginImport,
 } from '@services/codegen/common/get-plugin-import';
 export { generateZodSchema } from '@services/codegen/zod/generate-zod-schema';
+export { nativeEnumProps } from '@services/codegen/typescript/inline-enum-names';
 export {
   isSchemaReference,
   schemaRefsOf,

@@ -111,7 +111,8 @@ export interface IRBody {
 }
 
 export interface IRErrorResponse {
-  status: number;
+  /** `null` covers a set of statuses — the spec's `default`, or a range such as `4XX`. */
+  status: number | null;
   schema: IRSchema;
 }
 

@@ -65,7 +65,7 @@ export const playwright = (options: PlaywrightOptions = {}): ApigPlugin => ({
     const withError = errCfg.enabled && !errCfg.importPath;
     const withResponse = config.rawResponse === true;
     const withQuery = needsQueryHelper(ir, config);
-    const withParseError = needsParseErrorHelper(config, errCfg.enabled);
+    const withParseError = needsParseErrorHelper(ir, config, errCfg.enabled);
     if (!withError && !withResponse && !withQuery && !withParseError) return [];
     return [
       {

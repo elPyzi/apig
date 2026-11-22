@@ -1,5 +1,5 @@
 import type { IRSchema, IRProperty } from '@models';
-import { toPascalCase, quoteKey } from '@libs/string';
+import { toPascalCase, quoteKey, toStringLiteral } from '@libs/string';
 import { isSchemaReference } from '@services/codegen/common/schema-graph';
 import { yupString, yupNumber, withNullable } from './primitives';
 
@@ -34,10 +34,10 @@ export const generateYupValue = (
   }
 
   if (schema.isEnum && schema.enum) {
-    const values = schema.enum.map((v) => `'${v}'`).join(', ');
+    const values = schema.enum.map((v) => toStringLiteral(v)).join(', ');
     // the generic is what keeps the literal union: a bare `yup.mixed()` infers
     // as `AnyPresentValue`, which no annotated schema accepts
-    const union = schema.enum.map((v) => `'${v}'`).join(' | ');
+    const union = schema.enum.map((v) => toStringLiteral(v)).join(' | ');
     return withNullable(`yup.mixed<${union}>().oneOf([${values}])`, schema);
   }
 
@@ -49,7 +49,16 @@ export const generateYupValue = (
   }
 
   if (schema.type === 'array' && schema.items) {
-    let expr = `yup.array().of(${generateYupValue(schema.items, allSchemas, suffix, recursive)})`;
+    const item = generateYupValue(schema.items, allSchemas, suffix, recursive);
+    // an item schema is optional by default, which types the array
+    // `(T | undefined)[]` against a spec that never allows a hole; `.defined()`
+    // still lets a nullable item through. A reference is already defined, and
+    // `yup.lazy` has no such method.
+    const definedItem =
+      item.startsWith('yup.') && !item.startsWith('yup.lazy(')
+        ? `${item}.defined()`
+        : item;
+    let expr = `yup.array().of(${definedItem})`;
     if (schema.minItems !== undefined) expr += `.min(${schema.minItems})`;
     if (schema.maxItems !== undefined) expr += `.max(${schema.maxItems})`;
     return withNullable(expr, schema);

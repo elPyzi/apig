@@ -1,6 +1,19 @@
 # @travjek/apig
 
-> OpenAPI code generator for TypeScript with a plugin system. Reads an OpenAPI 3.0 spec (or Swagger 2.0, auto-upgraded) and generates typed TypeScript code via composable plugins.
+> OpenAPI code generator for TypeScript with a plugin system. Reads an OpenAPI 3.0/3.1 spec (Swagger 2.0 is upgraded automatically; JSON or YAML; file, URL or function) and writes typed TypeScript into an output directory: types, request functions, Zod/Valibot/Yup schemas, TanStack Query and SWR hooks, React Hook Form resolvers, Faker factories, MSW handlers, a Playwright API client and an MCP server. Configured in `apig.config.ts`, run with `npx apig generate`.
+
+Package: `@travjek/apig` (dev dependency). CLI binary: `apig`. Node >= 18, TypeScript >= 5. Docs: https://apig-docs.vercel.app
+
+## Key facts (read before answering)
+
+- Everything is configured in `defineConfig({...})` imported from `@travjek/apig`. Plugins are functions imported from the same package: `typescript, requests, zod, valibot, yup, tanstackQuery, swr, rhf, faker, msw, playwright, mcp`.
+- `typescript()`, `requests()` and `msw()` take NO options. HTTP client, base URL, error handling, raw responses, logging, enum style and type style are TOP-LEVEL config options, not plugin options.
+- `ApigError` is GENERATED into the user's output directory (`<output>/config.ts`). It is NOT exported by `@travjek/apig` or `@travjek/apig/client`. `@travjek/apig/client` exports only `isApigError(e)` and `isApigStatus(e, status)`.
+- If `zod()`/`valibot()`/`yup()` is enabled with `withTypes: true` (the default), it emits the TypeScript types and `types.ts` is NOT written. Use `withTypes: false` to keep a separate `types.ts`.
+- `tanstackQuery()` and `swr()` need `requests()`; `msw()` needs `faker()`; `mcp()` needs `requests()` and `zod()`; `rhf()` needs a validation plugin.
+- `playwright()` generates a client and a `test.extend()` fixture, never test bodies or assertions.
+- The output directory is emptied before each run (`output.clean` defaults to `true`). Never put hand-written files there.
+- Filter option is `filter.deprecated`, not `includeDeprecated`. File naming option is `fileNaming`. There is no `requests({ httpClient })`.
 
 ## Install
 
@@ -8,361 +21,367 @@
 npm install -D @travjek/apig
 ```
 
-## Config file
+Runtime libraries per plugin (install only what you use): `zod` | `valibot` | `yup` | `@tanstack/react-query` (or `vue-query`, `svelte-query`, `solid-query`) | `swr` (React) or `swrv` (Vue) | `react-hook-form` + `@hookform/resolvers` | `@faker-js/faker` | `msw` | `@playwright/test` >= 1.30 | `@modelcontextprotocol/sdk` + `zod`. HTTP client for `requests()`: none for fetch, or `axios` | `ky` | `ofetch` | `wretch`.
 
-Create `apig.config.ts` in the project root:
+## Minimal config
 
 ```ts
-import { defineConfig } from '@travjek/apig'
+// apig.config.ts
+import { defineConfig, typescript, requests, tanstackQuery } from '@travjek/apig';
 
 export default defineConfig({
-  input: './openapi.json',      // path or URL to OpenAPI spec
-  output: './src/api',          // output directory (default: .apig/generated)
-  plugins: [
-    typescript(),
-    requests(),
-    zod({ withTypes: true }),
-    tanstackQuery(),
-  ],
-})
+  input: './openapi.json',
+  output: './src/api',
+  plugins: [typescript(), requests(), tanstackQuery()],
+});
 ```
 
-Multiple configs in one file:
+Several APIs in one run: `export default defineConfig([configA, configB])` (each with its own `output`). The default export must be an object or an array — a function is not supported by the CLI.
+
+## Full config reference
 
 ```ts
-export default [configA, configB]
+import { defineConfig } from '@travjek/apig';
+
+export default defineConfig({
+  input: './openapi.yaml',              // REQUIRED. path (JSON/YAML), URL, or () => Promise<string> returning a path, URL or the spec text
+  output: './src/api',                  // or { path: './src/api', clean: true }. Default '.apig/generated'
+  name: 'petstore',                     // label in CLI output
+  auth: {                               // HTTP Basic Auth for a protected spec; sent only to the spec's own origin
+    username: process.env.SWAGGER_USER,
+    password: process.env.SWAGGER_PASSWORD,
+  },
+  httpClient: { name: 'fetch' },        // 'fetch' | 'axios' | 'ky' | 'ofetch' | 'wretch'; non-fetch: { name, path, export }
+  baseUrl: '/api/v1',                   // prefix for every request path
+  errorHandling: true,                  // true: throw ApigError | false: no status check | { path, export }: custom class (status, body)
+  rawResponse: false,                   // true: return { body, status, headers }
+  apiLogging: false,                    // console.log(fnName, result) in each request function
+  groupBy: 'none',                      // 'none' | 'tags' | 'endpoints' | 'operations'
+  fileNaming: 'kebab-case',             // 'kebab-case' | 'camelCase' | 'snake_case' | 'PascalCase'
+  functionNaming: 'camelCase',          // 'camelCase' | 'snake_case'
+  enumStyle: 'const',                   // 'const' | 'union' | 'enum'
+  typeStyle: 'type',                    // 'type' | 'interface'
+  filter: { tags: ['pets'], exclude: ['internal'], deprecated: false }, // with a filter set, deprecated ops are dropped unless deprecated: true
+  rename: { getPetById: 'fetchPet' },   // rename operationIds
+  index: true,                          // write index.ts re-exports
+  endpointsMap: false,                  // write endpoints.ts
+  formatter: 'none',                    // 'prettier' | 'biome' | 'oxfmt' | 'none' (must be installed; never downloaded)
+  hooks: { afterAllFilesWrite: 'eslint --fix src/api' },
+  cache: false,                         // true | { ttl: '7d', maxEntries: 20 } — ttl units s m h d
+  versioning: { enabled: true, storage: '.apig/versions', maxSaves: 10, pinVersions: [], saveSpec: false, aliasTemplate: 'gen{generation}' },
+  comment: 'before auth refactor',      // note on this run's snapshot
+  cliLogging: { level: 'minimal' },     // 'minimal' | 'normal' | 'detailed'
+  plugins: [],
+});
 ```
 
-## CLI
+## Generated files
 
-```bash
-apig generate              # run generation
-apig generate --dry-run    # preview without writing files
-apig generate --watch      # watch mode
-apig generate -c ./path/to/config.ts
+| File | Plugin | Exports |
+|------|--------|---------|
+| `types.ts` | `typescript()` | `type Pet` (or `interface`), enums per `enumStyle` |
+| `requests.ts` | `requests()` | `getPet(...)` per operation; `type GetPetErrors` per operation with error responses |
+| `config.ts` | `requests()`/`playwright()` | `ApigError`, `parseErrorBody`, `toQuery`, `QueryFormat`, `ApigResponse<T>` (with `rawResponse`) |
+| `zod.ts` / `valibot.ts` / `yup.ts` | validators | `PetSchema` per schema; `type Pet` when `withTypes` |
+| `tanstack.ts` | `tanstackQuery()` | keys, `queryOptions`, hooks |
+| `query-keys.ts` | `tanstackQuery({ queryKeysStyle: 'object' })` | `queryKeys` |
+| `swr.ts`, `swr-keys.ts` | `swr()` | hooks, keys |
+| `rhf.ts` | `rhf()` | `petResolver` per schema |
+| `faker.ts` | `faker()` | `generatePet()` per schema |
+| `msw.ts` | `msw()` | `handlers` |
+| `playwright.ts` | `playwright()` | `createApiClient`, `type ApiClient`, `apigPlaywrightTest` |
+| `mcp.ts` | `mcp()` | `server` (runs on stdio when executed) |
+| `endpoints.ts` | `endpointsMap: true` | `ENDPOINTS` (`{ listPets: '/pets', getPet: '/pets/{id}' }`), `type EndpointKey` |
+| `index.ts` | always unless `index: false` | named re-exports of all of the above except `config.ts` and the `<Op>Errors` types |
 
-apig versions              # list saved snapshots
-apig cache status          # show what is cached
-apig cache clear           # drop the cache so the next run parses again
-apig version checkout <id|alias>  # regenerate from snapshot
-apig info                  # show resolved config and spec summary
-apig config                # show current config
+With `groupBy`, operation files (`requests`, `tanstack`, `swr`, `playwright`) are split: `tags` → `pets/pets.requests.ts`; `endpoints` → `pets/get-pet/get-pet.requests.ts`; `operations` → `get-pet/get-pet.requests.ts`. Schema files stay at the root. `index.ts` re-exports everything regardless.
+
+## Generated names
+
+For `operationId: listPets` (GET), `getPet` (GET /pets/{id}), `createPet` (POST), schema `Pet`:
+
+| Plugin | Names |
+|--------|-------|
+| `requests()` | `listPets`, `getPet`, `createPet`; error union `GetPetErrors` |
+| `zod()`/`valibot()`/`yup()` | `PetSchema`; with zod `validateResponse: true` also `validatePetResponse(data)` |
+| `tanstackQuery()` react/vue | `listPetsQueryKey(params)`, `listPetsQueryOptions(params)`, `useListPetsQuery`, `useInfinityListPetsQuery` (infinite), `useSuspenseListPetsQuery` (suspense), `useCreatePetMutation` |
+| `tanstackQuery()` svelte/solid | `createListPetsQuery`, `createCreatePetMutation` (same keys/options) |
+| `tanstackQuery({ queryKeysStyle: 'object' })` | `queryKeys.listPets(params)` |
+| `swr()` | `listPetsSwrKey(params)`, `useListPets` (no suffix), `useCreatePetMutation` |
+| `rhf()` | `petResolver`, `createPetInputResolver` (camelCase schema + `Resolver`) |
+| `faker()` | `generatePet()` |
+| `playwright()` | `createApiClient(ctx).listPets(...)`; under groupBy `createPetsApiClient`, `petsApigPlaywrightTest` |
+| `mcp()` | one tool per operation named after the operationId |
+
+Spec names are made safe: `created-at` keys are quoted (`'created-at'?: string`), `v1.Pet` becomes `V1Pet`, `3dModel` becomes `_3dModel`, a reserved-word operationId `delete` becomes `_delete`, colliding operationIds get a numeric suffix. An inline enum on `Pet.status` is named `PetStatus`, or `PetStatusEnum` if a `PetStatus` schema exists.
+
+## Request functions
+
+Signature order: path params (one argument each, in path order) → `params` (object of query params) → `body` → `headers` (object of header params). Return type is the `200`/`201` JSON schema, or `void` when there is no JSON body (`204`).
+
+```ts
+// generated (fetch, errorHandling: true)
+export type GetPetErrors =
+  | { status: 404; body: Error };
+
+export const getPet = async (id: string): Promise<Pet> => {
+  const r = await fetch(`/pets/${id}`);
+  if (!r.ok) throw new ApigError(r.status, await parseErrorBody(r));
+  return (await r.json()) as Pet;
+};
+
+export const listPets = async (params?: { limit?: number; status?: 'available' | 'pending' | 'sold' }): Promise<PetList> => {
+  const r = await fetch(`/pets${toQuery(params)}`);
+  if (!r.ok) throw new ApigError(r.status, await parseErrorBody(r));
+  return (await r.json()) as PetList;
+};
+
+export const deletePet = async (id: string): Promise<void> => {
+  const r = await fetch(`/pets/${id}`, { method: 'DELETE' });
+  if (!r.ok) throw new ApigError(r.status, await parseErrorBody(r));
+};
 ```
 
-## Top-level config options
+```ts
+// usage
+await listPets({ limit: 20 });
+await createPet({ name: 'Rex', status: 'available' });
+await updatePet('42', { name: 'Max' });
+```
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `input` | `string` | Path or URL to OpenAPI spec |
-| `output` | `string` | Output directory (default: `.apig/generated`) |
-| `plugins` | `Plugin[]` | Array of plugins |
-| `baseUrl` | `string` | Prefix for all request paths |
-| `groupBy` | `'none' \| 'tags' \| 'endpoints' \| 'operations'` | Split output files by structure |
-| `fileNaming` | `'camelCase' \| 'kebab-case' \| 'snake_case'` | Output file naming convention |
-| `functionNaming` | `'camelCase' \| 'snake_case'` | Generated function naming convention |
-| `filter` | `{ tags?, includeDeprecated? }` | Include/exclude operations |
-| `rename` | `Record<string, string>` | Rename operationIds before generation |
-| `endpointsMap` | `boolean` | Generate `endpoints.ts` with typed path constants |
-| `index` | `boolean` | Control `index.ts` re-export generation |
-| `formatter` | `'prettier' \| 'biome' \| 'oxfmt' \| 'none'` | Format generated files |
-| `cache` | `boolean \| { ttl, maxEntries }` | Cache the parsed IR on disk. `ttl` is an amount and a unit (`30s`, `15m`, `12h`, `7d`); `maxEntries` bounds how many are kept. Both omitted means entries never expire and are never evicted |
-| `versioning` | `VersioningConfig` | Snapshot-based versioning of generated IR |
-| `hooks` | `{ afterAllFilesWrite?: string }` | Shell command after generation |
+- `errorHandling: false` → plain `fetch(...).then(r => r.json())`, no status check.
+- `rawResponse: true` → `Promise<ApigResponse<Pet>>` = `{ body: Pet; status: number; headers: Headers }`.
+- `default` and range responses (`4XX`) appear in the error union as `{ status: number; body: X }`.
+- Query serialization follows `style`/`explode` (repeat, comma, space, pipe, deepObject).
+- `multipart/form-data` → one argument per form field, sent as `FormData` through fetch (whatever the client).
+- OpenAPI 3.2 `QUERY` method is supported (a read: query hooks, not mutations).
+
+## Errors
+
+```ts
+import { getPet } from './api';
+import type { GetPetErrors } from './api/requests';
+import { ApigError } from './api/config';            // generated class
+import { isApigError, isApigStatus } from '@travjek/apig/client';
+
+try {
+  await getPet('42');
+} catch (e) {
+  if (e instanceof ApigError) {
+    const err = e as ApigError<GetPetErrors>;
+    err.status; // number
+    err.body;   // parsed JSON, or text, of the error response
+  }
+  if (isApigStatus(e, 404)) { /* ... */ }
+  if (isApigError(e)) { e.status; e.body; }
+}
+```
+
+`ApigError<T>` has `name = 'ApigError'`, `status: number`, `body: T`, message `ApigError <status>`. Non-fetch clients rethrow their own errors as `ApigError(status, body)`.
+
+## HTTP clients
+
+```ts
+// src/lib/http.ts
+import axios from 'axios';
+export const api = axios.create({ baseURL: 'https://api.example.com' });
+
+// apig.config.ts — path is relative to the project root
+httpClient: { name: 'axios', path: './src/lib/http', export: 'api' }
+```
+
+`fetch`: global fetch, no instance needed. `axios`/`ky`/`ofetch`/`wretch`: `path` + `export` of a configured instance (interceptors, auth, base URL live there). `wretch`: register `wretch/addons/queryString` on the instance. `ky` 1.x and 2.x are both supported.
 
 ## Plugins
 
-### `typescript()`
-
-Generates TypeScript types from OpenAPI schemas.
-
+### typescript()
+No options. Output per `enumStyle` / `typeStyle`:
 ```ts
-typescript({
-  typeStyle: 'type',        // 'type' | 'interface'
-  enumStyle: 'union',       // 'union' | 'enum' | 'const'
-})
+export const PetStatus = { Available: 'available', Sold: 'sold' } as const;   // enumStyle 'const' (default)
+export type PetStatus = typeof PetStatus[keyof typeof PetStatus];
+export type Pet = { id: string; name: string; status: PetStatus; 'created-at'?: string };
 ```
+`enumStyle: 'union'` → `type PetStatus = 'available' | 'sold'`; `'enum'` → `enum PetStatus { Available = 'available' }`.
 
-### `requests()`
+### requests()
+No options. See "Request functions".
 
-Generates typed request functions.
-
-```ts
-requests({
-  httpClient: { name: 'fetch' },   // 'fetch' | 'axios' | 'ky' | 'ofetch' | 'wretch'
-  errorHandling: 'ApigError',      // built-in or custom error class
-  rawResponse: false,              // return { body, status, headers } instead of data
-  apiLogging: false,               // add console.log to each function
-})
-```
-
-Generated output example:
-
-```ts
-export const getUsers = (params?: { page?: number }) =>
-  fetch(`/users?${new URLSearchParams(params)}`).then(r => r.json() as Promise<UserList>)
-
-export const createUser = (body: CreateUserInput) =>
-  fetch('/users', { method: 'POST', body: JSON.stringify(body) }).then(r => r.json() as Promise<User>)
-```
-
-### `zod()`
-
-Generates Zod schemas.
-
+### zod(options)
 ```ts
 zod({
-  schemaSuffix: 'Schema',          // variable name suffix (default: 'Schema')
-  enumStyle: 'union',              // 'union' | 'enum' | 'const'
-  withTypes: false,                // emit z.infer<> type aliases
-  infer: true,
-  input: true,
-  output: true,
-  validateResponse: false,         // generate validateXxxResponse(data: unknown): Xxx functions
+  withTypes: true,          // default true; emit types (types.ts is then skipped)
+  infer: true,              // default true; export type Pet = z.infer<typeof PetSchema>
+  input: false,             // export type PetInput = z.input<...>
+  output: false,            // export type PetOutput = z.output<...>
+  validateResponse: false,  // export validatePetResponse(data: unknown): Pet — standalone, NOT called by request functions
+  schemaSuffix: 'Schema',
 })
 ```
-
-Generated output example:
-
 ```ts
-export const UserSchema = z.object({
+export const PetSchema = z.object({
   id: z.string().uuid(),
-  email: z.string().email(),
-  bio: z.string().nullable().optional(),
-  role: RoleSchema,
-})
-export type User = z.infer<typeof UserSchema>
+  name: z.string().min(1).max(100),
+  status: z.enum(['available', 'pending', 'sold']),
+  age: z.number().min(0).optional(),
+});
+export type Pet = z.infer<typeof PetSchema>;
 ```
+Recursive schemas: `z.lazy` + explicit `z.ZodType<T>` annotation. Discriminated `oneOf` → `z.discriminatedUnion`.
 
-### `valibot()`
-
-Generates Valibot schemas.
-
+### valibot(options) / yup(options)
 ```ts
-valibot({
-  schemaSuffix: 'Schema',
-  enumStyle: 'union',              // 'union' | 'enum' | 'const'
-  withTypes: false,                // emit v.InferOutput<> type aliases
-})
+valibot({ withTypes: true, schemaSuffix: 'Schema' })
+yup({ withTypes: true, schemaSuffix: 'Schema' })
 ```
+Valibot: `v.object`, `v.pipe(v.string(), v.email())`, `v.picklist`, `v.optional`, `v.intersect`, `v.variant`; types via `v.InferOutput`. Yup: `yup.object`, `yup.string().email().required()`, `yup.mixed<...>().oneOf([...])`; types via `yup.InferType`. Only one validator may have `withTypes: true`.
 
-Generated output example:
-
-```ts
-export const UserSchema = v.object({
-  id: v.pipe(v.string(), v.uuid()),
-  email: v.pipe(v.string(), v.email()),
-  bio: v.optional(v.nullable(v.string())),
-})
-```
-
-Supports: `v.picklist` for enums, `v.pipe` for string/number constraints, `v.intersect` for `allOf`, `v.variant` for `oneOf` with discriminator.
-
-### `yup()`
-
-Generates Yup schemas.
-
-```ts
-yup({
-  schemaSuffix: 'Schema',
-  enumStyle: 'union',              // 'union' | 'enum' | 'const'
-  withTypes: false,                // emit yup.InferType<> type aliases
-})
-```
-
-Generated output example:
-
-```ts
-export const UserSchema = yup.object({
-  id: yup.string().uuid().required(),
-  email: yup.string().email().required(),
-  bio: yup.string().nullable().optional(),
-})
-```
-
-### `tanstackQuery()`
-
-Generates TanStack Query v5 hooks.
-
+### tanstackQuery(options)
 ```ts
 tanstackQuery({
-  framework: 'react',              // 'react' | 'vue' | 'svelte' | 'solid'
-  queryKeysStyle: 'functions',     // 'functions' | 'object'
-  query: true,                     // useQuery for GET operations
-  mutation: true,                  // useMutation for non-GET operations
-  infinite: false,                 // useInfiniteQuery hooks
-  suspense: false,                 // useSuspenseQuery hooks
-  hookGenerationStrategies: {
-    createUser: { mutation: true },  // override per operationId
-  },
+  framework: 'react',           // 'react' | 'vue' | 'svelte' | 'solid'
+  query: true,                  // query hooks for GET and QUERY operations
+  mutation: true,               // mutation hooks for other methods
+  infinite: false,              // useInfinity<Op>Query
+  suspense: false,              // useSuspense<Op>Query
+  queryKeysStyle: 'functions',  // 'functions' | 'object'
+  hookGenerationStrategies: { searchPets: { query: true, mutation: false } }, // per operationId: { query?, mutation?, infinite?, suspense? }
 })
 ```
-
-Generated output example:
-
 ```ts
-export const useGetUsers = (params?: GetUsersParams, options?: UseQueryOptions<UserList>) =>
-  useQuery({ queryKey: getUsersKey(params), queryFn: () => getUsers(params), ...options })
+export const listPetsQueryKey = (params?: {...}) => ['listPets', ...[params]] as const;
+export const listPetsQueryOptions = (params?: {...}) =>
+  queryOptions<PetList, ApigError>({ queryKey: listPetsQueryKey(params), queryFn: () => listPets(params) });
+export const useListPetsQuery = (params?, options?: Omit<UseQueryOptions<PetList, ApigError>, 'queryKey' | 'queryFn'>) =>
+  useQuery<PetList, ApigError>({ ...listPetsQueryOptions(params), ...options });
+export const useCreatePetMutation = (options?) =>
+  useMutation<Pet, ApigError, { body: CreatePetInput }>({ mutationFn: (vars) => createPet(vars.body), ...options });
+```
+Usage: `useListPetsQuery({ status: 'available' })`, `useGetPetQuery(id)`, `useCreatePetMutation().mutate({ body })`, `useUpdatePetMutation().mutate({ id, body })`. Mutation variables are an object of named path params plus `params`/`body`/`headers`. Error type is `ApigError<GetPetErrors>` when errors are declared. Infinite hooks ship with `getNextPageParam: () => undefined` — pass your own via options. Invalidate with `queryClient.invalidateQueries({ queryKey: listPetsQueryKey() })`.
 
-export const useCreateUser = (options?: UseMutationOptions<User, ApigError, CreateUserInput>) =>
-  useMutation({ mutationFn: createUser, ...options })
+### swr(options)
+```ts
+swr({ framework: 'react', queryKeysStyle: 'functions', hookGenerationStrategies: {} }) // framework 'react' (swr) | 'vue' (swrv)
+```
+```ts
+export const useListPets = (params?, options?: SWRConfiguration<PetList>) =>
+  useSWR<PetList, ApigError>(listPetsSwrKey(params), () => listPets(params), options);
+export const useCreatePetMutation = (options?) =>
+  useSWRMutation('createPet', (_key, { arg }: { arg: CreatePetInput }) => createPet(arg), options);
+```
+`swr()` and `tanstackQuery()` together require `index: false`.
+
+### rhf(options)
+```ts
+rhf({ resolver: 'zod', schemaSuffix: 'Schema', schemasImportPath: './zod' }) // resolver REQUIRED: 'zod' | 'valibot' | 'yup'
+```
+```ts
+export const createPetInputResolver = zodResolver(CreatePetInputSchema); // one per schema, not per operation
+const form = useForm<CreatePetInput>({ resolver: createPetInputResolver });
 ```
 
-### `swr()`
-
-Generates SWR hooks.
-
+### faker(options)
 ```ts
-swr({
-  framework: 'react',              // 'react' (swr) | 'vue' (swrv)
-  queryKeysStyle: 'functions',     // 'functions' | 'object'
-  hookGenerationStrategies: {},
-})
+faker({ locale: 'en' }) // 'en' | 'ru'
 ```
-
-### `rhf()`
-
-Generates React Hook Form resolvers.
-
 ```ts
-rhf({
-  resolver: 'zod',                 // 'zod' | 'valibot' | 'yup'
-})
-```
-
-### `faker()`
-
-Generates Faker.js factories for all schemas.
-
-```ts
-faker()
-```
-
-Generated output example:
-
-```ts
-export const generateUser = (): User => ({
+export const generatePet = (): Pet => ({
   id: faker.string.uuid(),
-  email: faker.internet.email(),
   name: faker.person.fullName(),
-  role: faker.helpers.arrayElement(['admin', 'user']),
-  tags: faker.helpers.multiple(() => faker.lorem.word(), { count: 3 }),
-})
+  status: faker.helpers.arrayElement(['available', 'pending', 'sold']),
+});
 ```
+Value choice: declared `format` (uuid, email, uri/url, hostname, ipv4, ipv6, password, date-time, date) → field-name hint for string/number fields (username, email, password, phone, url/photo, firstName, lastName, name, date, status, id) → generic value of the declared type. Arrays get 3 items. Recursive schemas stop after 2 levels.
 
-Semantic heuristics: field names like `email`, `name`, `phone`, `url`, `date`, `id` map to appropriate faker methods automatically.
-
-### `msw()`
-
-Generates Mock Service Worker request handlers. Requires `faker()` plugin.
-
-```ts
-msw()
-```
-
-Generated output example:
-
+### msw()
+No options; requires `faker()`.
 ```ts
 export const handlers = [
-  http.get('/users', () => HttpResponse.json(generateUserList())),
-  http.post('/users', () => HttpResponse.json(generateUser())),
-  http.delete('/users/:id', () => new HttpResponse(null, { status: 204 })),
-]
+  http.get('/pets', () => HttpResponse.json(generatePetList())),
+  http.post('/pets', async ({ request }) => { await request.json(); return HttpResponse.json(generatePet()); }),
+  http.delete('/pets/:id', () => new HttpResponse(null, { status: 204 })),
+];
+// setupWorker(...handlers).start()  |  setupServer(...handlers)
 ```
 
-### `playwright()`
-
-Generates a typed Playwright API client plus a `test.extend()` fixture. Generates the client, not the tests. Requires `@playwright/test >= 1.30.0`.
-
+### playwright(options)
 ```ts
 playwright({
-  testName: 'apigPlaywrightTest',   // name of the exported test
-  fixtureName: 'api',               // name of the fixture a test destructures
-  baseUrl: undefined,               // defaults to baseURL from playwright.config.ts
-  withFaker: false,                 // re-export faker factories as sample<Operation>()
-  authFixture: {                    // optional authenticated fixture
-    login: 'loginUser',             // operationId of the login endpoint
-    strategy: 'cookie',             // 'cookie' | 'bearer'
-    payload: '{ user: process.env.API_USER }',  // or { import, from }
-    tokenPath: 'token',             // bearer only
-    header: 'Authorization',        // bearer only
+  testName: 'apigPlaywrightTest',
+  fixtureName: 'api',
+  baseUrl: undefined,             // default: baseURL from playwright.config.ts
+  withFaker: false,               // sample<Operation>() bodies; needs faker()
+  authFixture: {                  // optional
+    login: 'loginUser',           // operationId
+    strategy: 'cookie',           // 'cookie' | 'bearer'
+    payload: '{ email: process.env.E2E_USER, password: process.env.E2E_PASS }', // or { import: 'name', from: './module' }
+    tokenPath: 'token',           // bearer only
+    header: 'Authorization',      // bearer only
     fixtureName: 'authedApi',
   },
 })
 ```
-
-Generated output example:
-
 ```ts
-export const createApiClient = (ctx: APIRequestContext) => ({
-  getUsers: async (params?: { page?: number }): Promise<UserList> => {
-    const r = await ctx.get(`/users`, { params: toParams(params) })
-    if (!r.ok()) throw new ApigError(r.status(), await parseApiError(r))
-    return r.json() as Promise<UserList>
-  },
-})
+import { apigPlaywrightTest as test } from './api/playwright';
+test('creates a pet', async ({ api }) => {
+  const pet = await api.createPet({ name: 'Rex', status: 'available' });
+});
+```
+`createApiClient(ctx)` accepts any `APIRequestContext` (`request` or `page.request`). Methods throw `ApigError` on non-2xx; with `rawResponse: true` they return `APIResponse`.
 
-export type ApiClient = ReturnType<typeof createApiClient>
+### mcp(options)
+```ts
+mcp({ name: 'apig', version: '1.0.0' })
+```
+Writes a runnable MCP stdio server (`mcp.ts`) with one tool per operation, inputs validated by the generated Zod schemas. Run it with `npx tsx src/api/mcp.ts` or `bun src/api/mcp.ts`; register in `.mcp.json` as `{ "mcpServers": { "api": { "command": "npx", "args": ["tsx", "src/api/mcp.ts"] } } }`. Multipart operations are skipped. Not allowed with `apiLogging: true`.
 
-export const apigPlaywrightTest = base.extend<{ api: ApiClient }>({
-  api: async ({ request }, use) => {
-    await use(createApiClient(request))
-  },
-})
+## CLI
+
+```bash
+apig generate                  # alias g; -c, --config <path> (default apig.config.ts); -d, --dry-run; -w, --watch
+apig start                     # alias s; interactive wizard that writes apig.config.ts
+apig config                    # alias c; scaffold apig.config.ts; -p, --preset <minimal|react|react-swr|testing|forms|full>; --list-presets
+apig migrate <generator>       # alias m; orval | kubb | hey-api; -t, --target <path>; -c, --clean (delete source config)
+apig info                      # alias i; spec statistics without generating; -c, --config
+apig versions                  # list snapshots; -c, --config; -s, --storage
+apig version show <id|alias>   # snapshot details
+apig version checkout <id|alias> [--dry-run]  # regenerate from a snapshot
+apig cache status              # show cached specs
+apig cache clear               # drop the cache
 ```
 
-The factory takes any `APIRequestContext`, so it works with the standalone `request` fixture and with `page.request` (which shares cookies with the browser). With `rawResponse: true` the methods return Playwright's `APIResponse` untouched. Under `groupBy`, exports are prefixed per group (`createPetsApiClient`, `petsApigPlaywrightTest`).
+## Migration from other generators
 
-### `mcp()`
+`apig migrate orval|kubb|hey-api` reads `orval.config.*`, `kubb.config.*` or `openapi-ts.config.*` (or `--target <path>`) and writes `apig.config.ts`: input, output, plugins, grouping, tag filters, formatter, enum style, HTTP client. Unmappable settings (mutators, SDK classes, unknown plugins, registry inputs, raw auth headers) become `// TODO(migrate): ...` comments and are printed. Refuses to overwrite an existing `apig.config.ts`.
 
-Generates an MCP (Model Context Protocol) server exposing the request functions as tools. Requires `requests()` and `zod()`. Incompatible with `apiLogging: true` — stdout carries the JSON-RPC stream.
+## Validation rules (enforced on load)
 
-```ts
-mcp({
-  name: 'apig',                    // server name reported to the MCP client
-  version: '1.0.0',
-})
-```
+- `msw` requires `faker`; `mcp` requires `requests` and `zod`; `rhf` requires `zod`, `valibot` or `yup`.
+- At most one of `zod`/`valibot`/`yup` with `withTypes: true`.
+- `tanstackQuery` + `swr` require `index: false`.
+- `apiLogging` is not allowed with `mcp`.
+- No plugin listed twice; `functionNaming` only `camelCase` | `snake_case`.
+- `auth.username` and `auth.password` must be non-empty strings (a missing env var is reported).
 
-## OpenAPI features supported
+## Supported OpenAPI
 
-- Schemas: `string`, `number`, `boolean`, `array`, `object`
-- String formats: `email`, `uuid`, `uri`, `date-time`
-- String constraints: `minLength`, `maxLength`
-- Number constraints: `minimum`, `maximum`
-- Array constraints: `minItems`, `maxItems`
-- Nullable fields: `nullable: true`
-- Optional fields: inferred from `required` array
-- Enums: `enum` array on string schemas
-- `allOf` → intersection / `.and()` / `.concat()`
-- `oneOf` with `discriminator.propertyName` → discriminated union
-- `$ref` → resolves to named schema variable
-- Swagger 2.0 → auto-upgraded to OpenAPI 3.0
+OpenAPI 3.0, 3.1 (`type: [..., 'null']`), Swagger 2.0 (auto-upgraded), the 3.2 `QUERY` method. External `$ref`s to files and URLs. Objects, arrays, tuples (`prefixItems`), enums, nullable, `allOf`, `oneOf`/`anyOf` with optional `discriminator`, `additionalProperties`, recursive schemas. Formats and `minLength`/`maxLength`/`minimum`/`maximum`/`minItems`/`maxItems`. Path/query/header params, `content`-style params, `style`/`explode`. JSON, multipart and binary bodies. `200`/`201` success types; `4xx`/`5xx`, `default` and `4XX`-style error responses; bodiless `204`.
 
-## Client library
+## Custom plugins
 
 ```ts
-import { ApigError } from '@travjek/apig/client'
+import type { ApigPlugin } from '@travjek/apig';
 
-try {
-  await createUser(data)
-} catch (e) {
-  if (e instanceof ApigError) {
-    console.log(e.status, e.body)
-  }
-}
+export const routesList = (): ApigPlugin => ({
+  name: 'routes-list',     // unique
+  fileName: 'routes',      // → routes.ts
+  scope: 'root',           // 'root': once for the whole spec | 'operations': once per group under groupBy
+  generate: (ir, config, ctx) => ({
+    code: `export const ROUTES = ${JSON.stringify(ir.operations.map((op) => op.path))} as const;\n`,
+    exports: ['ROUTES'],   // value names re-exported from index.ts
+    typeExports: [],       // type names re-exported from index.ts
+  }),
+  // optional: generateRootFiles(ir, config) => [{ fileName, code }]
+});
 ```
 
-## Versioning config
-
-```ts
-defineConfig({
-  versioning: {
-    enabled: true,
-    storage: '.apig/versions',
-    maxSaves: 10,
-    saveSpec: true,
-    pinVersions: ['abc123'],
-    aliasTemplate: '{apiVersion}-{date}',
-  },
-})
-```
+`ir.operations[]`: `{ id, method, path, tag, summary, description, deprecated, params: { path, query, header }, body, response, errors }`. `ir.schemas[]`: `{ name, type, properties, enum, items, ... }`. The interface is `ApigPlugin` (there is no exported `Plugin` type), and `generate` returns one `{ code, exports, typeExports }` object.

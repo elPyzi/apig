@@ -96,6 +96,146 @@ describe('typescript', () => {
     });
   });
 
+  describe('names that are not identifiers', () => {
+    test('a property name that is no identifier is quoted', () => {
+      const ir = makeIR(
+        [],
+        [
+          makeSchema({
+            name: 'Pet',
+            properties: [
+              makeProp('id'),
+              makeProp('created-at', 'string', false),
+              makeProp('1st', 'number'),
+              makeProp("it's"),
+              {
+                name: 'x-rank',
+                required: false,
+                type: 'string',
+                schema: { type: 'string', isEnum: true, enum: ['1st', ''] },
+              },
+            ],
+          }),
+        ],
+      );
+
+      for (const typeStyle of ['type', 'interface'] as const) {
+        const { code } = generateTypes(ir, { ...baseConfig, typeStyle });
+        expect(code).toContain('  id: string;');
+        expect(code).toContain("  'created-at'?: string;");
+        expect(code).toContain("  '1st': number;");
+        expect(code).toContain("  'it\\'s': string;");
+        expect(code).toContain("  'x-rank'?: PetXRank;");
+      }
+    });
+
+    test('a property inside an inline object is quoted too', () => {
+      const ir = makeIR(
+        [],
+        [
+          makeSchema({
+            name: 'Pod',
+            properties: [
+              {
+                name: 'metadata',
+                required: true,
+                type: 'object',
+                schema: {
+                  type: 'object',
+                  properties: [makeProp('kebab-label')],
+                },
+              },
+            ],
+          }),
+        ],
+      );
+
+      expect(generateTypes(ir, baseConfig).code).toContain(
+        "  'kebab-label': string;",
+      );
+    });
+
+    test('a dotted schema name is declared as an identifier', () => {
+      const ir = makeIR(
+        [],
+        [
+          makeSchema({ name: 'v1.Pet', properties: [makeProp('id')] }),
+          makeSchema({
+            name: 'io.k8s.api.core.v1.Pod',
+            properties: [
+              {
+                name: 'pet',
+                required: false,
+                type: 'object',
+                schema: { type: 'object', name: 'v1.Pet' },
+              },
+            ],
+          }),
+        ],
+      );
+      const { code, typeExports } = generateTypes(ir, baseConfig);
+
+      expect(code).toContain('export type V1Pet = {');
+      expect(code).toContain('export type IoK8sApiCoreV1Pod = {');
+      expect(code).toContain('  pet?: V1Pet;');
+      expect(code).not.toContain('V1.Pet');
+      expect(typeExports).toEqual(['V1Pet', 'IoK8sApiCoreV1Pod']);
+    });
+
+    test('an inline enum steps aside for a schema already declared by its name', () => {
+      const status = {
+        name: 'status',
+        required: true,
+        type: 'string' as const,
+        schema: { type: 'string' as const, isEnum: true, enum: ['a', 'b'] },
+      };
+      const ir = makeIR(
+        [],
+        [
+          makeSchema({ name: 'Pet', properties: [status] }),
+          makeSchema({
+            name: 'PetStatus',
+            type: 'string',
+            isEnum: true,
+            enum: ['x'],
+          }),
+        ],
+      );
+      const { code } = generateTypes(ir, baseConfig);
+
+      expect(code).toContain('export type PetStatusEnum =');
+      expect(code).toContain('  status: PetStatusEnum;');
+      expect(code.match(/export type PetStatus =/g)).toHaveLength(1);
+    });
+
+    test('an inline enum value with a quote is escaped', () => {
+      const ir = makeIR(
+        [],
+        [
+          makeSchema({
+            name: 'Pet',
+            type: 'object',
+            properties: [
+              {
+                name: 'tags',
+                required: true,
+                type: 'array',
+                schema: {
+                  type: 'array',
+                  items: { type: 'string', isEnum: true, enum: ["it's", ''] },
+                },
+              },
+            ],
+          }),
+        ],
+      );
+
+      expect(generateTypes(ir, baseConfig).code).toContain(
+        "  tags: Array<'it\\'s' | ''>;",
+      );
+    });
+  });
+
   describe('enum schema', () => {
     test('a value that is no identifier is quoted, in const and enum styles', () => {
       const ir = makeIR(

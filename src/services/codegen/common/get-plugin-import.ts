@@ -1,4 +1,10 @@
-import { GROUP_BY, type ApigConfig, type ApigPlugin } from '@models';
+import {
+  GROUP_BY,
+  type ApigConfig,
+  type ApigPlugin,
+  type IROperation,
+} from '@models';
+import { applyNaming } from '@libs/string';
 
 /** Where the file doing the import lives — the same value as the plugin's `scope`. */
 export type FileScope = 'root' | 'operations';
@@ -42,4 +48,32 @@ export const getRootPluginImport = (
 ): string => {
   const plugin = findPlugin(config, name);
   return `${getRootPrefix(config, scope)}${plugin?.fileName ?? name}`;
+};
+
+/**
+ * Import path, from a root-scoped file, to the file an operation-scoped plugin
+ * wrote `op` into. Under `groupBy` that file sits in the operation's group
+ * directory, named the way `index.ts` re-exports it — there is no root file.
+ * @example getOperationPluginImport(config, 'requests', op) → './pets/pets.requests'
+ */
+export const getOperationPluginImport = (
+  config: ApigConfig,
+  name: string,
+  op: IROperation,
+): string => {
+  const fileName = findPlugin(config, name)?.fileName ?? name;
+  const naming = config.fileNaming ?? 'kebab-case';
+  const tagDir = applyNaming(op.tag ?? 'default', naming);
+  const opDir = applyNaming(op.id, naming);
+
+  switch (config?.groupBy ?? GROUP_BY.NONE) {
+    case GROUP_BY.TAGS:
+      return `./${tagDir}/${tagDir}.${fileName}`;
+    case GROUP_BY.ENDPOINTS:
+      return `./${tagDir}/${opDir}/${opDir}.${fileName}`;
+    case GROUP_BY.OPERATIONS:
+      return `./${opDir}/${opDir}.${fileName}`;
+    default:
+      return `./${fileName}`;
+  }
 };

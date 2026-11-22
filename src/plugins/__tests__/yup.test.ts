@@ -300,8 +300,9 @@ describe('yup', () => {
           }),
         ],
       );
+      // an item is defined: the spec allows no hole in the array
       expect(generateYup(ir, baseConfig).code).toContain(
-        'yup.array().of(yup.string())',
+        'yup.array().of(yup.string().defined())',
       );
     });
 

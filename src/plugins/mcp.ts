@@ -11,6 +11,7 @@ import {
 import {
   logger,
   getRootPluginImport,
+  getOperationPluginImport,
   findPlugin,
   generateMcpTool,
   getFunctionName,
@@ -77,8 +78,6 @@ export const generateMcp = (
     );
   }
 
-  const requestsFns = operations.map((op) => getFunctionName(op, config));
-
   const schemaRefs = new Set<string>();
   for (const op of operations) operationSchemaRefs(op, ir.schemas, schemaRefs);
 
@@ -98,10 +97,17 @@ export const generateMcp = (
     "import { z } from 'zod';",
   ];
 
-  if (requestsFns.length > 0) {
-    lines.push(
-      `import { ${requestsFns.join(', ')} } from '${getRootPluginImport(config, 'requests', 'root')}';`,
-    );
+  // under groupBy each function lives in its group's file, not a root one
+  const requestsByFile = new Map<string, string[]>();
+  for (const op of operations) {
+    const from = getOperationPluginImport(config, 'requests', op);
+    requestsByFile.set(from, [
+      ...(requestsByFile.get(from) ?? []),
+      getFunctionName(op, config),
+    ]);
+  }
+  for (const [from, fns] of requestsByFile) {
+    lines.push(`import { ${fns.join(', ')} } from '${from}';`);
   }
 
   if (schemaRefs.size > 0) {

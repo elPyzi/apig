@@ -1,5 +1,10 @@
 import type { IRProperty, IRSchema, IROperation } from '@models';
-import { toPascalCase, quoteKey, toParamName } from '@libs/string';
+import {
+  toPascalCase,
+  quoteKey,
+  toParamName,
+  toStringLiteral,
+} from '@libs/string';
 import { generateTypeValue } from '@services/codegen/common/generate-type-value';
 
 export type FnArg = {
@@ -22,7 +27,7 @@ const paramType = (
   const schema = param.schema;
 
   if (schema?.isEnum && schema.enum) {
-    return schema.enum.map((v) => `'${v}'`).join(' | ');
+    return schema.enum.map((v) => toStringLiteral(v)).join(' | ');
   }
 
   if (allowArrays && schema?.type === 'array') {
@@ -40,7 +45,7 @@ const scalarType = (
   fallback?: string,
 ): string => {
   if (schema?.isEnum && schema.enum) {
-    return schema.enum.map((v) => `'${v}'`).join(' | ');
+    return schema.enum.map((v) => toStringLiteral(v)).join(' | ');
   }
 
   const type = schema?.type ?? fallback;
@@ -126,7 +131,8 @@ export const getArgs = (
         for (const prop of sorted) {
           const isBinary = prop.schema?.format === 'binary';
           args.push({
-            name: prop.name,
+            // a form field is named freely (`created-at`), an argument is not
+            name: toParamName(prop.name),
             type: isBinary
               ? 'File | Blob'
               : prop.type === 'number'
@@ -161,7 +167,7 @@ export const getArgs = (
     const headerFields = operation.params.header
       .map((p) => {
         const optional = p.required ? '' : '?';
-        return `'${p.name}'${optional}: ${paramType(p, false, allSchemas)}`;
+        return `${toStringLiteral(p.name)}${optional}: ${paramType(p, false, allSchemas)}`;
       })
       .join('; ');
 

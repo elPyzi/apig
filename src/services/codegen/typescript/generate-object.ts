@@ -1,8 +1,9 @@
 import { TYPE_STYLES, type ApigConfig, type IRSchema } from '@models';
-import { toPascalCase } from '@libs/string';
+import { quoteKey, toPascalCase } from '@libs/string';
 import { generateProperty } from '@services/codegen/common/generate-property';
 import { buildJsDoc } from '@services/codegen/common/jsdoc';
 import { generateEnumSchema } from '@services/codegen/typescript/generate-enum-schema';
+import { inlineEnumNames } from '@services/codegen/typescript/inline-enum-names';
 
 export const generateObject = (
   schema: IRSchema,
@@ -14,11 +15,12 @@ export const generateObject = (
   const name = toPascalCase(schema.name);
   const style = config.typeStyle ?? TYPE_STYLES.TYPE;
   const extraTypes: string[] = [];
+  const enumNames = inlineEnumNames(schema, allSchemas);
 
   const props = (schema.properties ?? [])
     .map((prop) => {
-      if (prop.schema?.isEnum && prop.schema.enum) {
-        const enumName = `${name}${toPascalCase(prop.name)}`;
+      const enumName = enumNames.get(prop.name);
+      if (enumName && prop.schema) {
         extraTypes.push(
           generateEnumSchema({ ...prop.schema, name: enumName }, config),
         );
@@ -34,7 +36,7 @@ export const generateObject = (
               .join('\n')
               .trimEnd() + '\n'
           : '';
-        return `${docIndented}  ${prop.name}${optional}: ${enumName};`;
+        return `${docIndented}  ${quoteKey(prop.name)}${optional}: ${enumName};`;
       }
       return generateProperty(prop, allSchemas);
     })

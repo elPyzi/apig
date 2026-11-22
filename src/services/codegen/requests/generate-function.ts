@@ -1,4 +1,4 @@
-import { getAdapter } from '@services/adapters';
+import { getAdapter, NO_BODY } from '@services/adapters';
 import {
   HTTP_CLIENTS,
   toHttpMethodLower,
@@ -20,6 +20,7 @@ import { getErrorConfig } from '@services/codegen/common/get-error-config';
 import { buildErrorHandlingBody } from './build-error-handling';
 import { buildRawResponseBody } from './build-raw-response';
 import { buildMultipartBody } from './build-multipart';
+import { returnLines } from './return-lines';
 import { getFunctionName } from '@services/codegen/common/get-function-name';
 
 export const generateFunction = (
@@ -41,6 +42,7 @@ export const generateFunction = (
   const errorHandling = errCfg.enabled;
   const errorClass = errCfg.className;
   const rawResponse = config.rawResponse === true;
+  const logAs = config.apiLogging ? fnName : undefined;
 
   const hasQuery = operation.params.query.length > 0;
   const hasBody = operation.body !== null;
@@ -81,22 +83,42 @@ export const generateFunction = (
     // no Content-Type here on purpose — the runtime sets it with the multipart boundary
     const fetchCall = `fetch(${urlExpr}, { method: '${method.toUpperCase()}', body: _fd${hasHeaders ? ', headers' : ''} })`;
 
-    if (config.apiLogging) {
+    const open = `${doc}export const ${fnName} = async (${argsList}): Promise<${returnType}> => {`;
+    // the fetch path of the other branches, so a multipart request checks its
+    // status, wraps a raw response and logs exactly as a JSON one does
+    if (rawResponse || errorHandling) {
+      const body = rawResponse
+        ? buildRawResponseBody(
+            fetchCall,
+            responseType,
+            HTTP_CLIENTS.FETCH,
+            errorHandling,
+            errorClass,
+            logAs,
+          )
+        : buildErrorHandlingBody(
+            fetchCall,
+            responseType,
+            HTTP_CLIENTS.FETCH,
+            errorClass,
+            logAs,
+          );
+      return [open, fdSetup, body, `};`].join('\n');
+    }
+    if (responseType === NO_BODY) {
       return [
-        `${doc}export const ${fnName} = async (${argsList}): Promise<${returnType}> => {`,
+        open,
         fdSetup,
-        `  const r = await ${fetchCall};`,
-        `  const response = (await r.json()) as ${responseType};`,
-        `  console.log('${fnName}', response);`,
-        `  return response;`,
+        `  await ${fetchCall};`,
+        ...(logAs ? [`  console.log('${logAs}');`] : []),
         `};`,
       ].join('\n');
     }
     return [
-      `${doc}export const ${fnName} = async (${argsList}): Promise<${returnType}> => {`,
+      open,
       fdSetup,
       `  const r = await ${fetchCall};`,
-      `  return (await r.json()) as ${responseType};`,
+      ...returnLines(`(await r.json()) as ${responseType}`, '  ', logAs),
       `};`,
     ].join('\n');
   }
@@ -111,47 +133,23 @@ export const generateFunction = (
     queryFormats,
   });
 
-  if (rawResponse) {
-    const logging = config.apiLogging === true;
-    const body = buildRawResponseBody(
-      call,
-      responseType,
-      httpClient,
-      errorHandling,
-      errorClass,
-      logging,
-    );
-    if (logging) {
-      return [
-        `${doc}export const ${fnName} = async (${argsList}): Promise<${returnType}> => {`,
-        body,
-        `  console.log('${fnName}', response);`,
-        `  return response;`,
-        `};`,
-      ].join('\n');
-    }
-    return [
-      `${doc}export const ${fnName} = async (${argsList}): Promise<${returnType}> => {`,
-      body,
-      `};`,
-    ].join('\n');
-  }
-
-  if (errorHandling) {
-    const body = buildErrorHandlingBody(
-      call,
-      responseType,
-      httpClient,
-      errorClass,
-    );
-    if (config.apiLogging) {
-      return [
-        `${doc}export const ${fnName} = async (${argsList}): Promise<${returnType}> => {`,
-        body,
-        `  console.log('${fnName}', response);`,
-        `};`,
-      ].join('\n');
-    }
+  if (rawResponse || errorHandling) {
+    const body = rawResponse
+      ? buildRawResponseBody(
+          call,
+          responseType,
+          httpClient,
+          errorHandling,
+          errorClass,
+          logAs,
+        )
+      : buildErrorHandlingBody(
+          call,
+          responseType,
+          httpClient,
+          errorClass,
+          logAs,
+        );
     return [
       `${doc}export const ${fnName} = async (${argsList}): Promise<${returnType}> => {`,
       body,

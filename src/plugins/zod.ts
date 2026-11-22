@@ -10,6 +10,7 @@ import {
 import {
   toPascalCase,
   generateZodSchema,
+  nativeEnumProps,
   getTypesImport,
   topoSortSchemas,
   findRecursiveSchemas,
@@ -60,6 +61,14 @@ export const generateZod = (
     lines.push(
       `import type { ${names.join(', ')} } from '${getTypesImport(config, 'root')}';`,
     );
+    // validated with `z.nativeEnum`, so needed as values, not just types
+    const enums = ir.schemas.flatMap((s) => [
+      ...nativeEnumProps(s, ir.schemas, config, recursive).values(),
+    ]);
+    if (enums.length > 0)
+      lines.push(
+        `import { ${enums.sort().join(', ')} } from '${getTypesImport(config, 'root')}';`,
+      );
   }
 
   lines.push('');

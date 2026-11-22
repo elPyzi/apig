@@ -1,13 +1,10 @@
 import { type IRSchema, type IRProperty, type ApigConfig } from '@models';
-import { toPascalCase } from '@libs/string';
-
-const VALID_IDENTIFIER = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
-const quoteKey = (name: string): string =>
-  VALID_IDENTIFIER.test(name) ? name : `'${name}'`;
+import { quoteKey, toPascalCase, toStringLiteral } from '@libs/string';
 import { zodString, zodNumber, withNullable } from './zod-primitives';
 import { generateZodEnum } from './generate-zod-enum';
 import { generateSchema } from '@services/codegen/typescript/generate-schema';
 import { isSchemaReference } from '@services/codegen/common/schema-graph';
+import { nativeEnumProps } from '@services/codegen/typescript/inline-enum-names';
 
 export interface ZodOpts {
   infer: boolean;
@@ -68,7 +65,7 @@ export const generateZodValue = (
   }
 
   if (schema.isEnum && schema.enum) {
-    const values = schema.enum.map((v) => `'${v}'`).join(', ');
+    const values = schema.enum.map((v) => toStringLiteral(v)).join(', ');
     return withNullable(`z.enum([${values}])`, schema);
   }
 
@@ -149,11 +146,22 @@ export const generateZodSchema = (
   const lines: string[] = [];
 
   if (schema.type === 'object' && schema.properties) {
+    const nativeEnums = nativeEnumProps(schema, allSchemas, config, recursive);
     const fields = schema.properties
-      .map(
-        (prop) =>
-          `  ${quoteKey(prop.name)}: ${generateZodProperty(prop, allSchemas, opts.schemaSuffix, schema.name, recursive)},`,
-      )
+      .map((prop) => {
+        const enumName = nativeEnums.get(prop.name);
+        const value = enumName
+          ? withNullable(`z.nativeEnum(${enumName})`, prop.schema!) +
+            (prop.required ? '' : '.optional()')
+          : generateZodProperty(
+              prop,
+              allSchemas,
+              opts.schemaSuffix,
+              schema.name,
+              recursive,
+            );
+        return `  ${quoteKey(prop.name)}: ${value},`;
+      })
       .join('\n');
     lines.push(`export const ${varName}${ann} = z.object({\n${fields}\n});`);
   } else if (schema.type === 'object') {

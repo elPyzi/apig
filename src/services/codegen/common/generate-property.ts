@@ -1,4 +1,5 @@
 import type { IRProperty, IRSchema } from '@models';
+import { quoteKey } from '@libs/string';
 import { generateTypeValue } from '@services/codegen/common/generate-type-value';
 import { buildJsDoc } from '@services/codegen/common/jsdoc';
 
@@ -21,5 +22,5 @@ export const generateProperty = (
         .join('\n')
         .trimEnd() + '\n'
     : '';
-  return `${docIndented}  ${prop.name}${optional}: ${type};`;
+  return `${docIndented}  ${quoteKey(prop.name)}${optional}: ${type};`;
 };

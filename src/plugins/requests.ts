@@ -47,7 +47,7 @@ export const requests = (): ApigPlugin => ({
     const withError = errCfg.enabled && !errCfg.importPath;
     const withResponse = config.rawResponse === true;
     const withQuery = needsQueryHelper(ir, config);
-    const withParseError = needsParseErrorHelper(config, errCfg.enabled);
+    const withParseError = needsParseErrorHelper(ir, config, errCfg.enabled);
     if (!withError && !withResponse && !withQuery && !withParseError) return [];
     return [
       {
@@ -113,7 +113,7 @@ export const generateRequests = (
     configValueImports.push(errCfg.className);
   }
 
-  if (needsParseErrorHelper(config, errCfg.enabled))
+  if (needsParseErrorHelper(ir, config, errCfg.enabled))
     configValueImports.push(PARSE_ERROR_FN);
 
   if (needsQueryHelper(ir, config)) configValueImports.push(TO_QUERY_FN);

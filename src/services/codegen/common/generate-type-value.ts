@@ -1,5 +1,5 @@
 import type { IRSchema } from '@models';
-import { toPascalCase } from '@libs/string';
+import { toPascalCase, toStringLiteral } from '@libs/string';
 import { generateProperty } from '@services/codegen/common/generate-property';
 
 /**
@@ -36,7 +36,7 @@ const renderType = (schema: IRSchema, allSchemas: IRSchema[]): string => {
   }
 
   if (schema.isEnum && schema.enum) {
-    return schema.enum.map((v) => `'${v}'`).join(' | ');
+    return schema.enum.map((v) => toStringLiteral(v)).join(' | ');
   }
 
   if (schema.type === 'tuple' && schema.prefixItems) {
