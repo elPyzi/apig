@@ -7,8 +7,8 @@ Thank you for your interest in contributing! Here's how to get started.
 **Requirements:** [Bun](https://bun.sh) >= 1.0
 
 ```bash
-git clone https://github.com/elPyzi/apig.git
-cd apig
+git clone https://github.com/elPyzi/zvyappy.git
+cd zvyappy
 bun install
 ```
 
@@ -28,7 +28,7 @@ bun run build
 
 ### Reporting Bugs
 
-Open a [GitHub Issue](https://github.com/elPyzi/apig/issues) and include:
+Open a [GitHub Issue](https://github.com/elPyzi/zvyappy/issues) and include:
 
 - `zvyappy` version
 - Your `zvyappy.config.ts`

@@ -4,7 +4,7 @@ Generate TypeScript types, request functions, Zod/Valibot/Yup schemas, TanStack 
 
 Formerly `@travjek/apig` (≤ 0.13.0): in 0.14.0 the package, CLI (`apig` → `zvyappy`, alias `zvy`), config file (`apig.config.ts` → `zvyappy.config.ts`) and names (`ApigError` → `ZvyappyError`, `isApigError` → `isZvyappyError`, `.apig/` → `.zvyappy/`) were renamed with no fallback.
 
-The complete reference is [`llms.txt`](https://github.com/elPyzi/apig/blob/main/llms.txt) and the README.
+The complete reference is [`llms.txt`](https://github.com/elPyzi/zvyappy/blob/main/llms.txt) and the README.
 
 ## Quick Start
 

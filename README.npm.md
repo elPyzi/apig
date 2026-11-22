@@ -720,7 +720,7 @@ export default defineConfig({ input: './openapi.json', plugins: [typescript(), r
 
 ## For AI assistants
 
-- [`llms.txt`](https://github.com/elPyzi/apig/blob/main/llms.txt) — a complete, plain-text reference of the config, plugins, generated names and CLI.
+- [`llms.txt`](https://github.com/elPyzi/zvyappy/blob/main/llms.txt) — a complete, plain-text reference of the config, plugins, generated names and CLI.
 - A Claude Code plugin with a zvyappy skill ships in the package (`skills/zvyappy`).
 
 ## Documentation

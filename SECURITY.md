@@ -17,7 +17,7 @@ If you discover a security vulnerability, **please do not open a public GitHub i
 
 Report it privately via one of these channels:
 
-- **GitHub Security Advisories:** [Report a vulnerability](https://github.com/elPyzi/apig/security/advisories/new)
+- **GitHub Security Advisories:** [Report a vulnerability](https://github.com/elPyzi/zvyappy/security/advisories/new)
 - **Email:** danila.pyzhikov@gmail.com
 
 Please include:
