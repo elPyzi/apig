@@ -28,6 +28,7 @@ const TYPE_STYLE_VALUES = Object.values(TYPE_STYLES);
 const DOCS_LINKS: Record<string, string> = {
   name: CONFIG_DOCS_URL,
   input: CONFIG_DOCS_URL,
+  auth: CONFIG_DOCS_URL,
   output: CONFIG_DOCS_URL,
   groupBy: CONFIG_DOCS_URL,
   httpClient: CONFIG_DOCS_URL,
@@ -126,6 +127,28 @@ export const validateConfig = (input: unknown): void => {
   }
   if (typeof config.input !== 'string' && typeof config.input !== 'function') {
     errors.push(`input must be a string or function`);
+  }
+
+  // auth
+  if (config.auth !== undefined) {
+    if (
+      !config.auth ||
+      typeof config.auth !== 'object' ||
+      Array.isArray(config.auth)
+    ) {
+      errors.push(`auth must be an object with username and password`);
+    } else {
+      // usually read from process.env, where a variable that is not set
+      // arrives as undefined rather than failing anywhere visible
+      for (const field of ['username', 'password'] as const) {
+        const value = config.auth[field];
+        if (typeof value !== 'string' || value === '') {
+          errors.push(
+            `auth.${field} is ${value === '' ? 'empty' : 'missing'} — if it comes from an environment variable, check that the variable is set`,
+          );
+        }
+      }
+    }
   }
 
   // output

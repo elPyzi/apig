@@ -26,7 +26,7 @@ export const load = async (config: ApigConfig): Promise<LoadResult> => {
   const cache = getCacheSettings(config);
 
   if (cache.enabled) {
-    const result = await fetchWithCache(input, cache.ttlMs);
+    const result = await fetchWithCache(input, cache.ttlMs, config.auth);
 
     if (result.hit) {
       logger.success('IR restored from cache');
