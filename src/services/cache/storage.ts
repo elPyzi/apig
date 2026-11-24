@@ -14,18 +14,18 @@ import type { IR } from '@models';
 import type { OpenAPIV3 } from 'openapi-types';
 import { getVersion } from '@constants';
 
-const CACHE_DIR = resolve('.apig/cache');
+const CACHE_DIR = resolve('.zvyappy/cache');
 
 export interface CacheMeta {
   etag?: string;
   specHash?: string;
   /**
-   * The apig that wrote this entry. The IR shape belongs to a release, so an
+   * The zvyappy that wrote this entry. The IR shape belongs to a release, so an
    * entry written by another one is discarded rather than trusted — a warm
    * cache would otherwise keep serving the old shape across an upgrade and hide
    * whatever that upgrade fixed.
    */
-  apigVersion?: string;
+  zvyappyVersion?: string;
   /** ISO timestamp the entry was written, for `cache.ttl` to measure against. */
   createdAt?: string;
 }
@@ -57,7 +57,7 @@ const TMP_SUFFIX = '.tmp';
  * `writeFileSync` truncates and then fills, so an interrupted write leaves a
  * readable file holding a fragment. Renaming into place is atomic within a
  * filesystem: the reader gets either the previous file whole or the new one
- * whole. The pid keeps two apig runs from colliding on the same scratch name.
+ * whole. The pid keeps two zvyappy runs from colliding on the same scratch name.
  */
 const writeAtomic = (path: string, data: string): void => {
   const tmp = `${path}.${process.pid}${TMP_SUFFIX}`;
@@ -114,7 +114,7 @@ export const readSpec = (key: string): OpenAPIV3.Document | null => {
 /**
  * Stores an entry, reporting why if it could not.
  *
- * The cache is an optimization, so a read-only `.apig`, a full disk or a
+ * The cache is an optimization, so a read-only `.zvyappy`, a full disk or a
  * locked-down container must not take the generation down with it — an
  * unguarded write here failed the whole run before a single file was emitted.
  * A half-written entry is left for `usableEntry` to reject on the next read.
@@ -135,7 +135,7 @@ export const writeCacheFiles = (
       metaPath(key),
       JSON.stringify({
         ...meta,
-        apigVersion: CURRENT_CACHE_VERSION,
+        zvyappyVersion: CURRENT_CACHE_VERSION,
         createdAt: new Date().toISOString(),
       }),
     );
@@ -178,7 +178,7 @@ export const purgeExpired = (ttlMs: number | null): number => {
 };
 
 export interface CacheSummary {
-  /** Directory the entries live in — always relative to where apig was run. */
+  /** Directory the entries live in — always relative to where zvyappy was run. */
   dir: string;
   /** Distinct inputs cached, not files: each entry is an IR, a spec and a meta. */
   entries: number;
@@ -194,7 +194,7 @@ export const inspectCache = (): CacheSummary => {
   try {
     files = readdirSync(CACHE_DIR);
   } catch {
-    // `apig cache status` answers a question; an unreadable directory is an
+    // `zvyappy cache status` answers a question; an unreadable directory is an
     // answer of "nothing", not a crash
     return summary;
   }

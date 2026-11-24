@@ -87,8 +87,8 @@ const buildConfig = (answers: StartAnswers): string => {
   const httpClient = buildHttpClient(answers);
 
   const lines: string[] = [
-    `// @travjek/apig — ${DOCS_BASE}`,
-    `import { defineConfig, ${usedFactories.join(', ')} } from '@travjek/apig';`,
+    `// zvyappy — ${DOCS_BASE}`,
+    `import { defineConfig, ${usedFactories.join(', ')} } from 'zvyappy';`,
     ``,
     `export default defineConfig({`,
     `  input: ${quote(answers.input)},`,
@@ -122,7 +122,7 @@ const buildConfig = (answers: StartAnswers): string => {
 
 export const runStart = async (): Promise<void> => {
   console.log('');
-  console.log('  @travjek/apig — interactive setup');
+  console.log('  zvyappy — interactive setup');
   console.log(`  docs: ${DOCS_BASE}`);
   console.log('');
 
@@ -274,12 +274,12 @@ export const runStart = async (): Promise<void> => {
     index: genIndex,
   };
 
-  const configPath = join(process.cwd(), 'apig.config.ts');
+  const configPath = join(process.cwd(), 'zvyappy.config.ts');
   const code = buildConfig(answers);
 
   if (existsSync(configPath)) {
     const overwrite = await confirm({
-      message: 'apig.config.ts already exists — overwrite?',
+      message: 'zvyappy.config.ts already exists — overwrite?',
       default: false,
     });
     if (!overwrite) {
@@ -291,11 +291,11 @@ export const runStart = async (): Promise<void> => {
   writeFileSync(configPath, code, 'utf-8');
 
   console.log('');
-  console.log('  ✓ apig.config.ts created');
+  console.log('  ✓ zvyappy.config.ts created');
   console.log('');
   console.log('  Next steps:');
-  console.log('    apig info       — preview spec stats');
-  console.log('    apig generate   — generate code');
-  console.log('    apig generate --dry-run  — preview files first');
+  console.log('    zvyappy info       — preview spec stats');
+  console.log('    zvyappy generate   — generate code');
+  console.log('    zvyappy generate --dry-run  — preview files first');
   console.log('');
 };

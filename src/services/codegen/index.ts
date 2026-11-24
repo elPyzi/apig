@@ -16,16 +16,16 @@ export {
 } from '@services/codegen/common/build-args';
 export { buildJsDoc } from '@services/codegen/common/jsdoc';
 export {
-  apigErrorCode,
-  apigResponseCode,
+  zvyappyErrorCode,
+  zvyappyResponseCode,
   toQueryCode,
   parseErrorBodyCode,
   PARSE_ERROR_FN,
-  APIG_ERROR_CLASS,
-  APIG_CONFIG_FILE,
+  ZVYAPPY_ERROR_CLASS,
+  ZVYAPPY_CONFIG_FILE,
   TO_QUERY_FN,
-  buildApigConfigFile,
-} from '@services/codegen/common/apig-error';
+  buildZvyappyConfigFile,
+} from '@services/codegen/common/zvyappy-error';
 export {
   needsQueryHelper,
   needsParseErrorHelper,

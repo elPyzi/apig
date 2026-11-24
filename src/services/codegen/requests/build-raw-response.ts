@@ -12,7 +12,7 @@ const stripJson = (call: string): string => {
   return at === -1 ? call : call.slice(0, at);
 };
 
-// axios headers are a plain object, not the `Headers` that ApigResponse promises
+// axios headers are a plain object, not the `Headers` that ZvyappyResponse promises
 const AXIOS_HEADERS =
   'new Headers(Object.entries(r.headers).filter(([, v]) => v != null).map(([k, v]): [string, string] => [k, String(v)]))';
 

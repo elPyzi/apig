@@ -1,4 +1,4 @@
-import { type ApigConfig, type IROperation, type IRSchema } from '@models';
+import { type ZvyappyConfig, type IROperation, type IRSchema } from '@models';
 import { toPascalCase } from '@libs/string';
 import { getArgs } from '@services/codegen/common/get-args';
 import {
@@ -12,16 +12,16 @@ import { getFunctionName } from '@services/codegen/common/get-function-name';
 export const generateSwrMutationHook = (
   operation: IROperation,
   allSchemas: IRSchema[],
-  config: ApigConfig,
+  config: ZvyappyConfig,
   errorHandling = false,
   rawResponse = false,
-  errorClass = 'ApigError',
+  errorClass = 'ZvyappyError',
   framework: 'react' | 'vue' = 'react',
 ): string => {
   const fnName = getFunctionName(operation, config);
   const hookName = `use${toPascalCase(operation.id)}Mutation`;
   const baseType = getResponseType(operation.response, allSchemas);
-  const responseType = rawResponse ? `ApigResponse<${baseType}>` : baseType;
+  const responseType = rawResponse ? `ZvyappyResponse<${baseType}>` : baseType;
   const errorType = errorHandling
     ? operation.errors?.length
       ? `${errorClass}<${getErrorTypeName(operation)}>`

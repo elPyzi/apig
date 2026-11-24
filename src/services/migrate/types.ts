@@ -7,16 +7,16 @@ import type {
   TypeStyle,
 } from '@models';
 
-/** A plugin factory call as it will be written into `apig.config.ts`. */
+/** A plugin factory call as it will be written into `zvyappy.config.ts`. */
 export interface PluginCall {
   factory: string;
   options?: Record<string, unknown>;
 }
 
 /**
- * One project from the source config, translated into apig terms.
+ * One project from the source config, translated into zvyappy terms.
  *
- * Kept as plain data rather than an `ApigConfig`: plugins have to end up as
+ * Kept as plain data rather than an `ZvyappyConfig`: plugins have to end up as
  * source text (`zod()`), not as the objects those factories return.
  */
 export interface MigratedProject {

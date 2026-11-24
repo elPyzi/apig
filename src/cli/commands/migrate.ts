@@ -60,7 +60,7 @@ export const registerMigrateCommand = (program: Command): void => {
     .command('migrate <generator>')
     .alias('m')
     .description(
-      `Create apig.config.ts from another generator's config (${GENERATORS.join(', ')})`,
+      `Create zvyappy.config.ts from another generator's config (${GENERATORS.join(', ')})`,
     )
     .option('-c, --clean', 'Delete the source config after migrating')
     .option('-t, --target <path>', 'Path to the source config')
@@ -82,9 +82,9 @@ export const registerMigrateCommand = (program: Command): void => {
         process.exit(1);
       }
 
-      const apigConfigPath = join(process.cwd(), 'apig.config.ts');
-      if (existsSync(apigConfigPath)) {
-        logger.error('apig.config.ts already exists');
+      const zvyappyConfigPath = join(process.cwd(), 'zvyappy.config.ts');
+      if (existsSync(zvyappyConfigPath)) {
+        logger.error('zvyappy.config.ts already exists');
         process.exit(1);
       }
 
@@ -104,12 +104,12 @@ export const registerMigrateCommand = (program: Command): void => {
       }
 
       writeFileSync(
-        apigConfigPath,
+        zvyappyConfigPath,
         renderConfig(projects, basename(configPath)),
         'utf-8',
       );
       logger.success(
-        `Created apig.config.ts from ${basename(configPath)} (${projects.length} project${projects.length === 1 ? '' : 's'})`,
+        `Created zvyappy.config.ts from ${basename(configPath)} (${projects.length} project${projects.length === 1 ? '' : 's'})`,
       );
 
       // the same note on a dozen projects reads better once, with the projects listed
@@ -141,6 +141,6 @@ export const registerMigrateCommand = (program: Command): void => {
       }
 
       logger.plain('');
-      logger.plain('Review apig.config.ts and run: apig generate');
+      logger.plain('Review zvyappy.config.ts and run: zvyappy generate');
     });
 };

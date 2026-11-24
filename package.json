@@ -1,6 +1,6 @@
 {
-  "name": "@travjek/apig",
-  "version": "0.13.0",
+  "name": "zvyappy",
+  "version": "0.14.0",
   "type": "module",
   "description": "OpenAPI code generator for TypeScript with a plugin system — generates types, typed request functions, Zod/Valibot/Yup schemas, TanStack Query / SWR hooks, React Hook Form resolvers, Faker factories, MSW handlers and Playwright API clients",
   "keywords": [
@@ -41,10 +41,11 @@
   "homepage": "https://apig-docs.vercel.app",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/elPyzi/apig.git"
+    "url": "git+https://github.com/elPyzi/zvyappy.git"
   },
   "bin": {
-    "apig": "./dist/cli.js"
+    "zvyappy": "./dist/cli.js",
+    "zvy": "./dist/cli.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

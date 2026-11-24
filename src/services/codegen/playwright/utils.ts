@@ -1,6 +1,6 @@
 import {
   GROUP_BY,
-  type ApigConfig,
+  type ZvyappyConfig,
   type IR,
   type IROperation,
   type IRSchema,
@@ -40,7 +40,7 @@ export const getPlaywrightArgs = (
  * file re-exports all of them, which does not compile. Ungrouped output needs no
  * prefix and keeps the plain names.
  */
-export const getExportPrefix = (ir: IR, config: ApigConfig): string => {
+export const getExportPrefix = (ir: IR, config: ZvyappyConfig): string => {
   const operation = ir.operations[0];
   if (!operation) return '';
 
@@ -66,7 +66,7 @@ export interface PlaywrightNames {
 
 export const buildNames = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   testName: string,
 ): PlaywrightNames => {
   const prefix = getExportPrefix(ir, config);
@@ -81,7 +81,7 @@ export const buildNames = (
 /** Method name for an operation — the same transform the requests plugin applies. */
 export const getMethodName = (
   operation: IROperation,
-  config: ApigConfig,
+  config: ZvyappyConfig,
 ): string => getFunctionName(operation, config);
 
 export const hasQueryParams = (operations: IROperation[]): boolean =>
@@ -108,7 +108,7 @@ export interface FakerSample {
  */
 export const getFakerSamples = (
   operations: IROperation[],
-  config: ApigConfig,
+  config: ZvyappyConfig,
 ): FakerSample[] => {
   const samples: FakerSample[] = [];
   const seen = new Set<string>();

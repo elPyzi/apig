@@ -1,5 +1,5 @@
 import type { IR } from './ir';
-import type { ApigConfig, PluginResult, FakerLocale } from './config';
+import type { ZvyappyConfig, PluginResult, FakerLocale } from './config';
 
 /**
  * Runtime context injected by the writer into operation-scoped plugins.
@@ -12,7 +12,7 @@ export interface PluginContext {
   requestsImportPath: string;
   /** Import path to the shared query-keys file. Only set when queryKeysStyle="object". */
   queryKeysImportPath?: string;
-  /** Import path to the shared config.ts file (ApigError, ApigResponse). */
+  /** Import path to the shared config.ts file (ZvyappyError, ZvyappyResponse). */
   configImportPath?: string;
   /** Import path to the custom error class file, resolved relative to the generated file. */
   customErrorImportPath?: string;
@@ -28,7 +28,7 @@ export interface ExtraFile {
 /**
  * Use: requests(), typescript(), tanstackQuery(), zod(), …
  */
-export interface ApigPlugin {
+export interface ZvyappyPlugin {
   /** Unique plugin name — used for deduplication and validation checks. */
   name: string;
   /** Base output filename without extension (e.g. "requests" → "requests.ts"). */
@@ -38,12 +38,16 @@ export interface ApigPlugin {
    * "operations" — called per group in groupBy=tags/endpoints (requests, tanstack, swr)
    */
   scope: 'root' | 'operations';
-  generate: (ir: IR, config: ApigConfig, ctx?: PluginContext) => PluginResult;
+  generate: (
+    ir: IR,
+    config: ZvyappyConfig,
+    ctx?: PluginContext,
+  ) => PluginResult;
   /**
    * Optional: called once with the full IR after all groupBy writing.
    * Used to emit root-level shared files (e.g. query-keys.ts).
    */
-  generateRootFiles?: (ir: IR, config: ApigConfig) => ExtraFile[];
+  generateRootFiles?: (ir: IR, config: ZvyappyConfig) => ExtraFile[];
   /**
    * Whether this plugin emits TypeScript type aliases.
    * When false, the writer will NOT suppress the typescript() plugin even if
@@ -168,7 +172,7 @@ export type PlaywrightAuthStrategy = 'cookie' | 'bearer';
  * Payload posted to the login operation.
  *
  * Either a raw expression inlined into the generated file, or a named export
- * the generated file imports. Credentials never live in apig's config — where
+ * the generated file imports. Credentials never live in zvyappy's config — where
  * they come from (env, a secret manager, a fixture file) stays yours.
  * @example '{ user: process.env.API_USER, pass: process.env.API_PASS }'
  * @example { import: 'authPayload', from: '../auth.config' }
@@ -219,8 +223,8 @@ export interface PlaywrightOptions {
   /**
    * Name of the exported `test` built with `test.extend()`.
    * Under `groupBy`, each group prefixes it with its own name to keep the
-   * barrel file free of duplicate exports (`petsApigPlaywrightTest`).
-   * @default "apigPlaywrightTest"
+   * barrel file free of duplicate exports (`petsZvyappyPlaywrightTest`).
+   * @default "zvyappyPlaywrightTest"
    */
   testName?: string;
   /**
@@ -250,7 +254,7 @@ export interface PlaywrightOptions {
 export interface McpOptions {
   /**
    * Server name reported to the MCP client.
-   * @default "apig"
+   * @default "zvyappy"
    */
   name?: string;
   /**

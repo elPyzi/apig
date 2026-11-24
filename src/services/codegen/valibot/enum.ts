@@ -1,10 +1,10 @@
-import type { IRSchema, ApigConfig } from '@models';
+import type { IRSchema, ZvyappyConfig } from '@models';
 import { enumMemberKey, toPascalCase, toStringLiteral } from '@libs/string';
 import type { ValibotOpts } from './generate-valibot-schema';
 
 export const generateValibotEnum = (
   schema: IRSchema,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   opts: ValibotOpts,
 ): string => {
   const name = toPascalCase(schema.name!);

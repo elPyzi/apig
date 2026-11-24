@@ -1,16 +1,16 @@
 # Custom Plugin
 
-You can extend apig with your own plugin implementing the `ApigPlugin` interface.
+You can extend zvyappy with your own plugin implementing the `ZvyappyPlugin` interface.
 
-## Real interface (import from `@travjek/apig`)
+## Real interface (import from `zvyappy`)
 
 ```ts
-interface ApigPlugin {
+interface ZvyappyPlugin {
   name: string;          // unique plugin name
   fileName: string;       // base output filename, no extension ("requests" → "requests.ts")
   scope: 'root' | 'operations'; // "root" = once for full IR, "operations" = per group under groupBy
-  generate: (ir: IR, config: ApigConfig, ctx?: PluginContext) => PluginResult;
-  generateRootFiles?: (ir: IR, config: ApigConfig) => ExtraFile[]; // optional shared files
+  generate: (ir: IR, config: ZvyappyConfig, ctx?: PluginContext) => PluginResult;
+  generateRootFiles?: (ir: IR, config: ZvyappyConfig) => ExtraFile[]; // optional shared files
   withTypes?: boolean;    // default true
 }
 
@@ -21,14 +21,14 @@ interface PluginResult {
 }
 ```
 
-There is **no** exported type named `Plugin` — it's `ApigPlugin`. `generate()` returns a single `PluginResult` object (`{ code, exports, typeExports }`), **not** an array of `{ fileName, code }` file objects.
+There is **no** exported type named `Plugin` — it's `ZvyappyPlugin`. `generate()` returns a single `PluginResult` object (`{ code, exports, typeExports }`), **not** an array of `{ fileName, code }` file objects.
 
 ## Minimal Example
 
 ```ts
-import type { ApigPlugin } from '@travjek/apig'
+import type { ZvyappyPlugin } from 'zvyappy'
 
-export const myPlugin = (): ApigPlugin => ({
+export const myPlugin = (): ZvyappyPlugin => ({
   name: 'my-plugin',
   fileName: 'my-output',
   scope: 'root',
@@ -49,7 +49,7 @@ export const myPlugin = (): ApigPlugin => ({
 Usage in config:
 
 ```ts
-import { defineConfig } from '@travjek/apig'
+import { defineConfig } from 'zvyappy'
 import { myPlugin } from './my-plugin'
 
 export default defineConfig({

@@ -10,7 +10,7 @@ import {
 } from 'fs';
 import { join, dirname, resolve, relative } from 'path';
 
-import type { ApigConfig } from '@models';
+import type { ZvyappyConfig } from '@models';
 import { write } from '@services/writer';
 import {
   typescript,
@@ -110,7 +110,7 @@ const quietly = async (fn: () => Promise<void>): Promise<void> => {
 
 const generate = async (
   outDir: string,
-  overrides: Partial<ApigConfig> = {},
+  overrides: Partial<ZvyappyConfig> = {},
 ): Promise<void> => {
   await quietly(() =>
     write({
@@ -211,7 +211,7 @@ describe('generated output', () => {
       expect(broken).toEqual([]);
     });
 
-    test('no internal apig alias leaks into generated code', () => {
+    test('no internal zvyappy alias leaks into generated code', () => {
       const aliased = collectImports(outDir).filter(({ specifier }) =>
         /^@(\/|services|libs|models|plugins|constants|client)/.test(specifier),
       );

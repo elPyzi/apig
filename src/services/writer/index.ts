@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { resolve } from 'path';
 
-import type { ApigConfig, GenerationStats, IR, PluginResult } from '@models';
+import type { ZvyappyConfig, GenerationStats, IR, PluginResult } from '@models';
 import { GROUP_BY, FORMATTERS, DEFAULTS } from '@models';
 import { load } from '@services/parser';
 import { saveSnapshot, VersionStorage, formatDate } from '@services/versioning';
@@ -44,7 +44,7 @@ export interface WriteOptions {
 
 const generateFromIR = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   outputPath: string,
   dryRun: boolean,
   stats: GenerationStats,
@@ -127,7 +127,7 @@ const generateFromIR = (
   logger.br();
 };
 
-const startRun = (config: ApigConfig): void => {
+const startRun = (config: ZvyappyConfig): void => {
   validateConfig(config);
   resetBaseUrlWarning();
   logger.setLevel(config.cliLogging?.level ?? DEFAULTS.CONFIG.cliLogging.level);
@@ -143,7 +143,7 @@ const createStats = (operations = 0, schemas = 0): GenerationStats => ({
   endedAt: 0,
 });
 
-const runAfterAllFilesWrite = (config: ApigConfig): void => {
+const runAfterAllFilesWrite = (config: ZvyappyConfig): void => {
   const command = config.hooks?.afterAllFilesWrite;
   if (!command) return;
 
@@ -157,7 +157,7 @@ const runAfterAllFilesWrite = (config: ApigConfig): void => {
 
 interface EmitOptions {
   ir: IR;
-  config: ApigConfig;
+  config: ZvyappyConfig;
   dryRun: boolean;
   stats: GenerationStats;
   /** Runs after files are written and formatted, before the user's hook. */
@@ -185,7 +185,7 @@ const emit = ({ ir, config, dryRun, stats, afterWrite }: EmitOptions): void => {
 };
 
 export const write = async (
-  config: ApigConfig,
+  config: ZvyappyConfig,
   { dryRun = false }: WriteOptions = {},
 ): Promise<void> => {
   startRun(config);
@@ -248,13 +248,13 @@ export const write = async (
 
 export const checkout = async (
   snapshotIdOrAlias: string,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   { dryRun = false }: WriteOptions = {},
 ): Promise<void> => {
   startRun(config);
 
   const versioning = config.versioning ?? {};
-  const storagePath = resolve(versioning.storage ?? '.apig/versions');
+  const storagePath = resolve(versioning.storage ?? '.zvyappy/versions');
   const storage = new VersionStorage(storagePath);
 
   const snapshotId = storage.resolveId(snapshotIdOrAlias);

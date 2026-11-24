@@ -24,7 +24,7 @@ export type CacheResult =
 /**
  * The cached IR, or the spec text to parse instead.
  *
- * An entry counts as usable only when the IR, the spec and the writing apig all
+ * An entry counts as usable only when the IR, the spec and the writing zvyappy all
  * line up: a half-present entry — a cleared `*.ir.json`, an interrupted write, a
  * partially restored CI cache — is treated as absent rather than trusted.
  */
@@ -33,7 +33,7 @@ const usableEntry = (
   meta: ReturnType<typeof readMeta>,
   ttlMs: number | null,
 ): { ir: IR; spec: OpenAPIV3.Document } | null => {
-  if (meta?.apigVersion !== CURRENT_CACHE_VERSION) return null;
+  if (meta?.zvyappyVersion !== CURRENT_CACHE_VERSION) return null;
   if (isExpired(meta, ttlMs)) return null;
   const ir = readIR(key);
   const spec = readSpec(key);

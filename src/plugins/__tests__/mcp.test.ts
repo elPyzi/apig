@@ -10,9 +10,9 @@ import {
   makeIR,
   makeSchema,
 } from './fixtures';
-import { HTTP_METHODS, type ApigConfig } from '@models';
+import { HTTP_METHODS, type ZvyappyConfig } from '@models';
 
-const withDeps = (overrides: Partial<ApigConfig> = {}): ApigConfig => ({
+const withDeps = (overrides: Partial<ZvyappyConfig> = {}): ZvyappyConfig => ({
   ...baseConfig,
   plugins: [typescript(), requests(), zod()],
   ...overrides,

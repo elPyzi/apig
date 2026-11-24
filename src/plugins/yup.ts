@@ -1,7 +1,7 @@
 import {
   type IR,
-  type ApigConfig,
-  type ApigPlugin,
+  type ZvyappyConfig,
+  type ZvyappyPlugin,
   type PluginResult,
   type YupOptions,
   banner,
@@ -26,7 +26,7 @@ const DEFAULT_OPTS = DEFAULTS.PLUGINS.YUP;
  * Requires `yup >= 1.0.0` as a peer dependency.
  * @example yup({ withTypes: true })
  */
-export const yup = (options: YupOptions = {}): ApigPlugin => {
+export const yup = (options: YupOptions = {}): ZvyappyPlugin => {
   const opts: YupOpts = {
     withTypes: options.withTypes ?? DEFAULT_OPTS.withTypes,
     schemaSuffix: options.schemaSuffix ?? DEFAULT_OPTS.schemaSuffix,
@@ -44,7 +44,7 @@ export const yup = (options: YupOptions = {}): ApigPlugin => {
 
 export const generateYup = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   opts: YupOpts = { ...DEFAULT_OPTS },
 ): PluginResult => {
   const recursive = findRecursiveSchemas(ir.schemas);

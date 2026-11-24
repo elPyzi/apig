@@ -1,4 +1,4 @@
-import { TYPE_STYLES, type ApigConfig, type IRSchema } from '@models';
+import { TYPE_STYLES, type ZvyappyConfig, type IRSchema } from '@models';
 import { quoteKey, toPascalCase } from '@libs/string';
 import { generateProperty } from '@services/codegen/common/generate-property';
 import { buildJsDoc } from '@services/codegen/common/jsdoc';
@@ -7,7 +7,7 @@ import { inlineEnumNames } from '@services/codegen/typescript/inline-enum-names'
 
 export const generateObject = (
   schema: IRSchema,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   allSchemas: IRSchema[],
 ): string => {
   if (!schema.name) return '';

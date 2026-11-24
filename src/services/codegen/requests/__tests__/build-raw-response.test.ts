@@ -8,7 +8,7 @@ describe('buildRawResponseBody', () => {
       'Array<Item>',
       'ky',
       false,
-      'ApigError',
+      'ZvyappyError',
     );
 
     expect(body).toContain('const res = await api.get(`/items`);');
@@ -20,7 +20,7 @@ describe('buildRawResponseBody', () => {
       'Record<string, Array<Item>>',
       'wretch',
       false,
-      'ApigError',
+      'ZvyappyError',
     );
 
     expect(body).toContain(
@@ -34,7 +34,7 @@ describe('buildRawResponseBody', () => {
       'Item',
       'axios',
       false,
-      'ApigError',
+      'ZvyappyError',
     );
 
     expect(body).toContain('headers: new Headers(Object.entries(r.headers)');
@@ -46,9 +46,9 @@ describe('buildRawResponseBody', () => {
       'Item',
       'axios',
       true,
-      'ApigError',
+      'ZvyappyError',
     );
 
-    expect(body).toContain('new ApigError(ae.response?.status ?? 0,');
+    expect(body).toContain('new ZvyappyError(ae.response?.status ?? 0,');
   });
 });

@@ -1,2 +1,2 @@
-export { isApigError, isApigStatus } from './is-apig-error';
-export type { ApigErrorLike } from './is-apig-error';
+export { isZvyappyError, isZvyappyStatus } from './is-zvyappy-error';
+export type { ZvyappyErrorLike } from './is-zvyappy-error';

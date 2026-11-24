@@ -15,8 +15,8 @@ import { getVersion } from '@constants';
 const program = new Command();
 
 program
-  .name('apig')
-  .description('@travjek/apig — OpenAPI code generator')
+  .name('zvyappy')
+  .description('zvyappy — OpenAPI code generator')
   .version(getVersion())
   .addHelpCommand('help', 'Display help for a command');
 

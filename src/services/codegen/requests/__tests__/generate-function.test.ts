@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { HTTP_METHODS, type ApigConfig, type HttpClients } from '@models';
+import { HTTP_METHODS, type ZvyappyConfig, type HttpClients } from '@models';
 import { generateFunction } from '../generate-function';
 import { generateErrorType } from '@services/codegen/common/generate-error-types';
 import {
@@ -23,7 +23,7 @@ const deletePet = makeOperation({
   response: null,
 });
 
-const generate = (config: Partial<ApigConfig> = {}, client?: HttpClients) =>
+const generate = (config: Partial<ZvyappyConfig> = {}, client?: HttpClients) =>
   generateFunction(deletePet, [], client ? 'api' : '', '', {
     ...baseConfig,
     ...config,
@@ -37,7 +37,7 @@ describe('a response without a body', () => {
     const code = generate();
 
     expect(code).toContain('Promise<void>');
-    expect(code).toContain('if (!r.ok) throw new ApigError');
+    expect(code).toContain('if (!r.ok) throw new ZvyappyError');
     expect(code).not.toContain('.json()');
   });
 
@@ -107,7 +107,7 @@ const getPet = makeOperation({
   response: { type: 'object', name: 'Pet' },
 });
 const petSchemas = [{ type: 'object' as const, name: 'Pet' }];
-const withClient = (config: Partial<ApigConfig>, client?: HttpClients) => ({
+const withClient = (config: Partial<ZvyappyConfig>, client?: HttpClients) => ({
   ...baseConfig,
   ...config,
   ...(client
@@ -195,7 +195,7 @@ describe('multipart', () => {
     },
     response: { type: 'object', name: 'Pet' },
   });
-  const gen = (config: Partial<ApigConfig> = {}, client?: HttpClients) =>
+  const gen = (config: Partial<ZvyappyConfig> = {}, client?: HttpClients) =>
     generateFunction(upload, petSchemas, client ? 'api' : '', '', {
       ...withClient(config, client),
     });
@@ -209,8 +209,8 @@ describe('multipart', () => {
   });
 
   test('the status is checked, as for a JSON request', () => {
-    expect(gen()).toContain('if (!r.ok) throw new ApigError');
-    expect(gen({ errorHandling: false })).not.toContain('ApigError');
+    expect(gen()).toContain('if (!r.ok) throw new ZvyappyError');
+    expect(gen({ errorHandling: false })).not.toContain('ZvyappyError');
   });
 
   test('rawResponse wraps the result', () => {

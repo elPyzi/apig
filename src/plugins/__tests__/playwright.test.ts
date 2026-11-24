@@ -9,7 +9,7 @@ import {
   makeProp,
   makeSchema,
 } from './fixtures';
-import { HTTP_METHODS, type ApigConfig, type IROperation } from '@models';
+import { HTTP_METHODS, type ZvyappyConfig, type IROperation } from '@models';
 
 const petSchema = makeSchema({ name: 'Pet' });
 const inputSchema = makeSchema({ name: 'CreatePetInput' });
@@ -75,7 +75,9 @@ describe('playwright', () => {
       expect(code).toContain(
         'export const createApiClient = (ctx: APIRequestContext) => ({',
       );
-      expect(code).toContain('export const apigPlaywrightTest = base.extend');
+      expect(code).toContain(
+        'export const zvyappyPlaywrightTest = base.extend',
+      );
     });
   });
 
@@ -126,7 +128,7 @@ describe('playwright', () => {
       const ir = irWith(
         getPets({ id: 'ping', method: HTTP_METHODS.DELETE, response: null }),
       );
-      const config: ApigConfig = { ...baseConfig, errorHandling: false };
+      const config: ZvyappyConfig = { ...baseConfig, errorHandling: false };
       const { code } = generatePlaywright(ir, config);
       expect(code).toContain('await ctx.delete(`/pets`);');
       expect(code).not.toContain('const r = await');
@@ -236,7 +238,7 @@ describe('playwright', () => {
 
   describe('base URL', () => {
     test('prefixes every path with the top-level baseUrl', () => {
-      const config: ApigConfig = {
+      const config: ZvyappyConfig = {
         ...baseConfig,
         baseUrl: 'https://api.example.com',
       };
@@ -246,7 +248,7 @@ describe('playwright', () => {
     });
 
     test('the plugin option wins over the top-level baseUrl', () => {
-      const config: ApigConfig = {
+      const config: ZvyappyConfig = {
         ...baseConfig,
         baseUrl: 'https://api.example.com',
       };
@@ -264,12 +266,12 @@ describe('playwright', () => {
   });
 
   describe('error handling', () => {
-    test('throws ApigError on a non-2xx response by default', () => {
+    test('throws ZvyappyError on a non-2xx response by default', () => {
       const { code } = generatePlaywright(irWith(getPets()), baseConfig);
       expect(code).toContain(
-        'if (!r.ok()) throw new ApigError(r.status(), await parseApiError(r));',
+        'if (!r.ok()) throw new ZvyappyError(r.status(), await parseApiError(r));',
       );
-      expect(code).toContain("import { ApigError } from './config'");
+      expect(code).toContain("import { ZvyappyError } from './config'");
     });
 
     test('uses a local parser because APIResponse is not a fetch Response', () => {
@@ -279,14 +281,14 @@ describe('playwright', () => {
     });
 
     test('throws nothing when errorHandling is off', () => {
-      const config: ApigConfig = { ...baseConfig, errorHandling: false };
+      const config: ZvyappyConfig = { ...baseConfig, errorHandling: false };
       const { code } = generatePlaywright(irWith(getPets()), config);
       expect(code).not.toContain('throw new');
       expect(code).not.toContain('const parseApiError =');
     });
 
     test('honours a custom error class', () => {
-      const config: ApigConfig = {
+      const config: ZvyappyConfig = {
         ...baseConfig,
         errorHandling: { path: './errors', export: 'MyError' },
       };
@@ -295,19 +297,19 @@ describe('playwright', () => {
       expect(code).toContain("import { MyError } from './errors'");
     });
 
-    test('emits the shared config.ts holding ApigError', () => {
+    test('emits the shared config.ts holding ZvyappyError', () => {
       const files = playwright().generateRootFiles!(
         irWith(getPets()),
         baseConfig,
       );
       expect(files).toHaveLength(1);
       expect(files[0]!.fileName).toBe('config.ts');
-      expect(files[0]!.code).toContain('class ApigError');
+      expect(files[0]!.code).toContain('class ZvyappyError');
     });
   });
 
   describe('rawResponse', () => {
-    const rawConfig: ApigConfig = { ...baseConfig, rawResponse: true };
+    const rawConfig: ZvyappyConfig = { ...baseConfig, rawResponse: true };
 
     test('hands back the Playwright APIResponse untouched', () => {
       const { code } = generatePlaywright(irWith(getPets()), rawConfig);
@@ -318,7 +320,7 @@ describe('playwright', () => {
     test('leaves the status check to the test', () => {
       expect(
         generatePlaywright(irWith(getPets()), rawConfig).code,
-      ).not.toContain('throw new ApigError');
+      ).not.toContain('throw new ZvyappyError');
     });
 
     test('does not import response types it no longer uses', () => {
@@ -347,19 +349,19 @@ describe('playwright', () => {
 
   describe('groupBy', () => {
     test('prefixes exports with the tag so the barrel file stays unique', () => {
-      const config: ApigConfig = { ...baseConfig, groupBy: 'tags' };
+      const config: ZvyappyConfig = { ...baseConfig, groupBy: 'tags' };
       const { code, exports, typeExports } = generatePlaywright(
         irWith(getPets()),
         config,
       );
       expect(code).toContain('export const createPetsApiClient');
       expect(exports).toContain('createPetsApiClient');
-      expect(exports).toContain('petsApigPlaywrightTest');
+      expect(exports).toContain('petsZvyappyPlaywrightTest');
       expect(typeExports).toContain('PetsApiClient');
     });
 
     test('prefixes with the operation id when grouping by operations', () => {
-      const config: ApigConfig = { ...baseConfig, groupBy: 'operations' };
+      const config: ZvyappyConfig = { ...baseConfig, groupBy: 'operations' };
       const { exports } = generatePlaywright(irWith(getPets()), config);
       expect(exports).toContain('createListPetsApiClient');
     });
@@ -374,7 +376,7 @@ describe('playwright', () => {
     });
 
     test('climbs back to the output root for shared imports', () => {
-      const config: ApigConfig = { ...baseConfig, groupBy: 'tags' };
+      const config: ZvyappyConfig = { ...baseConfig, groupBy: 'tags' };
       expect(generatePlaywright(irWith(getPets()), config).code).toContain(
         "from '../types'",
       );
@@ -382,7 +384,7 @@ describe('playwright', () => {
   });
 
   describe('withFaker', () => {
-    const fakerConfig: ApigConfig = { ...baseConfig, plugins: [faker()] };
+    const fakerConfig: ZvyappyConfig = { ...baseConfig, plugins: [faker()] };
 
     test('throws when the faker plugin is missing', () => {
       expect(() =>
@@ -494,7 +496,7 @@ describe('playwright', () => {
     });
 
     test('parses the login body when responses come back raw', () => {
-      const config: ApigConfig = { ...baseConfig, rawResponse: true };
+      const config: ZvyappyConfig = { ...baseConfig, rawResponse: true };
       const { code } = generatePlaywright(irWith(login()), config, {
         authFixture: { ...cookieAuth, strategy: 'bearer' },
       });
@@ -517,7 +519,7 @@ describe('playwright', () => {
     });
 
     test('is skipped in groups that do not hold the login operation', () => {
-      const config: ApigConfig = { ...baseConfig, groupBy: 'tags' };
+      const config: ZvyappyConfig = { ...baseConfig, groupBy: 'tags' };
       const { code } = generatePlaywright(irWith(getPets()), config, {
         authFixture: { login: 'login', payload: '{}' },
       });
@@ -538,7 +540,7 @@ describe('playwright', () => {
         irWith(getPets()),
         baseConfig,
       );
-      expect(exports).toEqual(['createApiClient', 'apigPlaywrightTest']);
+      expect(exports).toEqual(['createApiClient', 'zvyappyPlaywrightTest']);
       expect(typeExports).toEqual(['ApiClient']);
     });
   });

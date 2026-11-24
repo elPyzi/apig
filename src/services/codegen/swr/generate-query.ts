@@ -1,4 +1,4 @@
-import { type ApigConfig, type IROperation, type IRSchema } from '@models';
+import { type ZvyappyConfig, type IROperation, type IRSchema } from '@models';
 import { toPascalCase } from '@libs/string';
 import { getArgs } from '@services/codegen/common/get-args';
 import {
@@ -25,16 +25,16 @@ export const generateSwrQueryHook = (
   operation: IROperation,
   allSchemas: IRSchema[],
   style: 'functions' | 'object',
-  config: ApigConfig,
+  config: ZvyappyConfig,
   errorHandling = false,
   rawResponse = false,
-  errorClass = 'ApigError',
+  errorClass = 'ZvyappyError',
   framework: 'react' | 'vue' = 'react',
 ): string => {
   const fnName = getFunctionName(operation, config);
   const hookName = `use${toPascalCase(operation.id)}`;
   const baseType = getResponseType(operation.response, allSchemas);
-  const responseType = rawResponse ? `ApigResponse<${baseType}>` : baseType;
+  const responseType = rawResponse ? `ZvyappyResponse<${baseType}>` : baseType;
   const errorType = buildSwrErrorType(operation, errorHandling, errorClass);
   const args = getArgs(operation, allSchemas);
   const argsList = buildArgsList(args);

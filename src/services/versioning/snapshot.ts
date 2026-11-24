@@ -1,17 +1,17 @@
 import { createHash } from 'crypto';
 import { resolve } from 'path';
-import type { IR, SnapshotMetadata, ApigConfig } from '@models';
+import type { IR, SnapshotMetadata, ZvyappyConfig } from '@models';
 import type { OpenAPIV3 } from 'openapi-types';
 import { VersionStorage, IR_VERSION } from '@services/versioning/storage';
 import { logger } from '@libs/logger';
 
 const DEFAULT_COMMENT = 'travjek — generated snapshot comment';
-const DEFAULT_STORAGE = '.apig/versions';
+const DEFAULT_STORAGE = '.zvyappy/versions';
 
 interface SaveSnapshotParams {
   ir: IR;
   spec: OpenAPIV3.Document;
-  config: ApigConfig;
+  config: ZvyappyConfig;
   comment?: string;
 }
 

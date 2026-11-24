@@ -1,4 +1,4 @@
-import type { ApigConfig, ApigPlugin, PluginResult } from '@models';
+import type { ZvyappyConfig, ZvyappyPlugin, PluginResult } from '@models';
 import type { IR, IROperation } from '@models';
 import { applyNaming } from '@libs/string';
 import { banner } from '@constants';
@@ -18,7 +18,7 @@ const pushExports = (
 };
 
 export const buildIndexNone = (
-  plugins: ApigPlugin[],
+  plugins: ZvyappyPlugin[],
   results: Record<string, PluginResult>,
 ): string => {
   const lines: string[] = [banner, ''];
@@ -30,7 +30,7 @@ export const buildIndexNone = (
 };
 
 const buildIndexRootSection = (
-  plugins: ApigPlugin[],
+  plugins: ZvyappyPlugin[],
   results: Record<string, PluginResult>,
   lines: string[],
 ): void => {
@@ -42,10 +42,10 @@ const buildIndexRootSection = (
 };
 
 export const buildIndexTags = (
-  plugins: ApigPlugin[],
+  plugins: ZvyappyPlugin[],
   results: Record<string, PluginResult>,
   tagMap: Map<string, IROperation[]>,
-  config: ApigConfig,
+  config: ZvyappyConfig,
 ): string => {
   const naming = config.fileNaming ?? 'kebab-case';
   const lines: string[] = [banner, ''];
@@ -70,9 +70,9 @@ export const buildIndexTags = (
 
 export const buildIndexEndpoints = (
   ir: IR,
-  plugins: ApigPlugin[],
+  plugins: ZvyappyPlugin[],
   results: Record<string, PluginResult>,
-  config: ApigConfig,
+  config: ZvyappyConfig,
 ): string => {
   const naming = config.fileNaming ?? 'kebab-case';
   const lines: string[] = [banner, ''];
@@ -98,9 +98,9 @@ export const buildIndexEndpoints = (
 
 export const buildIndexOperations = (
   ir: IR,
-  plugins: ApigPlugin[],
+  plugins: ZvyappyPlugin[],
   results: Record<string, PluginResult>,
-  config: ApigConfig,
+  config: ZvyappyConfig,
 ): string => {
   const naming = config.fileNaming ?? 'kebab-case';
   const lines: string[] = [banner, ''];

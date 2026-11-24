@@ -1,7 +1,7 @@
 import {
-  type ApigConfig,
+  type ZvyappyConfig,
   type PluginResult,
-  type ApigPlugin,
+  type ZvyappyPlugin,
   type TypescriptOptions,
   type IR,
   banner,
@@ -15,14 +15,16 @@ import { toPascalCase, generateSchema } from '../libs';
  * Automatically included when using validation plugins unless `withTypes` is disabled.
  * @example typescript()
  */
-export const typescript = (_options: TypescriptOptions = {}): ApigPlugin => ({
+export const typescript = (
+  _options: TypescriptOptions = {},
+): ZvyappyPlugin => ({
   name: 'typescript',
   fileName: 'types',
   scope: 'root',
   generate: (ir, config) => generateTypes(ir, config),
 });
 
-export const generateTypes = (ir: IR, config: ApigConfig): PluginResult => {
+export const generateTypes = (ir: IR, config: ZvyappyConfig): PluginResult => {
   const lines: string[] = [banner, ''];
 
   for (const schema of ir.schemas) {

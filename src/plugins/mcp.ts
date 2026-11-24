@@ -1,8 +1,8 @@
 import {
   type IR,
   type IROperation,
-  type ApigConfig,
-  type ApigPlugin,
+  type ZvyappyConfig,
+  type ZvyappyPlugin,
   type PluginResult,
   type McpOptions,
   DEFAULTS,
@@ -31,7 +31,7 @@ const isSupported = (operation: IROperation): boolean =>
  * plus `@modelcontextprotocol/sdk` and `zod` at runtime.
  * @example mcp({ name: "petstore", version: "1.0.0" })
  */
-export const mcp = (options: McpOptions = {}): ApigPlugin => {
+export const mcp = (options: McpOptions = {}): ZvyappyPlugin => {
   const opts = {
     name: options.name ?? DEFAULTS.PLUGINS.MCP.name,
     version: options.version ?? DEFAULTS.PLUGINS.MCP.version,
@@ -47,7 +47,7 @@ export const mcp = (options: McpOptions = {}): ApigPlugin => {
 
 export const generateMcp = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   opts: Required<McpOptions> = {
     name: DEFAULTS.PLUGINS.MCP.name,
     version: DEFAULTS.PLUGINS.MCP.version,

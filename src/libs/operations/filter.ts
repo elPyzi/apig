@@ -1,9 +1,9 @@
 import type { IROperation } from '@models';
-import type { ApigConfig } from '@models';
+import type { ZvyappyConfig } from '@models';
 
 export const filterOperations = (
   operations: IROperation[],
-  config: ApigConfig,
+  config: ZvyappyConfig,
 ): IROperation[] => {
   if (!config.filter) return operations;
 

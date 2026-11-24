@@ -1,7 +1,7 @@
 import {
   type IR,
-  type ApigConfig,
-  type ApigPlugin,
+  type ZvyappyConfig,
+  type ZvyappyPlugin,
   type PluginResult,
   banner,
 } from '@models';
@@ -19,14 +19,14 @@ import {
  * Requires `@faker-js/faker` as a peer dependency.
  * @example faker()
  */
-export const faker = (): ApigPlugin => ({
+export const faker = (): ZvyappyPlugin => ({
   name: 'faker',
   fileName: 'faker',
   scope: 'root',
   generate: (ir, config) => generateFaker(ir, config),
 });
 
-export const generateFaker = (ir: IR, config: ApigConfig): PluginResult => {
+export const generateFaker = (ir: IR, config: ZvyappyConfig): PluginResult => {
   const typesImport = getTypesImport(config, 'root');
 
   const usedTypes = ir.schemas

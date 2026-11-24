@@ -1,4 +1,4 @@
-import type { ApigConfig, HttpClient } from '@models';
+import type { ZvyappyConfig, HttpClient } from '@models';
 import {
   requests,
   tanstackQuery,
@@ -53,14 +53,14 @@ const HTTP_CLIENT_AXIOS_WITHOUT_PATH_AND_EXPORT = { name: 'axios' };
 const VALID_ERROR_HANDLING_BOOLEAN = true;
 const VALID_ERROR_HANDLING_OBJECT = {
   path: 'src/errors/api-error',
-  export: 'ApigError',
+  export: 'ZvyappyError',
 };
 const ERROR_HANDLING_INVALID_TYPE = 'yes';
 const ERROR_HANDLING_OBJECT_MISSING_FIELDS = {};
 
 const VALID_CLI_LOGGING = {
   level: 'detailed',
-} satisfies ApigConfig['cliLogging'];
+} satisfies ZvyappyConfig['cliLogging'];
 
 const CLI_LOGGING_INVALID_LEVEL = { level: 'verbose' };
 
@@ -135,7 +135,7 @@ export const POSITIVE_CONFIGS = {
     apiLogging: true,
     endpointsMap: true,
   },
-} satisfies Record<string, ApigConfig>;
+} satisfies Record<string, ZvyappyConfig>;
 
 export const NEGATIVE_CONFIGS = {
   MCP_WITH_API_LOGGING: {

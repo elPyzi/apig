@@ -1,10 +1,10 @@
-import type { IRSchema, ApigConfig } from '@models';
+import type { IRSchema, ZvyappyConfig } from '@models';
 import { enumMemberKey, toPascalCase, toStringLiteral } from '@libs/string';
 import type { YupOpts } from './generate-yup-schema';
 
 export const generateYupEnum = (
   schema: IRSchema,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   opts: YupOpts,
 ): string => {
   const name = toPascalCase(schema.name!);

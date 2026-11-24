@@ -6,8 +6,8 @@ import { logger } from '@libs/logger';
 import { DOCS_BASE } from '@constants';
 import { PRESETS, PRESET_NAMES } from '../presets';
 
-const CONFIG_TEMPLATE = `// @travjek/apig — ${DOCS_BASE}
-import { defineConfig, typescript, requests, tanstackQuery } from '@travjek/apig';
+const CONFIG_TEMPLATE = `// zvyappy — ${DOCS_BASE}
+import { defineConfig, typescript, requests, tanstackQuery } from 'zvyappy';
 
 export default defineConfig({
   input: 'https://api.example.com/openapi.json',
@@ -37,7 +37,7 @@ export const registerConfigCommand = (program: Command): void => {
   program
     .command('config')
     .alias('c')
-    .description('Create apig.config.ts in the current directory')
+    .description('Create zvyappy.config.ts in the current directory')
     .option('-p, --preset <name>', `Preset to use: ${PRESET_NAMES.join(', ')}`)
     .option('--list-presets', 'List available presets and exit')
     .action((options) => {
@@ -53,10 +53,10 @@ export const registerConfigCommand = (program: Command): void => {
         return;
       }
 
-      const configPath = join(process.cwd(), 'apig.config.ts');
+      const configPath = join(process.cwd(), 'zvyappy.config.ts');
 
       if (existsSync(configPath)) {
-        logger.error('apig.config.ts already exists');
+        logger.error('zvyappy.config.ts already exists');
         process.exit(1);
       }
 
@@ -75,8 +75,8 @@ export const registerConfigCommand = (program: Command): void => {
       writeFileSync(configPath, template, 'utf-8');
 
       const label = options.preset ? ` (preset: ${options.preset})` : '';
-      logger.success(`Created apig.config.ts${label}`);
-      logger.plain('Edit the file and run: apig generate');
-      logger.plain('Or run: apig start  — for interactive setup');
+      logger.success(`Created zvyappy.config.ts${label}`);
+      logger.plain('Edit the file and run: zvyappy generate');
+      logger.plain('Or run: zvyappy start  — for interactive setup');
     });
 };

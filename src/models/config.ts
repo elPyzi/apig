@@ -1,4 +1,4 @@
-import type { ApigPlugin } from './plugin';
+import type { ZvyappyPlugin } from './plugin';
 
 export const LOG_LEVELS = {
   MINIMAL: 'minimal',
@@ -163,7 +163,7 @@ export type FakerLocale = (typeof FAKER_LOCALES)[keyof typeof FAKER_LOCALES];
 export interface Versioning {
   /** Enable snapshot versioning. Default: false. */
   enabled?: boolean;
-  /** Directory to store snapshots. Default: ".apig/versions". */
+  /** Directory to store snapshots. Default: ".zvyappy/versions". */
   storage?: string;
   /** Save the original OpenAPI spec in each snapshot. Default: false. */
   saveSpec?: boolean;
@@ -185,7 +185,7 @@ export interface CacheConfig {
    * `12h`, `7d`. Expired entries are removed on the next run.
    *
    * Omitted means an entry never expires on its own: it is replaced when the
-   * spec changes and discarded when apig is upgraded, but nothing else ages it
+   * spec changes and discarded when zvyappy is upgraded, but nothing else ages it
    * out.
    * @example ttl: "7d"
    */
@@ -254,12 +254,12 @@ export interface PluginResult {
   typeExports: string[];
 }
 
-export type { ApigPlugin, PluginContext } from './plugin';
+export type { ZvyappyPlugin, PluginContext } from './plugin';
 
 /**
  * Main configuration object for a single generation job.
  */
-export interface ApigConfig {
+export interface ZvyappyConfig {
   /**
    * Optional label for this generation job.
    * Shown in CLI output when multiple configs are used.
@@ -289,7 +289,7 @@ export interface ApigConfig {
    * @example "./src/api"
    * @example { path: "./src/api", clean: true }
    */
-  /** Output directory. Defaults to ".apig/generated" if not specified. */
+  /** Output directory. Defaults to ".zvyappy/generated" if not specified. */
   output?: Output;
 
   /**
@@ -303,7 +303,7 @@ export interface ApigConfig {
    * Plugins to run during generation.
    * @example [typescript(), requests(), tanstackQuery()]
    */
-  plugins?: ApigPlugin[];
+  plugins?: ZvyappyPlugin[];
 
   /**
    * Code formatter to apply after generation.
@@ -401,7 +401,7 @@ export interface ApigConfig {
   endpointsMap?: boolean;
 
   /**
-   * Cache the parsed IR on disk (.apig/cache). On repeated runs, skips parsing
+   * Cache the parsed IR on disk (.zvyappy/cache). On repeated runs, skips parsing
    * if the spec has not changed (uses ETag for URLs, hash for local files).
    *
    * Passing an object turns the cache on as well, so `cache: { ttl: "7d" }`
@@ -426,7 +426,7 @@ export interface ApigConfig {
 
   /**
    * Enable error handling for all request functions.
-   * - `true` (default) — generates built-in `ApigError` class
+   * - `true` (default) — generates built-in `ZvyappyError` class
    * - `false` — disables error handling entirely
    * - `{ path, export }` — uses a custom error class from the given path
    * @default true

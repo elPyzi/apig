@@ -1,4 +1,4 @@
-import { type ApigConfig, type IROperation, type IRSchema } from '@models';
+import { type ZvyappyConfig, type IROperation, type IRSchema } from '@models';
 import { toPascalCase } from '@libs/string';
 import { getResponseType } from '@services/codegen/common/get-response-type';
 import { getArgs } from '@services/codegen/common/get-args';
@@ -17,16 +17,16 @@ const DEFAULT_FW: TanstackFrameworkConfig = {
 export const generateTanstackMutation = (
   operation: IROperation,
   allSchemas: IRSchema[],
-  config: ApigConfig,
+  config: ZvyappyConfig,
   errorHandling = false,
   rawResponse = false,
-  errorClass = 'ApigError',
+  errorClass = 'ZvyappyError',
   fw: TanstackFrameworkConfig = DEFAULT_FW,
 ): string => {
   const name = getFunctionName(operation, config);
   const pascalName = toPascalCase(operation.id);
   const baseType = getResponseType(operation.response, allSchemas);
-  const responseType = rawResponse ? `ApigResponse<${baseType}>` : baseType;
+  const responseType = rawResponse ? `ZvyappyResponse<${baseType}>` : baseType;
   const args = getArgs(operation, allSchemas);
 
   const varsType =

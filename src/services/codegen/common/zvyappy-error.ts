@@ -1,7 +1,7 @@
 import { banner } from '@constants';
 
-export const APIG_ERROR_CLASS = 'ApigError';
-export const APIG_CONFIG_FILE = 'config';
+export const ZVYAPPY_ERROR_CLASS = 'ZvyappyError';
+export const ZVYAPPY_CONFIG_FILE = 'config';
 export const PARSE_ERROR_FN = 'parseErrorBody';
 
 /**
@@ -22,19 +22,19 @@ export const parseErrorBodyCode = `export const parseErrorBody = async (
 };
 `;
 
-export const apigErrorCode = `export class ApigError<T = unknown> extends Error {
+export const zvyappyErrorCode = `export class ZvyappyError<T = unknown> extends Error {
   status: number;
   body: T;
   constructor(status: number, body: T) {
-    super(\`ApigError \${status}\`);
-    this.name = 'ApigError';
+    super(\`ZvyappyError \${status}\`);
+    this.name = 'ZvyappyError';
     this.status = status;
     this.body = body;
   }
 }
 `;
 
-export const apigResponseCode = `export interface ApigResponse<T> {
+export const zvyappyResponseCode = `export interface ZvyappyResponse<T> {
   body: T;
   status: number;
   headers: Headers;
@@ -103,16 +103,16 @@ export const toQuery = (
 };
 `;
 
-export const buildApigConfigFile = (
+export const buildZvyappyConfigFile = (
   withError: boolean,
   withResponse: boolean,
   withQuery = false,
   withParseError = false,
 ): string => {
   const parts: string[] = [banner];
-  if (withError) parts.push(apigErrorCode);
+  if (withError) parts.push(zvyappyErrorCode);
   if (withParseError) parts.push(parseErrorBodyCode);
-  if (withResponse) parts.push(apigResponseCode);
+  if (withResponse) parts.push(zvyappyResponseCode);
   if (withQuery) parts.push(toQueryCode);
   return parts.join('\n');
 };

@@ -5,7 +5,7 @@ import { upgrade } from '@scalar/openapi-upgrader';
 import type { OpenAPIV3 } from 'openapi-types';
 import { logger } from '@libs/logger';
 import { authFailureMessage, specRequestHeaders } from '@libs/auth';
-import type { ApigConfig, LoadSpecResult } from '@models';
+import type { ZvyappyConfig, LoadSpecResult } from '@models';
 import { bundleExternalRefs } from './bundle-external';
 
 const isUrl = (value: unknown): value is string =>
@@ -35,7 +35,9 @@ const isSwagger2 = (spec: Record<string, unknown>): boolean =>
 const convertToV3 = (spec: Record<string, unknown>): Record<string, unknown> =>
   upgrade(spec, '3.0') as Record<string, unknown>;
 
-export const loadSpec = async (config: ApigConfig): Promise<LoadSpecResult> => {
+export const loadSpec = async (
+  config: ZvyappyConfig,
+): Promise<LoadSpecResult> => {
   const input =
     typeof config.input === 'function' ? await config.input() : config.input;
 

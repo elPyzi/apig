@@ -12,7 +12,7 @@ export interface Features {
 }
 
 /**
- * Turns what a project generated into apig plugins, in a stable order and with
+ * Turns what a project generated into zvyappy plugins, in a stable order and with
  * the plugins they depend on: hooks call the request functions, the MCP server
  * needs requests and zod, MSW handlers return faker data.
  */

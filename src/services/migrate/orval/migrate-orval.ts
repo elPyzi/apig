@@ -45,7 +45,7 @@ const readInput = (
 
   if (Array.isArray(target)) {
     project.notes.push(
-      `orval merged ${target.length} specs; apig reads one — only the first is used`,
+      `orval merged ${target.length} specs; zvyappy reads one — only the first is used`,
     );
     target = target[0];
   }
@@ -64,17 +64,17 @@ const readInput = (
   const names = tags.filter((t): t is string => typeof t === 'string');
   if (names.length < tags.length)
     project.notes.push(
-      'RegExp tag filters have no apig equivalent and were dropped',
+      'RegExp tag filters have no zvyappy equivalent and were dropped',
     );
   if (names.length)
     project.filter =
       filters?.mode === 'exclude' ? { exclude: names } : { tags: names };
   if (filters?.schemas)
-    project.notes.push('input.filters.schemas has no apig equivalent');
+    project.notes.push('input.filters.schemas has no zvyappy equivalent');
 
   if (asObject(options.override)?.transformer)
     project.notes.push(
-      'input.override.transformer has no apig equivalent — use `rename` or `filter`',
+      'input.override.transformer has no zvyappy equivalent — use `rename` or `filter`',
     );
   if (options.parserOptions)
     project.notes.push(
@@ -158,7 +158,7 @@ const migrateProject = (
   const client = output.client ?? 'axios-functions';
   const features: Features = { requests: true };
   if (typeof client === 'function') {
-    project.notes.push('a custom client function has no apig equivalent');
+    project.notes.push('a custom client function has no zvyappy equivalent');
   } else if (typeof client === 'string' && TANSTACK_FRAMEWORKS[client]) {
     features.tanstack = {
       framework: TANSTACK_FRAMEWORKS[client],
@@ -178,7 +178,7 @@ const migrateProject = (
     client !== 'axios-functions'
   ) {
     project.notes.push(
-      `orval client "${String(client)}" has no apig equivalent — plain request functions are generated instead`,
+      `orval client "${String(client)}" has no zvyappy equivalent — plain request functions are generated instead`,
     );
   }
 
@@ -196,11 +196,11 @@ const migrateProject = (
         : configDir;
     const mutatorName = asObject(mutator)?.name ?? 'default export';
     project.notes.push(
-      `orval mutator ${rebasePath(mutatorPath, from)} (${String(mutatorName)}) is a request function; apig takes the client instance itself — point httpClient at the module exporting it, e.g. { name: 'axios', path, export }`,
+      `orval mutator ${rebasePath(mutatorPath, from)} (${String(mutatorName)}) is a request function; zvyappy takes the client instance itself — point httpClient at the module exporting it, e.g. { name: 'axios', path, export }`,
     );
   } else if (usesAxios && features.requests) {
     project.notes.push(
-      "orval used axios's default instance; apig needs a module that exports one — set httpClient: { name: 'axios', path, export }, until then requests use fetch",
+      "orval used axios's default instance; zvyappy needs a module that exports one — set httpClient: { name: 'axios', path, export }, until then requests use fetch",
     );
   }
 
@@ -236,21 +236,21 @@ const migrateProject = (
     enumStyle !== 'const'
   )
     project.enumStyle = enumStyle as EnumStyle;
-  // orval writes interfaces unless told otherwise; apig defaults to type aliases
+  // orval writes interfaces unless told otherwise; zvyappy defaults to type aliases
   if (!override.useTypeOverInterfaces) project.typeStyle = 'interface';
 
   if (output.schemas)
     project.notes.push(
-      'orval wrote schemas to a separate directory; apig writes types.ts into the output directory',
+      'orval wrote schemas to a separate directory; zvyappy writes types.ts into the output directory',
     );
   if (override.operationName || query.operationName)
     project.notes.push(
-      'override.operationName has no apig equivalent — use `rename` for individual operations',
+      'override.operationName has no zvyappy equivalent — use `rename` for individual operations',
     );
   if (override.transformer)
-    project.notes.push('override.transformer has no apig equivalent');
+    project.notes.push('override.transformer has no zvyappy equivalent');
 
-  // a filter makes apig drop deprecated operations; orval keeps them unless
+  // a filter makes zvyappy drop deprecated operations; orval keeps them unless
   // useDeprecatedOperations is turned off
   const keepDeprecated = override.useDeprecatedOperations !== false;
   if (project.filter) project.filter.deprecated = keepDeprecated;
@@ -259,7 +259,7 @@ const migrateProject = (
   return project;
 };
 
-/** Translates every project in an orval config into an apig config. */
+/** Translates every project in an orval config into a zvyappy config. */
 export const migrateOrval = async (
   config: Config,
   configPath: string,

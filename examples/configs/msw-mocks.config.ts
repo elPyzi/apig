@@ -1,4 +1,4 @@
-import { defineConfig, typescript, faker, msw } from '@travjek/apig'
+import { defineConfig, typescript, faker, msw } from 'zvyappy'
 
 export default defineConfig({
   input: './openapi.json',

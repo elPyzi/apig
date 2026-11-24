@@ -6,7 +6,7 @@ export interface Preset {
   template: string;
 }
 
-const header = `// @travjek/apig — ${DOCS_BASE}`;
+const header = `// zvyappy — ${DOCS_BASE}`;
 const inputLine = `  input: 'https://api.example.com/openapi.json',`;
 const outputBlock = `  output: {
     path: 'src/api/generated',
@@ -17,7 +17,7 @@ const baseUrlLine = `  baseUrl: 'https://api.example.com',`;
 const build = (imports: string[], plugins: string[], extra = ''): string =>
   [
     header,
-    `import { defineConfig, ${imports.join(', ')} } from '@travjek/apig';`,
+    `import { defineConfig, ${imports.join(', ')} } from 'zvyappy';`,
     ``,
     `export default defineConfig({`,
     inputLine,

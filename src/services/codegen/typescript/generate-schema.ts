@@ -1,4 +1,4 @@
-import type { ApigConfig, IRSchema } from '@models';
+import type { ZvyappyConfig, IRSchema } from '@models';
 import { toPascalCase } from '@libs/string';
 import { generateComposition } from '@services/codegen/typescript/generate-composition';
 import { generateEnumSchema } from '@services/codegen/typescript/generate-enum-schema';
@@ -7,7 +7,7 @@ import { generateTypeValue } from '@services/codegen/common/generate-type-value'
 
 export const generateSchema = (
   schema: IRSchema,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   allSchemas: IRSchema[],
 ): string => {
   if (schema.isEnum) return generateEnumSchema(schema, config);

@@ -1,6 +1,6 @@
 import {
   toHttpMethodLower,
-  type ApigConfig,
+  type ZvyappyConfig,
   type IROperation,
   type IRSchema,
 } from '@models';
@@ -80,7 +80,7 @@ export const generatePlaywrightMethod = (
   operation: IROperation,
   allSchemas: IRSchema[],
   baseUrl: string,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   opts: PlaywrightMethodOptions,
 ): string => {
   const name = getMethodName(operation, config);

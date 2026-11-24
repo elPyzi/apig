@@ -47,23 +47,23 @@ export type GetUserErrors =
 
 export const getUser = async (id: string): Promise<User> => {
   const r = await fetch(`/users/${id}`);
-  if (!r.ok) throw new ApigError(r.status, await parseErrorBody(r));
+  if (!r.ok) throw new ZvyappyError(r.status, await parseErrorBody(r));
   return (await r.json()) as User;
 };
 
 export const listUsers = async (params?: { page?: number }): Promise<UserList> => {
   const r = await fetch(`/users${toQuery(params)}`);
-  if (!r.ok) throw new ApigError(r.status, await parseErrorBody(r));
+  if (!r.ok) throw new ZvyappyError(r.status, await parseErrorBody(r));
   return (await r.json()) as UserList;
 };
 
 export const deleteUser = async (id: string): Promise<void> => { // 204: no body, not parsed
   const r = await fetch(`/users/${id}`, { method: 'DELETE' });
-  if (!r.ok) throw new ApigError(r.status, await parseErrorBody(r));
+  if (!r.ok) throw new ZvyappyError(r.status, await parseErrorBody(r));
 };
 ```
 
-Arguments: path params (one each) → `params` (query object) → `body` → `headers` (header object). `ApigError`, `parseErrorBody` and `toQuery` live in the generated `config.ts`. `rawResponse: true` returns `ApigResponse<T>` = `{ body, status, headers }`; `errorHandling: false` returns the client's result with no status check. `default` and `4XX`-style responses appear in `<Op>Errors` as `{ status: number; body: X }`.
+Arguments: path params (one each) → `params` (query object) → `body` → `headers` (header object). `ZvyappyError`, `parseErrorBody` and `toQuery` live in the generated `config.ts`. `rawResponse: true` returns `ZvyappyResponse<T>` = `{ body, status, headers }`; `errorHandling: false` returns the client's result with no status check. `default` and `4XX`-style responses appear in `<Op>Errors` as `{ status: number; body: X }`.
 
 ---
 
@@ -157,7 +157,7 @@ Query key function: `getUsersQueryKey(...)` (style `'functions'`) or `queryKeys.
 - `framework: 'svelte' | 'solid'` use the `create` prefix: `createGetUsersQuery`, `createCreateUserMutation`.
 - `GET` and the OpenAPI 3.2 `QUERY` method get query hooks; every other method gets a mutation hook (override per operation with `hookGenerationStrategies`).
 - Infinite hooks are generated with `getNextPageParam: () => undefined` — pass your own in `options`.
-- The error type is `ApigError<GetUserErrors>` when the operation declares error responses.
+- The error type is `ZvyappyError<GetUserErrors>` when the operation declares error responses.
 
 ---
 
@@ -267,7 +267,7 @@ Generates a typed Playwright API client and a `test.extend()` fixture. Generates
 
 ```ts
 playwright({
-  testName: 'apigPlaywrightTest',  // exported test name
+  testName: 'zvyappyPlaywrightTest',  // exported test name
   fixtureName: 'api',              // what a test destructures
   baseUrl: undefined,              // defaults to baseURL from playwright.config.ts
   withFaker: false,                // needs faker() — adds sample<Operation>()
@@ -285,14 +285,14 @@ Output:
 export const createApiClient = (ctx: APIRequestContext) => ({
   getUsers: async (params?: { page?: number }): Promise<UserList> => {
     const r = await ctx.get(`/users`, { params: toParams(params) });
-    if (!r.ok()) throw new ApigError(r.status(), await parseApiError(r));
+    if (!r.ok()) throw new ZvyappyError(r.status(), await parseApiError(r));
     return r.json() as Promise<UserList>;
   },
 });
 
 export type ApiClient = ReturnType<typeof createApiClient>;
 
-export const apigPlaywrightTest = base.extend<{ api: ApiClient }>({
+export const zvyappyPlaywrightTest = base.extend<{ api: ApiClient }>({
   api: async ({ request }, use) => {
     await use(createApiClient(request));
   },
@@ -302,7 +302,7 @@ export const apigPlaywrightTest = base.extend<{ api: ApiClient }>({
 Usage:
 
 ```ts
-import { apigPlaywrightTest as test } from './api/playwright'
+import { zvyappyPlaywrightTest as test } from './api/playwright'
 
 test('lists users', async ({ api }) => {
   const users = await api.getUsers()
@@ -310,4 +310,4 @@ test('lists users', async ({ api }) => {
 })
 ```
 
-The factory takes any `APIRequestContext` — pass `request` for standalone API tests, or `page.request` to reuse the browser's session. With `rawResponse: true` the methods return `APIResponse` untouched. Under `groupBy`, exports are prefixed per group (`createPetsApiClient`, `petsApigPlaywrightTest`).
+The factory takes any `APIRequestContext` — pass `request` for standalone API tests, or `page.request` to reuse the browser's session. With `rawResponse: true` the methods return `APIResponse` untouched. Under `groupBy`, exports are prefixed per group (`createPetsApiClient`, `petsZvyappyPlaywrightTest`).

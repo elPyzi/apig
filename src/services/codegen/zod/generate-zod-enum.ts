@@ -1,10 +1,10 @@
-import { type IRSchema, type ApigConfig } from '@models';
+import { type IRSchema, type ZvyappyConfig } from '@models';
 import { enumMemberKey, toPascalCase, toStringLiteral } from '@libs/string';
 import { type ZodOpts } from './generate-zod-schema';
 
 export const generateZodEnum = (
   schema: IRSchema,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   opts: ZodOpts,
 ): string => {
   const name = toPascalCase(schema.name!);

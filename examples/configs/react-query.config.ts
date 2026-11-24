@@ -1,4 +1,4 @@
-import { defineConfig, typescript, requests, zod, tanstackQuery } from '@travjek/apig'
+import { defineConfig, typescript, requests, zod, tanstackQuery } from 'zvyappy'
 
 export default defineConfig({
   input: './openapi.json',

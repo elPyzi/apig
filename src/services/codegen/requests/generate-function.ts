@@ -2,7 +2,7 @@ import { getAdapter, NO_BODY } from '@services/adapters';
 import {
   HTTP_CLIENTS,
   toHttpMethodLower,
-  type ApigConfig,
+  type ZvyappyConfig,
   type IROperation,
   type IRSchema,
 } from '@models';
@@ -28,7 +28,7 @@ export const generateFunction = (
   allSchemas: IRSchema[],
   clientName: string,
   baseUrl: string,
-  config: ApigConfig,
+  config: ZvyappyConfig,
 ): string => {
   const fnName = getFunctionName(operation, config);
   const method = toHttpMethodLower(operation.method);
@@ -65,7 +65,7 @@ export const generateFunction = (
   const argsList = buildArgsList(args);
 
   const returnType = rawResponse
-    ? `ApigResponse<${responseType}>`
+    ? `ZvyappyResponse<${responseType}>`
     : responseType;
 
   const doc = buildJsDoc({

@@ -1,7 +1,7 @@
 import {
   isReadMethod,
   banner,
-  type ApigConfig,
+  type ZvyappyConfig,
   type IR,
   type IROperation,
 } from '@models';
@@ -13,7 +13,7 @@ import {
 import { getFunctionName } from '@services/codegen/common/get-function-name';
 
 export const generateSwrKeyFn = (
-  config: ApigConfig,
+  config: ZvyappyConfig,
   operation: IROperation,
 ): string => {
   const name = getFunctionName(operation, config);
@@ -25,7 +25,7 @@ export const generateSwrKeyFn = (
 };
 
 export const buildSwrKeyEntry = (
-  config: ApigConfig,
+  config: ZvyappyConfig,
   operation: IROperation,
 ): string => {
   const name = getFunctionName(operation, config);
@@ -37,7 +37,7 @@ export const buildSwrKeyEntry = (
 };
 
 export const buildSwrKeyExpr = (
-  config: ApigConfig,
+  config: ZvyappyConfig,
   operation: IROperation,
   args: ReturnType<typeof getArgs>,
   style: 'functions' | 'object',
@@ -48,7 +48,7 @@ export const buildSwrKeyExpr = (
   return `${name}SwrKey(${callArgs})`;
 };
 
-export const generateSwrKeysFile = (config: ApigConfig, ir: IR): string => {
+export const generateSwrKeysFile = (config: ZvyappyConfig, ir: IR): string => {
   const getOps = ir.operations.filter((op) => isReadMethod(op.method));
   const entries = getOps.map((op) => buildSwrKeyEntry(config, op)).join('\n');
   return [banner, '', 'export const swrKeys = {', entries, '};', ''].join('\n');

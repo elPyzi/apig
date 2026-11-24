@@ -12,7 +12,7 @@ export {
   PLUGINS,
   TYPE_STYLES,
   type EnumStyle,
-  type ApigConfig,
+  type ZvyappyConfig,
   type LogLevel,
   type LoggingConfig,
   type GenerationStats,
@@ -58,7 +58,7 @@ export type {
 export { banner, DOCS_BASE, getVersion } from '@constants';
 
 export type {
-  ApigPlugin,
+  ZvyappyPlugin,
   PluginContext,
   ExtraFile,
   TypescriptOptions,

@@ -1,7 +1,7 @@
 import {
-  type ApigConfig,
+  type ZvyappyConfig,
   type PluginResult,
-  type ApigPlugin,
+  type ZvyappyPlugin,
   type IR,
   banner,
 } from '@models';
@@ -13,8 +13,8 @@ import {
   getClientImport,
   getBaseUrl,
   generateFunction,
-  buildApigConfigFile,
-  APIG_CONFIG_FILE,
+  buildZvyappyConfigFile,
+  ZVYAPPY_CONFIG_FILE,
   generateErrorType,
   getErrorConfig,
   needsQueryHelper,
@@ -30,7 +30,7 @@ import {
  * Supports `fetch`, `axios`, `ky`, and `ofetch` HTTP clients.
  * @example requests()
  */
-export const requests = (): ApigPlugin => ({
+export const requests = (): ZvyappyPlugin => ({
   name: 'requests',
   fileName: 'requests',
   scope: 'operations',
@@ -51,8 +51,8 @@ export const requests = (): ApigPlugin => ({
     if (!withError && !withResponse && !withQuery && !withParseError) return [];
     return [
       {
-        fileName: `${APIG_CONFIG_FILE}.ts`,
-        code: buildApigConfigFile(
+        fileName: `${ZVYAPPY_CONFIG_FILE}.ts`,
+        code: buildZvyappyConfigFile(
           withError,
           withResponse,
           withQuery,
@@ -65,7 +65,7 @@ export const requests = (): ApigPlugin => ({
 
 export const generateRequests = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   configImportPath = './config',
   customErrorImportPath?: string,
   clientImportPath?: string,
@@ -125,7 +125,7 @@ export const generateRequests = (
   }
 
   if (config.rawResponse) {
-    lines.push(`import type { ApigResponse } from '${configImportPath}';`);
+    lines.push(`import type { ZvyappyResponse } from '${configImportPath}';`);
   }
 
   lines.push('');

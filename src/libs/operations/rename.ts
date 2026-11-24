@@ -1,9 +1,9 @@
 import type { IROperation } from '@models';
-import type { ApigConfig } from '@models';
+import type { ZvyappyConfig } from '@models';
 
 export const renameOperations = (
   operations: IROperation[],
-  config: ApigConfig,
+  config: ZvyappyConfig,
 ): IROperation[] => {
   if (!config.rename) return operations;
 

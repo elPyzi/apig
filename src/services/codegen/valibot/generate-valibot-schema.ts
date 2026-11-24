@@ -1,4 +1,4 @@
-import type { IRSchema, ApigConfig } from '@models';
+import type { IRSchema, ZvyappyConfig } from '@models';
 import { toPascalCase, quoteKey } from '@libs/string';
 import { generateSchema } from '@services/codegen/typescript/generate-schema';
 import { generateValibotValue, generateValibotProperty } from './value';
@@ -14,7 +14,7 @@ export interface ValibotOpts {
 export const generateValibotSchema = (
   schema: IRSchema,
   allSchemas: IRSchema[],
-  config: ApigConfig,
+  config: ZvyappyConfig,
   opts: ValibotOpts,
   recursive: ReadonlySet<string> = new Set(),
 ): string => {

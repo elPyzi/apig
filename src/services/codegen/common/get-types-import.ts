@@ -1,4 +1,4 @@
-import type { ApigConfig } from '@models';
+import type { ZvyappyConfig } from '@models';
 import { findPlugin, getRootPrefix, type FileScope } from './get-plugin-import';
 
 type ValidationPlugin = 'zod' | 'valibot' | 'yup';
@@ -10,7 +10,7 @@ const VALIDATION_PLUGINS: ValidationPlugin[] = ['zod', 'valibot', 'yup'];
  * A validation plugin only owns the types when it emits them (`withTypes !== false`);
  * otherwise `typescript()` stays responsible and types live in `types.ts`.
  */
-const getTypesOwner = (config: ApigConfig): string => {
+const getTypesOwner = (config: ZvyappyConfig): string => {
   for (const name of VALIDATION_PLUGINS) {
     const plugin = findPlugin(config, name);
     if (plugin && (plugin.withTypes ?? true)) return plugin.fileName;
@@ -23,5 +23,7 @@ const getTypesOwner = (config: ApigConfig): string => {
  * @param scope scope of the plugin doing the import — types always live at the
  *              output root, so a root-scoped importer never needs to climb up.
  */
-export const getTypesImport = (config: ApigConfig, scope: FileScope): string =>
-  `${getRootPrefix(config, scope)}${getTypesOwner(config)}`;
+export const getTypesImport = (
+  config: ZvyappyConfig,
+  scope: FileScope,
+): string => `${getRootPrefix(config, scope)}${getTypesOwner(config)}`;

@@ -1,8 +1,8 @@
 import {
   GROUP_BY,
   banner,
-  type ApigConfig,
-  type ApigPlugin,
+  type ZvyappyConfig,
+  type ZvyappyPlugin,
   type IR,
   type PluginContext,
   type PlaywrightOptions,
@@ -18,8 +18,8 @@ import {
   getRootPluginImport,
   needsQueryHelper,
   needsParseErrorHelper,
-  buildApigConfigFile,
-  APIG_CONFIG_FILE,
+  buildZvyappyConfigFile,
+  ZVYAPPY_CONFIG_FILE,
   buildNames,
   getMethodName,
   getFakerSamples,
@@ -36,7 +36,7 @@ import {
   type ResolvedAuth,
 } from '../libs';
 
-const DEFAULT_TEST_NAME = 'apigPlaywrightTest';
+const DEFAULT_TEST_NAME = 'zvyappyPlaywrightTest';
 const DEFAULT_FIXTURE_NAME = 'api';
 const DEFAULT_AUTH_FIXTURE_NAME = 'authedApi';
 const DEFAULT_TOKEN_PATH = 'token';
@@ -46,14 +46,14 @@ const DEFAULT_AUTH_HEADER = 'Authorization';
  * Generates a typed Playwright API client from OpenAPI operations.
  *
  * Produces a `playwright.ts` file with a `createApiClient(ctx)` factory and an
- * `apigPlaywrightTest` fixture built on `test.extend()`. The factory takes any
+ * `zvyappyPlaywrightTest` fixture built on `test.extend()`. The factory takes any
  * `APIRequestContext`, so the same client works with the standalone `request`
  * fixture and with `page.request`, which shares cookies with the browser.
  * Requires `@playwright/test >= 1.30.0` as a peer dependency.
  * @example playwright()
  * @example playwright({ testName: 'apiTest', withFaker: true })
  */
-export const playwright = (options: PlaywrightOptions = {}): ApigPlugin => ({
+export const playwright = (options: PlaywrightOptions = {}): ZvyappyPlugin => ({
   name: 'playwright',
   fileName: 'playwright',
   scope: 'operations',
@@ -69,8 +69,8 @@ export const playwright = (options: PlaywrightOptions = {}): ApigPlugin => ({
     if (!withError && !withResponse && !withQuery && !withParseError) return [];
     return [
       {
-        fileName: `${APIG_CONFIG_FILE}.ts`,
-        code: buildApigConfigFile(
+        fileName: `${ZVYAPPY_CONFIG_FILE}.ts`,
+        code: buildZvyappyConfigFile(
           withError,
           withResponse,
           withQuery,
@@ -87,7 +87,7 @@ export const playwright = (options: PlaywrightOptions = {}): ApigPlugin => ({
  */
 const resolveAuth = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   options: PlaywrightOptions,
   rawResponse: boolean,
 ): ResolvedAuth | null => {
@@ -122,7 +122,7 @@ const resolveAuth = (
 
 export const generatePlaywright = (
   ir: IR,
-  config: ApigConfig,
+  config: ZvyappyConfig,
   options: PlaywrightOptions = {},
   ctx?: PluginContext,
 ): PluginResult => {
@@ -182,7 +182,7 @@ export const generatePlaywright = (
   if (errorClass) {
     const importPath = errCfg.importPath
       ? (ctx?.customErrorImportPath ?? errCfg.importPath)
-      : (ctx?.configImportPath ?? `./${APIG_CONFIG_FILE}`);
+      : (ctx?.configImportPath ?? `./${ZVYAPPY_CONFIG_FILE}`);
     lines.push(`import { ${errorClass} } from '${importPath}';`);
   }
 
